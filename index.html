@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J.A.R.V.I.S OS — HUD v2.0</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cyan:   #00ffcc;
+    --red:    #ff2244;
+    --amber:  #ffaa00;
+    --green:  #00ff88;
+    --dim:    #00ffcc18;
+    --bg:     #040d0d;
+    --panel:  #071515;
+    --border: #00ffcc33;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body {
+    margin: 0; padding: 0;
+    background-color: var(--bg);
+    background-image:
+      repeating-linear-gradient(0deg,   transparent, transparent 39px, var(--dim) 39px, var(--dim) 40px),
+      repeating-linear-gradient(90deg,  transparent, transparent 39px, var(--dim) 39px, var(--dim) 40px);
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--cyan);
+    min-height: 100vh;
+  }
+
+  /* Scanlines */
+  body::after {
+    content: '';
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px
+    );
+    z-index: 9999;
+  }
+
+  /* ── Typography ── */
+  .jarvis-title {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(1.4rem, 3vw, 2.4rem);
+    font-weight: 900;
+    color: var(--cyan);
+    text-shadow: 0 0 20px var(--cyan), 0 0 60px #00ffcc55;
+    letter-spacing: 0.15em;
+    text-align: center;
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+  .jarvis-sub {
+    font-size: 0.65rem;
+    color: #00ffcc77;
+    text-align: center;
+    letter-spacing: 0.3em;
+    margin-top: 2px;
+  }
+  .hud-section {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.58rem;
+    color: #00ffcc55;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 4px;
+    margin-bottom: 10px;
+  }
+  .orb-font { font-family: 'Orbitron', monospace; }
+
+  /* ── Dividers ── */
+  .hud-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    box-shadow: 0 0 8px #00ffcc44;
+    margin: 10px 0 16px;
+  }
+
+  /* ── Panels ── */
+  .hud-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 14px 16px;
+    box-shadow: 0 0 14px #00ffcc10, inset 0 0 20px #00ffcc06;
+    position: relative;
+    overflow: hidden;
+  }
+  .hud-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  }
+
+  /* ── Metric cards ── */
+  .metric-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 16px;
+    box-shadow: 0 0 12px #00ffcc18, inset 0 0 20px #00ffcc06;
+    position: relative;
+    overflow: hidden;
+    flex: 1;
+  }
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  }
+  .metric-label { font-size: 0.62rem; color: #00ffcc77; letter-spacing: 0.2em; }
+  .metric-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.5rem;
+    color: var(--cyan);
+    text-shadow: 0 0 10px var(--cyan);
+    line-height: 1.2;
+  }
+
+  /* ── Status badge ── */
+  .status-badge {
+    display: inline-block;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--bg);
+    background: var(--cyan);
+    padding: 4px 14px;
+    border-radius: 3px;
+    letter-spacing: 0.15em;
+    box-shadow: 0 0 16px var(--cyan);
+    animation: badge-pulse 2s infinite;
+  }
+  .status-badge.locked {
+    background: var(--red);
+    box-shadow: 0 0 16px var(--red);
+    animation: badge-pulse-red 1.5s infinite;
+  }
+  .status-badge.unlocked {
+    background: var(--green);
+    box-shadow: 0 0 16px var(--green);
+  }
+
+  /* ── Core output ── */
+  .core-output {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cyan);
+    border-radius: 4px;
+    padding: 14px 18px;
+    font-size: 0.88rem;
+    color: var(--cyan);
+    box-shadow: 0 0 20px #00ffcc10;
+    min-height: 52px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* ── Sensor cards ── */
+  .sensor-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.3s;
+  }
+  .sensor-card:hover { box-shadow: 0 0 20px #00ffcc22; }
+  .sensor-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  }
+  .sensor-card.offline {
+    border-color: #ff224433;
+    opacity: 0.7;
+  }
+  .sensor-card.offline::before {
+    background: linear-gradient(90deg, transparent, var(--red), transparent);
+  }
+  .sensor-name {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.2em;
+    color: #00ffcc88;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .sensor-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.4rem;
+    color: var(--cyan);
+    text-shadow: 0 0 8px var(--cyan);
+  }
+  .sensor-unit { font-size: 0.7rem; color: #00ffcc66; margin-left: 4px; }
+  .sensor-iface { font-size: 0.58rem; color: #00ffcc44; letter-spacing: 0.15em; margin-bottom: 4px; }
+  .sensor-offline-label {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem;
+    color: var(--red);
+    text-shadow: 0 0 8px var(--red);
+    letter-spacing: 0.1em;
+    margin-top: 4px;
+  }
+  .motion-alert {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.72rem;
+    color: var(--amber);
+    text-shadow: 0 0 10px var(--amber);
+    animation: badge-pulse-red 0.8s infinite;
+  }
+  .motion-clear {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.72rem;
+    color: var(--green);
+  }
+
+  /* ── Tabs ── */
+  .tab-bar {
+    display: flex;
+    gap: 4px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px;
+    margin-bottom: 16px;
+  }
+  .tab-btn {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    font-weight: 700;
+    color: #00ffcc66;
+    background: transparent;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .tab-btn:hover { color: var(--cyan); background: #00ffcc11; }
+  .tab-btn.active { background: #00ffcc18; color: var(--cyan); box-shadow: 0 0 12px #00ffcc22; }
+
+  /* ── Override form ── */
+  .override-input {
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--cyan);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    outline: none;
+    margin-bottom: 8px;
+    letter-spacing: 0.1em;
+  }
+  .override-input:focus { border-color: var(--cyan); box-shadow: 0 0 10px #00ffcc22; }
+  .override-input::placeholder { color: #00ffcc33; }
+  .hud-btn {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--cyan);
+    padding: 8px 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .hud-btn:hover { background: #00ffcc18; box-shadow: 0 0 12px #00ffcc22; }
+  .hud-btn.danger { border-color: #ff224455; color: var(--red); }
+  .hud-btn.danger:hover { background: #ff224415; box-shadow: 0 0 12px #ff224422; }
+
+  /* ── Log table ── */
+  .log-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+  .log-table th {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    color: #00ffcc66;
+    border-bottom: 1px solid var(--border);
+    padding: 6px 8px;
+    text-align: left;
+  }
+  .log-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #00ffcc11;
+    color: #00ffccaa;
+  }
+  .log-table tr:hover td { background: #00ffcc08; }
+  .log-allowed { color: var(--green); }
+  .log-denied  { color: var(--red); }
+
+  /* ── Voice ring ── */
+  #voiceRing {
+    width: 80px; height: 80px; border-radius: 50%;
+    border: 2px solid #00ffcc44;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; position: relative;
+    transition: all 0.3s;
+    box-shadow: 0 0 20px #00ffcc22;
+    margin: 0 auto;
+  }
+  #ringPulse {
+    position: absolute; inset: -6px; border-radius: 50%;
+    border: 1px solid #00ffcc22;
+    animation: ring-idle 2.5s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: #00ffcc33; border-radius: 4px; }
+
+  /* ── Lock overlay ── */
+  #lockScreen {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    z-index: 10000;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 16px;
+  }
+  .lock-title {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(1.6rem, 4vw, 3rem);
+    color: var(--red);
+    text-shadow: 0 0 30px var(--red), 0 0 60px #ff000066;
+    animation: flicker 1.5s infinite alternate;
+    letter-spacing: 0.12em;
+  }
+  .lock-sub { font-size: 0.85rem; color: #ff6677; letter-spacing: 0.2em; text-align: center; }
+
+  /* ── Animations ── */
+  @keyframes pulse-glow {
+    0%, 100% { text-shadow: 0 0 20px var(--cyan), 0 0 40px #00ffcc44; }
+    50%       { text-shadow: 0 0 30px var(--cyan), 0 0 80px #00ffcc88, 0 0 120px #00ffcc22; }
+  }
+  @keyframes badge-pulse {
+    0%, 100% { box-shadow: 0 0 16px var(--cyan); }
+    50%       { box-shadow: 0 0 28px var(--cyan), 0 0 50px #00ffcc44; }
+  }
+  @keyframes badge-pulse-red {
+    0%, 100% { box-shadow: 0 0 16px var(--red); }
+    50%       { box-shadow: 0 0 40px var(--red), 0 0 70px #ff224444; }
+  }
+  @keyframes ring-idle {
+    0%, 100% { transform: scale(1); opacity: 0.3; }
+    50%       { transform: scale(1.15); opacity: 0.6; }
+  }
+  @keyframes ring-listen {
+    0%, 100% { transform: scale(1);    opacity: 1; border-color: #ff2244; }
+    50%       { transform: scale(1.25); opacity: 0.7; border-color: #ff2244; }
+  }
+  @keyframes flicker {
+    0% { opacity: 1; } 85% { opacity: 1; } 90% { opacity: 0.35; } 95% { opacity: 1; } 100% { opacity: 0.8; }
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .fade-in { animation: fadeIn 0.35s ease forwards; }
+
+  /* ── Diagnostics accordion ── */
+  .diag-toggle {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--amber);
+    background: transparent;
+    border: 1px solid #ffaa0033;
+    border-radius: 3px;
+    padding: 4px 10px;
+    cursor: pointer;
+    margin-top: 8px;
+    width: 100%;
+    text-align: left;
+    transition: background 0.2s;
+  }
+  .diag-toggle:hover { background: #ffaa0010; }
+  .diag-panel {
+    display: none;
+    font-size: 0.7rem;
+    color: #00ffcc88;
+    margin-top: 6px;
+    line-height: 1.7;
+    padding: 8px;
+    background: #00ffcc06;
+    border-radius: 3px;
+    border: 1px solid #00ffcc15;
+  }
+  .diag-panel.open { display: block; }
+  .diag-cause { color: #ffaa0099; display: block; margin-top: 2px; }
+
+  /* ── Tooltip tag ── */
+  .pi-ip-tag {
+    font-size: 0.6rem; color: #00ffcc44; letter-spacing: 0.1em;
+    text-align: center; margin-top: 2px;
+  }
+
+  /* ── connection dot ── */
+  .conn-dot {
+    display: inline-block;
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--amber);
+    margin-right: 6px;
+    box-shadow: 0 0 6px var(--amber);
+    animation: badge-pulse 1.5s infinite;
+  }
+  .conn-dot.online  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .conn-dot.offline { background: var(--red);   box-shadow: 0 0 6px var(--red); animation: badge-pulse-red 1.5s infinite; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     LOCK SCREEN OVERLAY
+════════════════════════════════════════ -->
+<div id="lockScreen" style="display:none;">
+  <div class="lock-title">🔒 SYSTEM LOCKED</div>
+  <div class="lock-sub">RFID SENTRY ACTIVE — TAP MASTER CARD OR USE OVERRIDE</div>
+  <hr style="border-color: var(--border); width: 320px; box-shadow: 0 0 8px #00ffcc44;">
+  <div style="width:320px;">
+    <input id="lockInput" class="override-input" type="password" placeholder="Enter manual override key...">
+    <button class="hud-btn" style="width:100%;" onclick="tryUnlock()">◈ SUBMIT OVERRIDE</button>
+    <div id="lockMsg" style="margin-top:8px; font-size:0.75rem; min-height:18px; text-align:center;"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     MAIN DASHBOARD
+════════════════════════════════════════ -->
+<div id="mainDash" class="p-4 max-w-screen-2xl mx-auto">
+
+  <!-- Header -->
+  <div class="mb-3">
+    <div class="jarvis-title">J.A.R.V.I.S</div>
+    <div class="jarvis-sub">JUST A RATHER VERY INTELLIGENT SYSTEM &nbsp;|&nbsp; HUD v2.0</div>
+    <div class="pi-ip-tag" id="piIpTag">DATA ENDPOINT: —</div>
+  </div>
+  <hr class="hud-divider">
+
+  <!-- Row 1: Voice + Telemetry -->
+  <div class="flex flex-col md:flex-row gap-4 mb-4">
+
+    <!-- Voice Interface -->
+    <div style="flex:0 0 auto; min-width:220px;">
+      <div class="hud-section">◈ VOICE INTERFACE</div>
+      <div class="hud-panel" style="text-align:center; padding:18px 16px;">
+        <div id="voiceRing" onclick="startVoice()" title="Click to speak">
+          <div id="ringPulse"></div>
+          <span id="micIcon" style="font-size:26px; user-select:none;">🎙️</span>
+        </div>
+        <div id="micStatus" style="font-size:11px; color:#00ffcc88; letter-spacing:0.2em; text-transform:uppercase; margin-top:8px;">
+          NEURAL LINK: INITIALIZING...
+        </div>
+        <div id="lastTransmit" style="font-size:10px; color:#00ffcc44; letter-spacing:0.1em; min-height:14px; margin-top:4px; word-break:break-word;"></div>
+        <div style="margin-top:10px;">
+          <span class="conn-dot" id="wsDot"></span>
+          <span id="wsLabel" style="font-size:0.6rem; color:#00ffcc55; letter-spacing:0.15em;">WS CONNECTING</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Telemetry -->
+    <div style="flex:1;">
+      <div class="hud-section">◈ SYSTEM TELEMETRY</div>
+      <div class="flex items-center gap-3 mb-3 flex-wrap">
+        <span class="status-badge" id="statusBadge">● IDLE</span>
+        <span style="font-size:0.6rem; color:#00ffcc44; letter-spacing:0.15em;" id="lastFetch">—</span>
+      </div>
+      <div class="flex gap-3 flex-wrap">
+        <div class="metric-card">
+          <div class="metric-label">CPU</div>
+          <div class="metric-value" id="metCpu">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">RAM</div>
+          <div class="metric-value" id="metRam">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">TEMP</div>
+          <div class="metric-value" id="metTemp">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">UPTIME</div>
+          <div class="metric-value" id="metUptime">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Core Output -->
+  <div class="mb-4">
+    <div class="hud-section">◈ CORE OUTPUT</div>
+    <div style="font-family:'Orbitron',monospace; font-size:0.55rem; color:#00ffcc55; letter-spacing:0.3em; margin-bottom:4px;">LAST RESPONSE</div>
+    <div class="core-output" id="coreOutput">Awaiting core output...</div>
+  </div>
+
+  <hr class="hud-divider">
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('tab-rfid',   this)">◈ RFID SENTRY</button>
+    <button class="tab-btn"        onclick="switchTab('tab-sensors', this)">◈ SENSOR NETWORK</button>
+    <button class="tab-btn"        onclick="switchTab('tab-terminal',this)">◈ TERMINAL</button>
+  </div>
+
+  <!-- ── TAB: RFID ── -->
+  <div id="tab-rfid">
+    <div class="flex flex-col md:flex-row gap-4 mb-4">
+
+      <!-- Vault status + controls -->
+      <div style="flex:1;">
+        <div class="hud-section">◈ VAULT STATUS</div>
+        <span class="status-badge unlocked" id="vaultBadge">🔓 SYSTEM UNLOCKED</span>
+        <div class="mt-4">
+          <div class="hud-section">◈ VIRTUAL OVERRIDE</div>
+          <div class="hud-panel" style="display:flex; flex-direction:column; gap:8px;">
+            <div style="font-size:0.75rem; color:#00ffcc77;">Send lock/unlock command to Pi endpoint.</div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="hud-btn danger" onclick="sendLock(true)">🔒 LOCK SYSTEM</button>
+              <button class="hud-btn" onclick="sendLock(false)">🔓 UNLOCK SYSTEM</button>
+            </div>
+            <div id="lockActionMsg" style="font-size:0.72rem; min-height:16px; color: var(--amber);"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- System info -->
+      <div style="flex:1;">
+        <div class="hud-section">◈ SYSTEM INFO</div>
+        <div class="hud-panel" style="font-size:0.75rem; line-height:2.2; color:#00ffcc88;">
+          VAULT STATE &nbsp;: &nbsp;<span id="infoVaultState" style="color: var(--green);">UNLOCKED</span><br>
+          RFID SENTRY &nbsp;: &nbsp;<span style="color: var(--cyan);">ACTIVE</span><br>
+          AUTH METHOD &nbsp;: &nbsp;<span style="color: var(--cyan);">RFID + PASSWORD</span><br>
+          DATA SOURCE &nbsp;: &nbsp;<span id="infoEndpoint" style="color:#00ffcc66; word-break:break-all;">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Register card -->
+    <div class="hud-section">◈ REGISTER CARD</div>
+    <div class="hud-panel mb-4" style="max-width:520px;">
+      <div class="flex gap-3 flex-wrap">
+        <input id="newUid" class="override-input" style="flex:1; min-width:140px; margin-bottom:0;" placeholder="Card UID (e.g. A3:FF:12:BC)">
+        <input id="newName" class="override-input" style="flex:1; min-width:120px; margin-bottom:0;" placeholder="User Name">
+        <button class="hud-btn" onclick="registerCard()">➕ REGISTER</button>
+      </div>
+      <div id="regMsg" style="font-size:0.72rem; margin-top:8px; min-height:16px; color: var(--green);"></div>
+    </div>
+
+    <!-- Scan history -->
+    <div class="hud-section">◈ RECENT SCAN HISTORY</div>
+    <div class="hud-panel" style="overflow-x:auto;">
+      <table class="log-table">
+        <thead>
+          <tr>
+            <th>TIMESTAMP</th>
+            <th>UID</th>
+            <th>USER</th>
+            <th>RESULT</th>
+          </tr>
+        </thead>
+        <tbody id="rfidLog">
+          <tr><td colspan="4" style="color:#00ffcc33; text-align:center; padding:20px;">NO SCAN EVENTS RECORDED</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── TAB: SENSORS ── -->
+  <div id="tab-sensors" style="display:none;">
+    <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+      <div class="hud-section" style="margin-bottom:0;">◈ LIVE HYBRID SENSOR STREAM</div>
+      <button class="hud-btn" onclick="fetchData()">🔄 REFRESH</button>
+    </div>
+    <div id="sensorGrid" class="grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));">
+      <div style="color:#00ffcc33; font-size:0.8rem; text-align:center; padding:30px; grid-column:1/-1;">
+        AWAITING SENSOR DATA...
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB: TERMINAL ── -->
+  <div id="tab-terminal" style="display:none;">
+    <div class="hud-section">◈ MANUAL OVERRIDE TERMINAL</div>
+    <div class="hud-panel mb-3" id="terminalLog" style="min-height:180px; max-height:340px; overflow-y:auto; font-size:0.82rem; line-height:1.8;">
+      <span style="color:#00ffcc44;">— TERMINAL READY —</span>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <span style="color:#00ffcc66; font-size:0.85rem;">↳</span>
+      <input id="cmdInput" class="override-input" style="flex:1; margin-bottom:0;" placeholder="enter command directive..." onkeydown="if(event.key==='Enter') sendCmd()">
+      <button class="hud-btn" onclick="sendCmd()">TRANSMIT</button>
+    </div>
+  </div>
+
+</div><!-- /mainDash -->
+
+<script>
+    async function discoverPi() {
+    const potentialIps = ['raspberrypi.local', '192.168.0.8', '192.168.1.100'];
+    
+    for (let ip of potentialIps) {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 500); // Quick 500ms ping
+            
+            const response = await fetch(`http://${ip}:8080/data`, { signal: controller.signal });
+            if (response.ok) {
+                console.log(`✅ JARVIS Found at: ${ip}`);
+                return ip;
+            }
+        } catch (e) {
+            continue;
+        }
+    }
+    return null;
+}
+// ════════════════════════════════════════
+// CONFIG — edit PI_IP to match your device
+// ════════════════════════════════════════
+// This tells the browser to look for the Pi by name, not by a specific IP
+const PI_IP   = 'raspberrypi.local'; 
+const HTTP    = `http://${PI_IP}:8080`;
+const WS_URL  = `ws://${PI_IP}:8765`;
+const LOCKED_PASS = 'DJ123';   // manual override password
+
+// Show endpoint info
+document.getElementById('piIpTag').textContent     = `DATA ENDPOINT: ${HTTP}/data`;
+document.getElementById('infoEndpoint').textContent = `${HTTP}/data`;
+
+// ════════════════════════════════════════
+// LOCK SCREEN
+// ════════════════════════════════════════
+function checkLockState(locked) {
+  const ls = document.getElementById('lockScreen');
+  const md = document.getElementById('mainDash');
+  if (locked) { ls.style.display = 'flex'; md.style.display = 'none'; }
+  else         { ls.style.display = 'none'; md.style.display = 'block'; }
+}
+
+function tryUnlock() {
+  const val = document.getElementById('lockInput').value;
+  const msg = document.getElementById('lockMsg');
+  if (val === LOCKED_PASS) {
+    msg.style.color = 'var(--green)';
+    msg.textContent = '✅ OVERRIDE ACCEPTED. WELCOME BACK, DJ.';
+    // POST unlock to Pi
+    fetch(`${HTTP}/lock`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({locked:false}) }).catch(()=>{});
+    setTimeout(() => checkLockState(false), 800);
+  } else if (val) {
+    msg.style.color = 'var(--red)';
+    msg.textContent = '❌ ACCESS DENIED';
+  }
+}
+document.getElementById('lockInput').addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
+
+// ════════════════════════════════════════
+// TABS
+// ════════════════════════════════════════
+function switchTab(id, btn) {
+  ['tab-rfid','tab-sensors','tab-terminal'].forEach(t => {
+    document.getElementById(t).style.display = (t === id) ? 'block' : 'none';
+  });
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ════════════════════════════════════════
+// WEBSOCKET — ripped directly from dashboard.py JS
+// ════════════════════════════════════════
+let retryDelay = 1000;
+let jarvisWs;
+
+function connectWS() {
+  const dot   = document.getElementById('wsDot');
+  const label = document.getElementById('wsLabel');
+
+  jarvisWs = new WebSocket(WS_URL);
+
+  jarvisWs.onopen = function() {
+    dot.className   = 'conn-dot online';
+    label.textContent = 'WS ONLINE';
+    document.getElementById('micStatus').textContent  = 'NEURAL LINK: ONLINE';
+    document.getElementById('micStatus').style.color  = '#00ffcc';
+    retryDelay = 1000;
+  };
+
+  jarvisWs.onmessage = function(e) {
+    const synth = window.speechSynthesis;
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(e.data);
+    const voices = synth.getVoices();
+    u.voice = voices.find(v => v.name.includes('UK English') || v.name.includes('Google US')) || voices[0];
+    u.pitch = 0.85; u.rate = 1.05;
+    synth.speak(u);
+    // echo to core output
+    document.getElementById('coreOutput').textContent = e.data;
+    // echo to terminal
+    termLog(`[WS RX] ${e.data}`, 'var(--cyan)');
+  };
+
+  jarvisWs.onclose = function() {
+    dot.className   = 'conn-dot offline';
+    label.textContent = 'WS OFFLINE';
+    document.getElementById('micStatus').textContent = 'NEURAL LINK: RECONNECTING...';
+    document.getElementById('micStatus').style.color = 'var(--amber)';
+    setTimeout(connectWS, retryDelay);
+    retryDelay = Math.min(retryDelay * 2, 10000);
+  };
+
+  jarvisWs.onerror = function() {
+    dot.className = 'conn-dot offline';
+  };
+}
+connectWS();
+
+// ════════════════════════════════════════
+// VOICE — ripped directly from dashboard.py JS
+// ════════════════════════════════════════
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+function startVoice() {
+  if (!SpeechRecognition) {
+    document.getElementById('micStatus').textContent = 'USE CHROME FOR VOICE SUPPORT';
+    return;
+  }
+  const ring   = document.getElementById('voiceRing');
+  const pulse  = document.getElementById('ringPulse');
+  const status = document.getElementById('micStatus');
+  const lastTx = document.getElementById('lastTransmit');
+
+  ring.style.borderColor = '#ff2244';
+  ring.style.boxShadow   = '0 0 30px #ff224466';
+  pulse.style.animation  = 'ring-listen 0.8s ease-in-out infinite';
+  pulse.style.borderColor= '#ff2244';
+  status.textContent     = 'LISTENING...';
+  status.style.color     = '#ff2244';
+
+  const rec = new SpeechRecognition();
+  rec.continuous = false;
+  rec.lang = 'en-US';
+
+  rec.onresult = function(event) {
+    const t = event.results[0][0].transcript;
+    lastTx.textContent  = 'TX: ' + t;
+    status.textContent  = 'TRANSMITTED';
+    status.style.color  = '#00ffcc';
+    ring.style.borderColor = '#00ffcc44';
+    ring.style.boxShadow   = '0 0 20px #00ffcc22';
+    pulse.style.animation  = 'ring-idle 2.5s ease-in-out infinite';
+    pulse.style.borderColor= '#00ffcc22';
+    if (jarvisWs && jarvisWs.readyState === WebSocket.OPEN) {
+      jarvisWs.send(t);
+    }
+    termLog(`[TX VOICE] ${t}`, 'var(--amber)');
+  };
+
+  rec.onerror = function(e) {
+    status.textContent  = 'MIC ERROR: ' + e.error.toUpperCase();
+    status.style.color  = '#ff2244';
+    ring.style.borderColor = '#00ffcc44';
+    ring.style.boxShadow   = '0 0 20px #00ffcc22';
+    pulse.style.animation  = 'ring-idle 2.5s ease-in-out infinite';
+  };
+
+  rec.start();
+}
+
+// ════════════════════════════════════════
+// DATA FETCH — polls http://[PI_IP]:8080/data every 1s
+// ════════════════════════════════════════
+const DIAGNOSTICS = {
+  distance:     { wiring:'HC-SR04 (Ard1): VCC→5V | GND→GND | Trig→Pin9 | Echo→Pin10', causes:['ECHO FAILURE: Wires swapped (Trig/Echo reversed).','POWER STARVATION: Sensor receiving <4.5V.','ACOUSTIC INTERFERENCE: Too close to flat surface.'] },
+  temp_humidity:{ wiring:'BME280 (Ard1): VCC→3.3V | GND→GND | SCL→A5 | SDA→A4',      causes:['I2C ADDRESS MISMATCH: Module on 0x76, code expects 0x77.','PROTOCOL CONFLICT: SDA/SCL swapped.'] },
+  motion:       { wiring:'PIR (Ard1): VCC→5V | GND→GND | OUT→Pin2',                   causes:['Time Delay dial too high.','Sensitivity dial too low.'] },
+  vibration:    { wiring:'LM358P (Ard2): VCC→Pin8 | GND→Pin4 | Piezo+→Pin3 | OUT→A0', causes:['GAIN SATURATION: Potentiometer too high.','FLOATING INPUT: Piezo GND disconnected.'] },
+  combustible:  { wiring:'MQ-2 (Ard2): VCC→5V | GND→GND | A0→A1',                     causes:['THERMAL COLLAPSE: 4 MQ sensors brownout Arduino 5V reg.','BURN-IN REQUIRED: Heater needs 24-48h burn-in.','FLOATING PIN: A0 wire unplugged, reading RF noise.','SENSOR POISONING: Exposed to silicone vapors.','COLD START: Taken before 3-min warm-up.'] },
+  alcohol:      { wiring:'MQ-3 (Ard2): VCC→5V | GND→GND | A0→A2',                     causes:['THERMAL COLLAPSE','BURN-IN REQUIRED','FLOATING PIN','SENSOR POISONING','COLD START'] },
+  methane:      { wiring:'MQ-4 (Ard2): VCC→5V | GND→GND | A0→A3',                     causes:['THERMAL COLLAPSE','BURN-IN REQUIRED','FLOATING PIN','SENSOR POISONING','COLD START'] },
+  air_quality:  { wiring:'MQ-135 (Ard2): VCC→5V | GND→GND | A0→A4',                   causes:['THERMAL COLLAPSE','BURN-IN REQUIRED','FLOATING PIN','SENSOR POISONING','COLD START'] }
+};
+
+let fetchOk = false;
+
+async function fetchData() {
+  try {
+    const res  = await fetch(`${HTTP}/data`, { signal: AbortSignal.timeout(4000) });
+    const data = await res.json();
+    fetchOk = true;
+    renderData(data);
+  } catch (e) {
+    fetchOk = false;
+    document.getElementById('metCpu').textContent  = '—';
+    document.getElementById('metRam').textContent  = '—';
+    document.getElementById('metTemp').textContent = '—';
+  }
+  const badge = document.getElementById('statusBadge');
+  badge.classList.toggle('locked', !fetchOk);
+  document.getElementById('lastFetch').textContent = `LAST SYNC: ${new Date().toLocaleTimeString()}`;
+}
+
+function renderData(d) {
+  // Telemetry
+  const h = (d.telemetry || {}).system_health || d.system_health || {};
+  document.getElementById('metCpu').textContent    = h.cpu_load   || h.cpu   || '—';
+  document.getElementById('metRam').textContent    = h.ram_used   || h.ram   || '—';
+  document.getElementById('metTemp').textContent   = h.temp       || '—';
+  document.getElementById('metUptime').textContent = h.uptime     || '—';
+
+  const status = d.status || 'IDLE';
+  const badge  = document.getElementById('statusBadge');
+  badge.textContent = '● ' + status;
+  badge.className   = 'status-badge' + (status === 'LOCKED' ? ' locked' : '');
+
+  if (d.last_response) {
+    document.getElementById('coreOutput').textContent = d.last_response;
+  }
+
+  // Lock state
+  if (d.vault_locked !== undefined) {
+    checkLockState(d.vault_locked);
+    const vb = document.getElementById('vaultBadge');
+    const vs = document.getElementById('infoVaultState');
+    if (d.vault_locked) {
+      vb.textContent = '🔒 SYSTEM LOCKED';
+      vb.className   = 'status-badge locked';
+      vs.textContent = 'LOCKED'; vs.style.color = 'var(--red)';
+    } else {
+      vb.textContent = '🔓 SYSTEM UNLOCKED';
+      vb.className   = 'status-badge unlocked';
+      vs.textContent = 'UNLOCKED'; vs.style.color = 'var(--green)';
+    }
+  }
+
+  // RFID log
+  if (Array.isArray(d.rfid_logs)) renderRfidLog(d.rfid_logs);
+
+  // Sensors
+  if (d.sensor_state || d.sensors) renderSensors(d.sensor_state || d.sensors, d.sensor_registry || d.registry || {});
+}
+
+function renderRfidLog(logs) {
+  const tbody = document.getElementById('rfidLog');
+  if (!logs.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="color:#00ffcc33; text-align:center; padding:20px;">NO SCAN EVENTS RECORDED</td></tr>';
+    return;
+  }
+  tbody.innerHTML = [...logs].reverse().slice(0,40).map(l => `
+    <tr>
+      <td>${l.timestamp || l.time || '—'}</td>
+      <td style="font-family:'Orbitron',monospace; font-size:0.68rem;">${l.uid || '—'}</td>
+      <td>${l.user || l.name || 'UNKNOWN'}</td>
+      <td class="${(l.result||l.status||'').toLowerCase().includes('deny') ? 'log-denied' : 'log-allowed'}">${l.result || l.status || '—'}</td>
+    </tr>`).join('');
+}
+
+function renderSensors(state, registry) {
+  const grid = document.getElementById('sensorGrid');
+  const keys = Object.keys(state || {});
+  if (!keys.length) {
+    grid.innerHTML = '<div style="color:#00ffcc33; font-size:0.8rem; text-align:center; padding:30px; grid-column:1/-1;">NO SENSORS REGISTERED</div>';
+    return;
+  }
+  grid.innerHTML = keys.map(name => {
+    const sd   = state[name] || {};
+    const meta = (registry[name] || {});
+    const status = (sd.status || 'OFFLINE').toUpperCase();
+    const isOff  = status === 'OFFLINE';
+    const diag   = DIAGNOSTICS[meta.type || name] || { wiring:'No config found.', causes:['General failure — check connections.'] };
+
+    if (isOff) {
+      return `
+        <div class="sensor-card offline">
+          <div class="sensor-name">${name}</div>
+          <div class="sensor-offline-label">◈ OFFLINE</div>
+          <button class="diag-toggle" onclick="toggleDiag(this)">🛠 AI DIAGNOSTICS ▸</button>
+          <div class="diag-panel">
+            <span style="color:#00ffcc66;">${diag.wiring}</span>
+            <span style="font-family:'Orbitron',monospace; font-size:0.55rem; color:#00ffcc44; letter-spacing:0.2em; display:block; margin:6px 0 2px;">◈ DIAGNOSED CAUSES</span>
+            ${diag.causes.map(c => `<span class="diag-cause">▸ ${c}</span>`).join('')}
+          </div>
+        </div>`;
+    }
+
+    const display = meta.display || 'number';
+    if (display === 'status') {
+      const isMotion = sd.motion === true || sd.motion === 'true';
+      return `
+        <div class="sensor-card">
+          <div class="sensor-name">${name}</div>
+          ${isMotion
+            ? '<div class="motion-alert">⚡ MOTION DETECTED</div>'
+            : '<div class="motion-clear">✅ CLEAR</div>'}
+        </div>`;
+    }
+
+    const vals = Object.entries(sd).filter(([k]) => k !== 'status').map(([,v]) => v).join(' / ') || 'N/A';
+    return `
+      <div class="sensor-card">
+        <div class="sensor-name">${name}</div>
+        <div class="sensor-iface">${(meta.interface||'').toUpperCase()}</div>
+        <span class="sensor-value">${vals}</span><span class="sensor-unit">${meta.unit||''}</span>
+      </div>`;
+  }).join('');
+}
+
+function toggleDiag(btn) {
+  const panel = btn.nextElementSibling;
+  panel.classList.toggle('open');
+  btn.textContent = panel.classList.contains('open') ? '🛠 AI DIAGNOSTICS ▾' : '🛠 AI DIAGNOSTICS ▸';
+}
+
+// ════════════════════════════════════════
+// LOCK CONTROL
+// ════════════════════════════════════════
+async function sendLock(locked) {
+  const msg = document.getElementById('lockActionMsg');
+  msg.style.color = 'var(--amber)';
+  msg.textContent = 'TRANSMITTING...';
+  try {
+    await fetch(`${HTTP}/lock`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ locked })
+    });
+    msg.style.color = 'var(--green)';
+    msg.textContent = locked ? '🔒 LOCK COMMAND SENT' : '🔓 UNLOCK COMMAND SENT';
+    setTimeout(() => fetchData(), 400);
+  } catch (e) {
+    msg.style.color = 'var(--red)';
+    msg.textContent = '❌ ENDPOINT UNREACHABLE';
+  }
+  setTimeout(() => { msg.textContent = ''; }, 3000);
+}
+
+// ════════════════════════════════════════
+// CARD REGISTER
+// ════════════════════════════════════════
+async function registerCard() {
+  const uid  = document.getElementById('newUid').value.trim();
+  const name = document.getElementById('newName').value.trim();
+  const msg  = document.getElementById('regMsg');
+  if (!uid || !name) { msg.style.color='var(--red)'; msg.textContent='⚠ UID AND NAME REQUIRED'; return; }
+  try {
+    await fetch(`${HTTP}/register_card`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid, name })
+    });
+    msg.style.color = 'var(--green)';
+    msg.textContent = `✅ ${name.toUpperCase()} REGISTERED IN VAULT`;
+    document.getElementById('newUid').value  = '';
+    document.getElementById('newName').value = '';
+  } catch {
+    msg.style.color = 'var(--red)';
+    msg.textContent = '❌ FAILED TO REACH ENDPOINT';
+  }
+  setTimeout(() => { msg.textContent = ''; }, 3000);
+}
+
+// ════════════════════════════════════════
+// TERMINAL
+// ════════════════════════════════════════
+function termLog(text, color='var(--cyan)') {
+  const log = document.getElementById('terminalLog');
+  const line = document.createElement('div');
+  line.style.color = color;
+  line.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+}
+
+function sendCmd() {
+  const inp = document.getElementById('cmdInput');
+  const cmd = inp.value.trim();
+  if (!cmd) return;
+  termLog(`↳ ${cmd}`, 'var(--amber)');
+  inp.value = '';
+  if (jarvisWs && jarvisWs.readyState === WebSocket.OPEN) {
+    jarvisWs.send(cmd);
+    termLog('[WS TX] COMMAND DISPATCHED', '#00ffcc66');
+  } else {
+    termLog('[WS] NOT CONNECTED — ATTEMPTING HTTP FALLBACK', 'var(--red)');
+    fetch(`${HTTP}/command`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ command: cmd })
+    })
+    .then(r => r.json())
+    .then(d => termLog('[HTTP RX] ' + (d.response || JSON.stringify(d)), 'var(--cyan)'))
+    .catch(() => termLog('[HTTP] ENDPOINT UNREACHABLE', 'var(--red)'));
+  }
+}
+document.getElementById('cmdInput').addEventListener('keydown', e => { if (e.key === 'Enter') sendCmd(); });
+
+// ════════════════════════════════════════
+// POLL LOOP — 1s interval
+// ════════════════════════════════════════
+fetchData();
+setInterval(fetchData, 1000);
+</script>
+</body>
+</html>
