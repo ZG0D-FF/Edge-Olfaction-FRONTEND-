@@ -677,13 +677,14 @@ const FeatureFlags = {
     </p>
     <div class="divider" style="margin: 1.2rem auto;"></div>
     <div class="team-byline">
-      Presented by &nbsp; DIBYAJYOTEE GHOSH &nbsp;·&nbsp; SHARMIK SEN<br>
+      Presented by &nbsp; DIBYAJYOTEE GHOSH &nbsp;·&nbsp; SHARMIK SEN &nbsp;·&nbsp; PROF. RIMI SENGUPTA<br>
       <span style="opacity:0.55;">Electronics &amp; Communication Engineering — TECHTRONIX</span>
     </div>
     <div style="margin-top:2.4rem; display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
       <span class="tag">ARDUINO UNO</span>
       <span class="tag">RASPBERRY PI 3B+</span>
       <span class="tag">MQ SENSOR ARRAY</span>
+      <span class="tag">PIEZO-ELECTRIC DISCS</span>
       <span class="tag">EDGE AI</span>
     </div>
   </section>
@@ -883,6 +884,14 @@ const FeatureFlags = {
         </div>
       </div>
     </div>
+    <div class="explain-overlay">
+      <div class="explain-title">⚠️ Deep Dive: The Connectivity Bottleneck</div>
+      <div class="explain-text">
+        <p><strong>Note for the Panel:</strong> The logistics industry requires a paradigm shift—moving from passively "keeping food on ice" to using predictive smart sensors that warn us before decay is even visible.</p>
+        <br>
+        <p><strong>Why Cloud IoT Fails Here:</strong> Centralized architectures suffer from high latency, bandwidth bottlenecks, and single points of failure, particularly in rural transit corridors prone to network dead-zones. This makes our offline Edge architecture a necessity, not just an alternative.</p>
+      </div>
+    </div>
   </section>
 
   <!-- ============ SLIDE 6: COMPETITIVE LANDSCAPE ============ -->
@@ -918,6 +927,14 @@ const FeatureFlags = {
         <div class="quad-dot" style="left:28%; top:28%; background:var(--accent); width:18px; height:18px; box-shadow:0 0 12px var(--accent);">
           <div class="quad-dot-label" style="color:var(--accent); font-weight:700;">Edge-Olfaction ★</div>
         </div>
+      </div>
+    </div>
+    <div class="explain-overlay">
+      <div class="explain-title">⚔️ Deep Dive: The Algorithmic Moat</div>
+      <div class="explain-text">
+        <p><strong>Note for the Panel:</strong> What separates our hardware from expensive Cloud IoT is our algorithmic efficiency on the edge.</p>
+        <br>
+        <p>We specifically fuse <strong>Arrhenius reaction kinetics</strong> with <strong>non-linear environmental drift compensation</strong> and our custom cubic decay estimation algorithm. This allows a standard Raspberry Pi to execute the predictive logic of a cloud cluster, natively.</p>
       </div>
     </div>
   </section>
@@ -989,6 +1006,14 @@ const FeatureFlags = {
       </div>
     </div> <div class="slide-body" style="text-align:center; margin-top:1.4rem; font-size:0.9rem; color:var(--muted);">
       ECE Department · IEEE documentation standards · Academic oversight
+    </div>
+    <div class="explain-overlay">
+      <div class="explain-title">🎓 Deep Dive: Departmental Objectives</div>
+      <div class="explain-text">
+        <p><strong>Note for the Panel:</strong> This architecture directly aligns with the ECE department's focus on practical IoT applications and resilient edge AI deployment.</p>
+        <br>
+        <p><strong>The Core Proof:</strong> We are demonstrating that complex data pipelines and predictive mathematical models do not require heavy, expensive external dependencies or cloud databases to function effectively in real-world electrical engineering.</p>
+      </div>
     </div>
   </section>
 
@@ -1157,6 +1182,88 @@ function triggerSlideAnimations(idx) {
       gsap.to('.g3', { left: "100%", duration: 1.2, repeat: -1, ease: "none", delay: 0.8 });
     });
   }
+  // Slide 5: Market Opportunity (Live HUD Render)
+
+  if (idx === 5) {
+    const canvas = document.getElementById('donut-canvas');
+    if (!canvas || !window.gsap) return;
+    const ctx = canvas.getContext('2d');
+    const cx = 110, cy = 110, r = 80, ir = 60; 
+
+    const slices = [
+      { pct: 0.52, color: '#00e5ff' },       
+      { pct: 0.28, color: 'rgba(0, 229, 255, 0.15)' }, 
+      { pct: 0.20, color: '#64ffda' }        
+    ];
+
+    // Target the legend items
+    const legends = slide.querySelectorAll('.two-col > div:nth-child(2) > div > div');
+    gsap.set(legends, { opacity: 0, x: -15 });
+
+    // 1. INSTANTLY WIPE THE CANVAS so it's blank when the slide opens
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 2. THE PROXY OBJECT
+    const proxy = { progress: 0 };
+    gsap.killTweensOf(proxy);
+
+    // 3. FORCE IT FROM 0 TO 1 WITH A DELAY
+    gsap.fromTo(proxy, 
+      { progress: 0 }, 
+      {
+        progress: 1,
+        duration: 1.8,
+        ease: "power2.out",
+        delay: 0.6, // <--- THE FIX: Waits for the slide to fully fade in first!
+        onUpdate: () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          let angle = -Math.PI / 2; 
+
+          // Background targeting ring
+          ctx.beginPath();
+          ctx.arc(cx, cy, r + 6, 0, 2 * Math.PI);
+          ctx.strokeStyle = `rgba(0, 229, 255, ${proxy.progress * 0.3})`;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          // Live animated data slices
+          slices.forEach(s => {
+            const currentPct = s.pct * proxy.progress;
+            const end = angle + (currentPct * 2 * Math.PI);
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, r, angle, end);
+            ctx.closePath();
+            ctx.fillStyle = s.color;
+            ctx.fill();
+            angle = end;
+          });
+
+          // Inner cutout
+          ctx.beginPath();
+          ctx.arc(cx, cy, ir, 0, 2 * Math.PI);
+          ctx.fillStyle = '#020c18'; 
+          ctx.fill();
+
+          // Live glitch-count percent counter
+          const livePercent = Math.floor(proxy.progress * 100);
+          ctx.fillStyle = '#00e5ff';
+          ctx.font = 'bold 22px "Orbitron", sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`${livePercent}%`, cx, cy - 10);
+
+          ctx.fillStyle = 'rgba(0,229,255,0.4)';
+          ctx.font = '11px "Share Tech Mono", monospace';
+          ctx.fillText('TAM COMPILED', cx, cy + 14);
+        },
+        onComplete: () => {
+          // Fade in the legend stats only after the circle finishes drawing
+          gsap.to(legends, { opacity: 1, x: 0, duration: 0.4, stagger: 0.15, ease: "back.out(2)" });
+        }
+      }
+    );
+  }
 
   // Slide 9 (The Ask): Dynamic Budget Bars
   if (idx === 9) {
@@ -1197,34 +1304,6 @@ function triggerSlideAnimations(idx) {
 }
 
 // =========================
-// ⌨️ KEYBOARD EVENTS
-// =========================
-document.addEventListener('keydown', (e) => {
-  switch(e.key) {
-    case 'ArrowRight': case 'ArrowDown': case ' ':
-      e.preventDefault(); navigate(1); break;
-    case 'ArrowLeft': case 'ArrowUp':
-      e.preventDefault(); navigate(-1); break;
-    case 'F5': case 'p': case 'P':
-      e.preventDefault(); toggleFullscreen(); break;
-    case 'Tab': case 'o': case 'O':
-      e.preventDefault(); toggleOverview(); break;
-    case 'Escape': closeOverview(); break;
-    case 'a': case 'A': toggleAutoplay(); break;
-    case 'd': case 'D': togglePerfMonitor(); break;
-    // Add this inside the switch(e.key) statement:
-    case 'e': case 'E':
-      e.preventDefault(); 
-      document.body.classList.toggle('explain-active');
-      break;
-    case 'c': case 'C':
-      e.preventDefault();
-      document.body.classList.toggle('cinematic');
-      break;
-  }
-});
-
-// =========================
 // 🖱️ TOUCH SWIPE
 // =========================
 let touchStartX = 0;
@@ -1246,9 +1325,9 @@ function toggleFullscreen() {
 }
 
 // =========================
-// 📋 OVERVIEW MODE
+// 🖥️ UI FUNCTIONS (REPAIRED)
 // =========================
-function buildOverview() {
+function buildOverview() { // <-- The 'f' is back!
   const ov = document.getElementById('overview');
   ov.innerHTML = '';
   SLIDE_TITLES.forEach((title, i) => {
@@ -1259,10 +1338,12 @@ function buildOverview() {
     ov.appendChild(div);
   });
 }
+
 function toggleOverview() {
   buildOverview();
   document.getElementById('overview').classList.toggle('visible');
 }
+
 function closeOverview() {
   document.getElementById('overview').classList.remove('visible');
 }
@@ -1321,47 +1402,6 @@ function perfLoop(now) {
   requestAnimationFrame(perfLoop);
 }
 requestAnimationFrame(perfLoop);
-
-// =========================
-// 🍩 DONUT CHART (slide 4)
-// =========================
-function drawDonut() {
-  const canvas = document.getElementById('donut-canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const cx = 110, cy = 110, r = 80, ir = 50;
-  const slices = [
-    { pct: 0.52, color: '#00e5ff' },
-    { pct: 0.28, color: '#5a7a9a' },
-    { pct: 0.20, color: '#64ffda' }
-  ];
-  let angle = -Math.PI / 2;
-  ctx.clearRect(0, 0, 220, 220);
-  slices.forEach(s => {
-    const end = angle + s.pct * 2 * Math.PI;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, r, angle, end);
-    ctx.closePath();
-    ctx.fillStyle = s.color;
-    ctx.fill();
-    angle = end;
-  });
-  // Inner cut
-  ctx.beginPath();
-  ctx.arc(cx, cy, ir, 0, 2 * Math.PI);
-  ctx.fillStyle = '#050a0f';
-  ctx.fill();
-  // Center label
-  ctx.fillStyle = '#00e5ff';
-  ctx.font = 'bold 18px Space Mono, monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('TAM', cx, cy - 8);
-  ctx.fillStyle = '#5a7a9a';
-  ctx.font = '11px Space Mono, monospace';
-  ctx.fillText('COLD CHAIN', cx, cy + 10);
-}
 
 
 // =========================
@@ -1498,7 +1538,7 @@ function init3DBg() {
 // =========================
 function init() {
   updateUI();
-  drawDonut();
+  //drawDonut();
   
   // LAUNCH 3D ENGINE
   if (typeof init3DBg === 'function') init3DBg();
@@ -1548,19 +1588,20 @@ function toggleAutoplay() {
 // 🎙️ THE STARK AI VOICE SUITE (MULTI-AGENT)
 // =========================
 let voiceCoreActive = false;
+let globalRecognition = null; // <-- FIXED: Global scope so the keyboard can access it
 
 if (typeof FeatureFlags !== 'undefined' && FeatureFlags.enableVoice) {
   let lastVoiceCmdTime = 0; 
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+  globalRecognition = SpeechRecognition ? new SpeechRecognition() : null;
 
   const wordToNum = {"one":1, "two":2, "three":3, "four":4, "five":5, "six":6, "seven":7, "eight":8, "nine":9, "ten":10};
 
-  if (recognition) {
-    recognition.continuous = true;
-    recognition.interimResults = false;
+  if (globalRecognition) {
+    globalRecognition.continuous = true;
+    globalRecognition.interimResults = false;
     
-    recognition.onresult = (e) => {
+    globalRecognition.onresult = (e) => {
       const now = Date.now();
       if (now - lastVoiceCmdTime < 1500) return; 
 
@@ -1588,15 +1629,14 @@ if (typeof FeatureFlags !== 'undefined' && FeatureFlags.enableVoice) {
     };
     
     // THE SELF-HEALING RESTART LOOP
-    recognition.onerror = (e) => {
+    globalRecognition.onerror = (e) => {
       console.warn("J.A.R.V.I.S. Audio Diagnostic: ", e.error);
-      if (e.error === 'not-allowed') voiceCoreActive = false; // Stop if permissions denied
+      if (e.error === 'not-allowed') voiceCoreActive = false; 
     };
 
-    recognition.onend = () => { 
-      // Force the mic back on if the browser tried to put it to sleep due to silence
+    globalRecognition.onend = () => { 
       if (voiceCoreActive) {
-        try { recognition.start(); } catch(err) { console.error("Mic restart collision bypass."); }
+        try { globalRecognition.start(); } catch(err) { console.error("Mic restart collision bypass."); }
       }
     };
   }
@@ -1649,8 +1689,9 @@ function autoNarrateSlide(idx) {
     speakAs(`Allocation: ${lbl}, ${amt}`, vMark4, 0.3, 0.9);
   });
 }
+
 // =========================
-// ⌨️ KEYBOARD EVENTS (MERGED)
+// ⌨️ KEYBOARD EVENTS (MERGED & FIXED)
 // =========================
 document.addEventListener('keydown', (e) => {
   switch(e.key) {
@@ -1681,21 +1722,17 @@ document.addEventListener('keydown', (e) => {
       if (typeof FeatureFlags !== 'undefined' && FeatureFlags.enableVoice) {
         voiceCoreActive = !voiceCoreActive;
         const kbdHint = document.getElementById('kbd-hint');
-        
-        // Ensure recognition is defined (safeguard)
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const recognition = SpeechRecognition ? new SpeechRecognition() : null;
 
         if (voiceCoreActive) {
-          // Restart logic requires clearing errors sometimes
-          try { if (recognition) recognition.start(); } catch(err){}
+          // Restart logic utilizing the globally defined microphone
+          try { if (globalRecognition) globalRecognition.start(); } catch(err){}
           autoNarrateSlide(currentSlide);
           kbdHint.innerText = "🎙️ J.A.R.V.I.S. CORE: ONLINE (Mic Active)";
           kbdHint.style.opacity = '1';
           kbdHint.style.color = "var(--danger)";
         } else {
-          // Stop logic
-          try { if (recognition) recognition.stop(); } catch(err){}
+          // Stop logic utilizing the globally defined microphone
+          try { if (globalRecognition) globalRecognition.stop(); } catch(err){}
           window.speechSynthesis.cancel();
           kbdHint.innerText = "🎙️ J.A.R.V.I.S. CORE: OFFLINE";
           setTimeout(() => { kbdHint.style.opacity = '0'; }, 2000);
