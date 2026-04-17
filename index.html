@@ -1000,7 +1000,7 @@ const FeatureFlags = {
       
       <div class="team-card" style="border-color:var(--muted);">
         <div class="avatar" style="background-image: url('PROF RIMI SENGUPTA.jpg'); border-color:var(--muted); color: transparent;">M</div>
-        <div class="team-name">Ma'am</div>
+        <div class="team-name">PROF. RIMI SENGUPTA</div>
         <div class="team-role">Project Supervisor, ECE</div>
         <div class="team-desc">Emphasizing academic rigor, component viability, and strict adherence to IEEE documentation standards.</div>
       </div>
@@ -1706,6 +1706,13 @@ document.addEventListener('keydown', (e) => {
     case 'Escape': closeOverview(); break;
     case 'a': case 'A': toggleAutoplay(); break;
     case 'd': case 'D': togglePerfMonitor(); break;
+    case 'd': case 'D': togglePerfMonitor(); break;
+    
+    // 🚀 LAUNCH MISSION CONTROL
+    case 't': case 'T':
+      e.preventDefault();
+      window.open('EDGE_upgraded.html', '_blank');
+      break;
     case 'e': case 'E':
       if (typeof FeatureFlags !== 'undefined' && FeatureFlags.enableExplain) {
         e.preventDefault(); 
