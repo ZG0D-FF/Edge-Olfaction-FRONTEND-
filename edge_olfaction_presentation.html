@@ -1,0 +1,1719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edge Olfaction — Presentation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<!-- =========================
+     EXTERNAL LIBRARIES (CDN)
+     MathJax, GSAP
+========================== -->
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] },
+    startup: { ready() { MathJax.startup.defaultReady(); } }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+<!-- =========================
+     CONFIGURATION ZONE
+     Edit these values only
+========================== -->
+<script>
+const CONFIG = {
+  title: "EDGE OLFACTION",
+  subtitle: "Zero-Latency Agricultural Spoilage Detection",
+  team: ["Dibyajyotee Ghosh", "Sharmik Sen"],
+  org: "TECHTRONIX — Khardaha, West Bengal",
+  autoPlayInterval: 0, // ms between slides (0 = off)
+  transitionDuration: 0.55, // seconds
+  fpsWarningThreshold: 30,
+  baselineShelfLife: 168, // hours
+  currentBOM: 6800, // INR
+  alertTime: 2, // seconds
+  spoilageReduction: 30, // percent
+  askAmount: 5000, // INR
+  // --- NEW BUDGET DATA ---
+  budget: {
+    hardware: { amount: 2500, label: "Hardware Iteration & Enclosure" },
+    pilot: { amount: 1500, label: "Localized Pilot Operations" },
+    calibration: { amount: 1000, label: "Calibration Materials" }
+  }
+};
+// =========================
+// 🧱 COMPONENT BOUNDARY WRAPPER (FEATURE FLAGS)
+// =========================
+const FeatureFlags = {
+  enableVoice: true,      // J.A.R.V.I.S. Web Speech API
+  enableCinematic: true,  // The 'C' key UI hide/zoom flex
+  enableExplain: true,    // The 'E' key Judge Notes overlay
+  enable3D: false,        // Future-proofing for Three.js Portal Mode
+  enableLiveData: false   // Future-proofing for IoT hardware scraping
+};
+</script>
+<link rel="manifest" href="manifest.json">
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').then(reg => {
+        console.log('Zero-Cloud Engine Offline Cache Active:', reg.scope);
+      });
+    });
+  }
+</script>
+
+<!-- =========================
+     STYLES SECTION
+========================== -->
+<style>
+  /* ---- RESET & BASE ---- */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg: #020c18;
+    --surface: rgba(11, 21, 32, 0.7); /* Made slightly transparent for 3D */
+    --surface2: rgba(15, 30, 46, 0.7);
+    --accent: #00e5ff;
+    --accent2: #64ffda;
+    --accent3: #ff6b35;
+    --text: #e0f0ff;
+    --muted: rgba(0,229,255,0.4);
+    --border: rgba(0,229,255,0.18);
+    --danger: #ff4d6d;
+    --warning: #ffab00;
+    --mono: 'Share Tech Mono', monospace; /* Upgraded Font */
+    --sans: 'Rajdhani', sans-serif;
+    --hud: 'Orbitron', sans-serif; /* New Title Font */
+    --glow: 0 0 18px rgba(0,229,255,0.4);
+    --transition: 0.55s cubic-bezier(0.77,0,0.175,1);
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 16px;
+  }
+  /* ── 3D CANVAS BG ── */
+  #bg-canvas {
+    position: fixed; inset: 0;
+    pointer-events: none; 
+    z-index: 1; /* Pulled forward from -1 so it sits above the body background! */
+  }
+
+  /* ---- SCANLINE OVERLAY ---- */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,229,255,0.018) 2px,
+      rgba(0,229,255,0.018) 4px
+    );
+    pointer-events: none;
+    z-index: 9990;
+  }
+
+  /* ---- SLIDE CONTAINER ---- */
+  #presentation {
+    width: 100vw; height: 100vh;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .slide {
+    position: absolute; inset: 0;
+    width: 100vw; height: 100vh;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: 5vh 6vw;
+    opacity: 0;
+    transform: translateX(60px);
+    transition: opacity var(--transition), transform var(--transition);
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .slide.active {
+    opacity: 1; transform: translateX(0);
+    pointer-events: all;
+    z-index: 10;
+  }
+  .slide.exit-left {
+    opacity: 0; transform: translateX(-60px);
+    z-index: 5;
+  }
+
+  /* ---- GRID BACKGROUND ---- */
+  .slide::after {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .slide > * { position: relative; z-index: 1; }
+
+  /* ---- CORNER DECORATIONS ---- */
+  .corner { position: absolute; width: 20px; height: 20px; }
+  .corner::before, .corner::after { content: ''; position: absolute; background: var(--accent); }
+  .corner::before { width: 100%; height: 2px; }
+  .corner::after { width: 2px; height: 100%; }
+  .corner.tl { top: 20px; left: 20px; }
+  .corner.tr { top: 20px; right: 20px; transform: scaleX(-1); }
+  .corner.bl { bottom: 20px; left: 20px; transform: scaleY(-1); }
+  .corner.br { bottom: 20px; right: 20px; transform: scale(-1); }
+
+  /* ---- TYPOGRAPHY ---- */
+  .slide-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+    opacity: 0.8;
+  }
+  .slide-title {
+    font-family: var(--hud); /* Upgraded */
+    font-size: clamp(2rem, 5vw, 3.8rem);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-shadow: var(--glow); /* Added Glow */
+    margin-bottom: 1.2rem;
+  }
+  .slide-title .accent, .slide-title .accent2 { color: #fff; } /* Invert accent for contrast */
+  .slide-title .accent { color: var(--accent); }
+  .slide-title .accent2 { color: var(--accent2); }
+  .slide-body {
+    font-size: clamp(0.95rem, 1.8vw, 1.25rem);
+    line-height: 1.75;
+    color: rgba(224,240,255,0.82);
+    max-width: 820px;
+    width: 100%;
+  }
+  .tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    padding: 3px 10px;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    border-radius: 2px;
+    margin-right: 8px;
+    margin-bottom: 6px;
+  }
+
+  /* ---- METRIC CARDS ---- */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    width: 100%;
+    max-width: 860px;
+    margin-top: 1.5rem;
+  }
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--accent);
+    padding: 1.2rem 1rem;
+    text-align: center;
+  }
+  .metric-value {
+    font-family: var(--mono);
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    font-weight: 700;
+    color: var(--accent);
+    display: block;
+    line-height: 1;
+  }
+  .metric-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: 6px;
+    display: block;
+  }
+  .metric-card.warn .metric-value { color: var(--warning); }
+  .metric-card.ok .metric-value { color: var(--accent2); }
+
+  /* ---- TWO-COL LAYOUT ---- */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    width: 100%;
+    max-width: 900px;
+    align-items: start;
+  }
+  @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* ---- LIST ITEMS ---- */
+  .item-list { list-style: none; width: 100%; max-width: 820px; }
+  .item-list li {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0,229,255,0.08);
+    font-size: clamp(0.9rem, 1.6vw, 1.15rem);
+    line-height: 1.6;
+    color: rgba(224,240,255,0.85);
+  }
+  .item-list li::before {
+    content: '▹';
+    color: var(--accent);
+    font-size: 1rem;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+  .item-list li strong { color: var(--accent2); font-weight: 600; }
+
+  /* ---- MATH BLOCK ---- */
+  .math-block {
+    background: var(--surface2);
+    border-left: 3px solid var(--accent);
+    padding: 1.2rem 1.6rem;
+    margin: 1rem 0;
+    font-family: var(--mono);
+    font-size: clamp(0.85rem, 1.4vw, 1rem);
+    width: 100%;
+    max-width: 820px;
+    overflow-x: auto;
+  }
+  .math-block .eq-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  /* ---- CODE BLOCK ---- */
+  .code-block {
+    background: #020810;
+    border: 1px solid rgba(0,229,255,0.15);
+    padding: 1rem 1.4rem;
+    font-family: var(--mono);
+    font-size: clamp(0.78rem, 1.3vw, 0.92rem);
+    width: 100%; max-width: 820px;
+    margin-top: 0.8rem;
+    overflow-x: auto;
+    line-height: 1.7;
+    color: var(--accent2);
+  }
+  .code-block .c { color: var(--muted); font-style: italic; }
+  .code-block .kw { color: var(--accent); }
+  .code-block .val { color: var(--warning); }
+  .code-block .fn { color: var(--accent3); }
+
+  /* ---- BUDGET BAR ---- */
+  .budget-item {
+    display: flex; align-items: center; gap: 12px;
+    margin: 10px 0; width: 100%; max-width: 700px;
+  }
+  .budget-label {
+    font-family: var(--mono); font-size: 12px;
+    color: var(--muted); width: 200px; flex-shrink: 0;
+  }
+  .budget-bar-bg {
+    flex: 1; height: 6px;
+    background: rgba(0,229,255,0.1);
+    position: relative;
+  }
+  .budget-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    transform-origin: left;
+    transition: width 1s ease;
+  }
+  .budget-amount {
+    font-family: var(--mono); font-size: 13px;
+    color: var(--accent); width: 70px; text-align: right; flex-shrink: 0;
+  }
+
+  /* ---- TEAM CARD ---- */
+  .team-grid { display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center; margin-top: 1rem; }
+  .team-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 1.4rem;
+    width: 240px;
+    text-align: center;
+  }
+  .avatar {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--surface2), var(--surface));
+    background-size: cover; background-position: center;
+    border: 2px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 1.4rem;
+    color: var(--accent);
+    margin: 0 auto 1rem;
+  }
+
+  /* ---- OVERFLOW PROTECTION FOR SMALL/LAPTOP SCREENS ---- */
+  @media (max-height: 800px) {
+    .slide { padding: 2vh 4vw; }
+    .slide-title { font-size: clamp(2rem, 4vw, 3rem); margin-bottom: 0.5rem; }
+    .team-grid { transform: scale(0.85); transform-origin: top center; margin-top: -15px; flex-wrap: nowrap; }
+    .metrics-grid { transform: scale(0.85); transform-origin: top center; margin-top: 0; }
+    .flow-container { transform: scale(0.85); transform-origin: top center; margin-top: 0; }
+  }
+  .team-name { font-weight: 700; font-size: 1.1rem; color: var(--text); }
+  .team-role { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; color: var(--accent); margin: 4px 0 8px; text-transform: uppercase; }
+  .team-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.5; }
+
+  /* ---- MARKET DONUT ---- */
+  #donut-canvas { display: block; margin: 0 auto; }
+
+  /* ---- COMPETITIVE QUADRANT ---- */
+  .quadrant-wrap {
+    position: relative;
+    width: min(340px, 90vw);
+    height: min(340px, 90vw);
+    border: 1px solid var(--border);
+    margin: 0 auto;
+    flex-shrink: 0;
+  }
+  .quad-axis-h {
+    position: absolute; top: 50%; left: 0; right: 0;
+    height: 1px; background: var(--border);
+  }
+  .quad-axis-v {
+    position: absolute; left: 50%; top: 0; bottom: 0;
+    width: 1px; background: var(--border);
+  }
+  .quad-label {
+    position: absolute;
+    font-family: var(--mono); font-size: 9px;
+    letter-spacing: 0.1em; color: var(--muted);
+    text-transform: uppercase;
+  }
+  .quad-dot {
+    position: absolute;
+    width: 14px; height: 14px; border-radius: 50%;
+    transform: translate(-50%,-50%);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .quad-dot-label {
+    position: absolute;
+    font-family: var(--mono); font-size: 9px;
+    color: var(--text); white-space: nowrap;
+    top: -18px; left: 50%; transform: translateX(-50%);
+  }
+
+  /* ---- PROGRESS BAR ---- */
+  #progress-bar {
+    position: fixed; bottom: 0; left: 0;
+    height: 3px; background: var(--accent);
+    transition: width 0.4s ease;
+    z-index: 9999;
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  /* ---- SLIDE COUNTER ---- */
+  #slide-counter {
+    position: fixed; bottom: 18px; right: 24px;
+    font-family: var(--mono); font-size: 12px;
+    color: var(--muted);
+    z-index: 9998;
+    letter-spacing: 0.1em;
+  }
+
+  /* ---- PERF MONITOR ---- */
+  #perf-monitor {
+    position: fixed; bottom: 18px; left: 24px;
+    font-family: var(--mono); font-size: 11px;
+    color: var(--muted);
+    z-index: 9998;
+    background: rgba(5,10,15,0.7);
+    padding: 4px 10px;
+    border-left: 2px solid var(--accent);
+    line-height: 1.8;
+    display: none;
+  }
+  #perf-fps { color: var(--accent2); }
+  #perf-mem { color: var(--accent); }
+
+  /* ---- NAVIGATION ARROWS ---- */
+  .nav-btn {
+    position: fixed; top: 50%; z-index: 9999;
+    background: none; border: none; cursor: pointer;
+    padding: 16px; transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 1.4rem;
+    transition: color 0.2s, opacity 0.2s;
+    opacity: 0.5;
+  }
+  .nav-btn:hover { color: var(--accent); opacity: 1; }
+  #nav-prev { left: 10px; }
+  #nav-next { right: 10px; }
+
+  /* ---- OVERVIEW MODE ---- */
+  #overview {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(5,10,15,0.95);
+    z-index: 9995;
+    padding: 40px;
+    overflow-y: auto;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+    align-content: flex-start;
+  }
+  #overview.visible { display: flex; }
+  .overview-thumb {
+    width: 160px; height: 100px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 10px;
+    color: var(--muted); gap: 6px;
+    transition: border-color 0.2s;
+    text-align: center; padding: 8px;
+  }
+  .overview-thumb:hover, .overview-thumb.active { border-color: var(--accent); color: var(--accent); }
+  .overview-thumb .num { font-size: 1.6rem; color: var(--accent); opacity: 0.5; font-weight: 700; }
+
+  /* ---- AUTOPLAY INDICATOR ---- */
+  #autoplay-indicator {
+    position: fixed; top: 18px; right: 24px;
+    font-family: var(--mono); font-size: 11px;
+    color: var(--muted); z-index: 9998;
+    display: none;
+  }
+  #autoplay-indicator.on { color: var(--accent2); display: block; }
+
+  /* ---- LOGO HEADER ---- */
+  .logo-mark {
+    display: inline-flex; gap: 4px; flex-wrap: wrap;
+    width: 60px; justify-content: center; margin-bottom: 1rem;
+  }
+  .logo-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .logo-dot:nth-child(even) { background: var(--accent2); }
+
+  /* ---- DIVIDER ---- */
+  .divider {
+    width: 80px; height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    margin: 1rem 0;
+  }
+  
+/* ---- UPGRADED HARDWARE FLOW ---- */
+  .flow-container {
+    display: flex; align-items: center; justify-content: center;
+    gap: 0; width: 100%; max-width: 900px; margin-top: 2.5rem;
+    position: relative;
+  }
+  .flow-node {
+    background: rgba(11, 21, 32, 0.85);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--accent);
+    padding: 1.2rem 1rem; text-align: center; width: 150px;
+    position: relative; z-index: 2;
+    box-shadow: inset 0 0 15px rgba(0,229,255,0.05), 0 5px 15px rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+  }
+  .flow-node::before { /* Blinking status light */
+    content: ''; position: absolute; top: 8px; right: 8px;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent); box-shadow: var(--glow);
+    animation: nodeBlink 2s infinite;
+  }
+  @keyframes nodeBlink { 0%, 100% {opacity:1;} 50% {opacity:0.3;} }
+  
+  .flow-node-title { font-family: var(--hud); font-size: 14px; color: var(--text); margin-bottom: 4px; letter-spacing: 1px; }
+  .flow-node-desc { font-family: var(--mono); font-size: 9px; color: var(--muted); text-transform: uppercase; }
+  
+  .flow-arrow-wrap {
+    position: relative; width: 70px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .flow-line-track {
+    width: 100%; height: 2px; background: rgba(0,229,255,0.1);
+    position: relative; overflow: hidden;
+  }
+  .flow-line-glow {
+    position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+  .flow-payload {
+    position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
+    font-family: var(--mono); font-size: 9px; color: var(--text);
+    white-space: nowrap; opacity: 0; background: rgba(0,229,255,0.1);
+    padding: 2px 6px; border: 1px solid var(--accent); border-radius: 2px;
+  }
+
+  /* ---- TITLE SLIDE SPECIFIC ---- */
+  #slide-0 {
+    background: radial-gradient(ellipse 80% 60% at 60% 40%, rgba(0,229,255,0.06) 0%, transparent 70%),
+                radial-gradient(ellipse 50% 50% at 10% 80%, rgba(100,255,218,0.04) 0%, transparent 60%),
+                var(--bg);
+    text-align: center;
+    align-items: center;
+  }
+  #slide-0 .slide-title {
+    font-size: clamp(2.8rem, 7vw, 6rem);
+    letter-spacing: 0.08em;
+    text-shadow: 0 0 40px rgba(0,229,255,0.3);
+  }
+  .team-byline {
+    font-family: var(--mono); font-size: 12px;
+    letter-spacing: 0.15em; color: var(--muted);
+    margin-top: 1.2rem;
+  }
+  /* ---- EXPLAIN MODE OVERLAY ---- */
+  .explain-overlay {
+    position: absolute; inset: 0;
+    background: rgba(5, 10, 15, 0.95);
+    backdrop-filter: blur(8px);
+    z-index: 50;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s ease;
+    padding: 10%;
+  }
+  body.explain-active .explain-overlay {
+    opacity: 1; pointer-events: all;
+  }
+  .explain-title {
+    font-family: var(--mono); color: var(--warning); font-size: 14px;
+    letter-spacing: 0.2em; margin-bottom: 1rem; text-transform: uppercase;
+  }
+  .explain-text {
+    font-size: 1.2rem; line-height: 1.8; color: var(--accent2);
+    max-width: 800px; text-align: left;
+    border-left: 2px solid var(--warning); padding-left: 20px;
+  }
+  /* ---- 🕶️ CINEMATIC MODE ---- */
+  body.cinematic #progress-bar, 
+  body.cinematic #slide-counter,
+  body.cinematic .nav-btn, 
+  body.cinematic #kbd-hint,
+  body.cinematic #autoplay-indicator,
+  body.cinematic .logo-mark, 
+  body.cinematic .slide-label {
+    opacity: 0 !important; 
+    pointer-events: none; 
+    transition: opacity 1s ease;
+  }
+  
+  body.cinematic .slide.active .slide-title,
+  body.cinematic .slide.active .slide-body,
+  body.cinematic .slide.active .metrics-grid {
+    animation: cinematicZoom 20s linear forwards;
+  }
+
+  @keyframes cinematicZoom {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.08); }
+  }
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+
+<!-- =========================
+     NAVIGATION UI
+========================== -->
+<button class="nav-btn" id="nav-prev" onclick="navigate(-1)" title="Previous (←)">&#9664;</button>
+<button class="nav-btn" id="nav-next" onclick="navigate(1)" title="Next (→)">&#9654;</button>
+<div id="progress-bar"></div>
+<div id="slide-counter">01 / 08</div>
+<div id="perf-monitor"><span id="perf-fps">-- fps</span> &nbsp; <span id="perf-mem">-- MB</span></div>
+<div id="autoplay-indicator">● AUTO</div>
+
+<!-- =========================
+     OVERVIEW MODE
+========================== -->
+<div id="overview"></div>
+
+<!-- =========================
+     PRESENTATION CONTAINER
+========================== -->
+<div id="presentation">
+
+  <!-- ============ SLIDE 0: TITLE ============ -->
+  <section class="slide active" id="slide-0">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+    <div class="logo-mark">
+      <div class="logo-dot"></div><div class="logo-dot"></div><div class="logo-dot"></div>
+      <div class="logo-dot"></div><div class="logo-dot"></div><div class="logo-dot"></div>
+    </div>
+    <div class="slide-label">TECHTRONIX — KHARDAHA, WEST BENGAL</div>
+    <h1 class="slide-title"><span class="accent">EDGE</span> OLFACTION</h1>
+    <p class="slide-body" style="text-align:center; max-width:600px; font-size:1.15rem;">
+      Zero-Latency Agricultural Spoilage Detection at the Edge.<br>
+      No Cloud. No Delay. No Loss.
+    </p>
+    <div class="divider" style="margin: 1.2rem auto;"></div>
+    <div class="team-byline">
+      Presented by &nbsp; DIBYAJYOTEE GHOSH &nbsp;·&nbsp; SHARMIK SEN<br>
+      <span style="opacity:0.55;">Electronics &amp; Communication Engineering — TECHTRONIX</span>
+    </div>
+    <div style="margin-top:2.4rem; display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
+      <span class="tag">ARDUINO UNO</span>
+      <span class="tag">RASPBERRY PI 3B+</span>
+      <span class="tag">MQ SENSOR ARRAY</span>
+      <span class="tag">EDGE AI</span>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 1: EXECUTIVE SUMMARY ============ -->
+  <section class="slide" id="slide-1">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+    <div class="slide-label">01 — EXECUTIVE SUMMARY</div>
+    <h2 class="slide-title">What Is <span class="accent">Edge Olfaction</span>?</h2>
+    <div class="slide-body">
+      A localised, <strong style="color:var(--accent2)">zero-latency Electronic Nose</strong> that predicts agricultural spoilage in transit — without any cloud dependency. It fuses an Arduino-driven multivariable gas sensor array with a Raspberry Pi edge inference engine.
+    </div>
+    <ul class="item-list" style="margin-top:1.2rem;">
+      <li><strong>Decentralised Architecture</strong> — Separates raw ADC polling (Arduino) from mathematical inference (Raspberry Pi)</li>
+      <li><strong>Dynamic Cargo Profiling</strong> — Swappable algorithmic profiles per produce type (ethylene for apples, sulfur/methane for onions)</li>
+      <li><strong>Transit Acoustic Filtering</strong> — Piezo impact disc array tracks baselines to distinguish truck rumble from pest activity</li>
+      <li><strong>Headless Survival Mode</strong> — Immutable SSH file locks &amp; hardcoded nmcli WPA-PSK overrides survive mobile hotspot drops</li>
+    </ul>
+    <div class="explain-overlay">
+      <div class="explain-title">📡 Deep Dive: Headless Field Survival</div>
+      <div class="explain-text">
+        <p><strong>Note for the Panel:</strong> Standard dynamic networking fails during mobile transit[cite: 133]. To ensure the Raspberry Pi does not drop the mobile hotspot connection, we enforce aggressive network overrides.</p>
+        <br>
+        <p>We hardcode the WPA-PSK via terminal <code>nmcli</code> commands and apply an immutable file lock to the SSH configuration using <code>sudo chattr +i /etc/ssh/sshd_config</code>[cite: 134, 142]. This guarantees unrestricted IPv4 SSH listening on Port 22, allowing the node to be accessible to engineers even without a GUI[cite: 139, 194, 230].</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 2: PROBLEM / SOLUTION ============ -->
+  <section class="slide" id="slide-2">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+    <div class="slide-label">02 — PROBLEM / SOLUTION</div>
+    <h2 class="slide-title">The <span class="accent">Dead-Zone</span> Problem</h2>
+    <div class="two-col">
+      <div>
+        <div class="slide-label" style="color:var(--danger)">PROBLEM</div>
+        <div class="slide-body" style="font-size:1rem;">
+          Agricultural supply chains lose millions to transit spoilage. Current IoT sensors require stable cloud APIs. If the truck loses Wi-Fi, data is buffered — and by the time the system reconnects, the entire batch of produce is already rotting.
+        </div>
+      </div>
+      <div>
+        <div class="slide-label" style="color:var(--accent2)">SOLUTION</div>
+        <div class="slide-body" style="font-size:1rem;">
+          Intelligence moved to the edge. The system monitors Volatile Organic Compounds (VOCs) locally, interpolates ADC readings against calibrated <em>Fresh</em> / <em>Rot</em> constants, and executes asynchronous Telegram payloads the second it hits a hotspot.
+        </div>
+      </div>
+    </div>
+    <div class="metrics-grid" style="margin-top:1.4rem;">
+      <div class="metric-card ok">
+        <span class="metric-value">&lt; 2s</span>
+        <span class="metric-label">Alert Latency</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-value">168 h</span>
+        <span class="metric-label">Shelf-Life Baseline</span>
+      </div>
+      <div class="metric-card ok">
+        <span class="metric-value">30%</span>
+        <span class="metric-label">Spoilage Reduction</span>
+      </div>
+      <div class="metric-card warn">
+        <span class="metric-value">₹6,800</span>
+        <span class="metric-label">BOM Cost / Node</span>
+      </div>
+    </div>
+    <div class="explain-overlay">
+      <div class="explain-title">🎛️ Deep Dive: Transit Acoustic Filtering</div>
+      <div class="explain-text">
+        <p><strong>Note for the Panel:</strong> To prevent false positives from physical movement, the system categorizes vibrations using a Piezo impact disc array[cite: 160, 195].</p>
+        <br>
+        <p>Our dynamic baseline tracking mathematically filters this noise: a sudden vibration spike of >100 triggers a 5-second hardware lockout to ignore transit rumble[cite: 195, 196]. Conversely, a continuous micro-spike of >10 flags potential pest activity, successfully separating truck movement from organic threats[cite: 196].</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 3: MATH / ARCHITECTURE ============ -->
+  <section class="slide" id="slide-3">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+    <div class="slide-label">03 — MATHEMATICAL ARCHITECTURE</div>
+    <h2 class="slide-title">Decay <span class="accent2">Models</span></h2>
+    <div class="math-block">
+      <span class="eq-label">Arrhenius Rate Equation</span>
+      $$k = A \, e^{-E_a / RT}$$
+      <p style="font-size:0.82rem; color:var(--muted); margin-top:8px; font-family:var(--mono);">
+        where $k$ = spoilage rate, $A$ = pre-exponential factor, $E_a$ = activation energy, $R$ = universal gas constant, $T$ = temperature (K)
+      </p>
+    </div>
+    <div class="math-block" style="margin-top:10px;">
+      <span class="eq-label">Risk Normalisation</span>
+      $$\text{Risk}_\text{sensor} = \frac{V_\text{current} - V_\text{fresh}}{V_\text{rot} - V_\text{fresh}} \times 100$$
+    </div>
+    <div class="math-block" style="margin-top:10px;">
+      <span class="eq-label">Aggregate Clamped Risk &amp; Shelf-Life Projection</span>
+      $$\text{Risk}_\text{total} = \max\!\left(5.0,\, \min\!\left(99.9,\, \frac{\text{Risk}_{135} + \text{Risk}_{3}}{2}\right)\right)$$
+      $$\text{Hours}_\text{left} = \max\!\left(1,\, \left\lfloor 168 \times \left(\frac{100 - \text{Risk}_\text{total}}{100}\right)^{\!3}\right\rfloor\right)$$
+    </div>
+    <div class="explain-overlay">
+      <div class="explain-title">🔬 Deep Dive: Pre-Exponential Gas Integration</div>
+      <div class="explain-text">
+        <p><strong>Note for the Panel:</strong> Our cubic decay model ties directly into the Arrhenius equation: $$k = A \, e^{-E_a / RT}$$[cite: 181].</p>
+        <br>
+        <p>Instead of treating the pre-exponential factor ($A$) as a static constant, our system dynamically increases it based on the integrated MQ-135 and MQ-3 gas sensor outputs[cite: 137, 204]. This mathematically represents the accelerated rotting rate caused specifically by external ethylene or fungal off-gassing, resulting in a highly accurate exponential decay curve[cite: 204, 214].</p>
+      </div>
+    </div>
+  </section>
+  
+  <!-- ============ SLIDE 4: TELEMETRY PIPELINE ============ -->
+<section class="slide" id="slide-4">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+    <div class="slide-label">04 — TELEMETRY PIPELINE</div>
+    <h2 class="slide-title">The <span class="accent">Payload</span> Flow</h2>
+    <div class="slide-body">
+      A decoupled architecture ensures that if the Pi is busy running Arrhenius calculations, ADC polling from the MQ array never drops.
+    </div>
+    
+    <div class="flow-container">
+      <div class="flow-node">
+        <div class="flow-node-title">MQ Array</div>
+        <div class="flow-node-desc">Raw ADC Polling</div>
+      </div>
+      
+      <div class="flow-arrow-wrap">
+        <div class="flow-payload p1">Analog</div>
+        <div class="flow-line-track"><div class="flow-line-glow g1"></div></div>
+      </div>
+      
+      <div class="flow-node">
+        <div class="flow-node-title">Arduino Uno</div>
+        <div class="flow-node-desc">Hardware Bridge</div>
+      </div>
+      
+      <div class="flow-arrow-wrap">
+        <div class="flow-payload p2" style="border-color:var(--accent2); color:var(--accent2);">JSON</div>
+        <div class="flow-line-track"><div class="flow-line-glow g2" style="background:linear-gradient(90deg, transparent, var(--accent2), transparent);"></div></div>
+      </div>
+      
+      <div class="flow-node" style="border-top-color: var(--accent2);">
+        <style>#slide-4 .flow-node:nth-child(5)::before { background: var(--accent2); }</style>
+        <div class="flow-node-title" style="color: var(--accent2);">Raspberry Pi</div>
+        <div class="flow-node-desc">Cubic Decay AI</div>
+      </div>
+      
+      <div class="flow-arrow-wrap">
+        <div class="flow-payload p3" style="border-color:var(--warning); color:var(--warning);">Async</div>
+        <div class="flow-line-track"><div class="flow-line-glow g3" style="background:linear-gradient(90deg, transparent, var(--warning), transparent);"></div></div>
+      </div>
+      
+      <div class="flow-node" style="border-top-color: var(--warning);">
+        <style>#slide-4 .flow-node:nth-child(7)::before { background: var(--warning); }</style>
+        <div class="flow-node-title" style="color: var(--warning);">Telegram</div>
+        <div class="flow-node-desc">Zero-Latency Alert</div>
+      </div>
+    </div>
+    <div class="explain-overlay">
+      <div class="explain-title">⚙️ Deep Dive: Pipeline Dependencies</div>
+      <div class="explain-text">
+        <p><strong>Note for the Panel:</strong> The analog-to-digital pipeline requires strict physical preparation. The MQ sensor array must undergo a 24-48 hour continuous heating "burn-in" phase to stabilize the internal resistance before any reliable calibration can occur.</p>
+        <br>
+        <p>On the software side, the Pi's stability depends on <code>jarvis_bridge.py</code> maintaining a background thread, while <code>csv_logger.py</code> writes ambient data locally (generating our <code>khardaha_full_log</code> files) without causing I/O blocking or crashing the AI risk routine.</p>
+      </div>
+    </div>
+  </section>
+
+<!-- ============ SLIDE 5: MARKET OPPORTUNITY ============ -->
+  <section class="slide" id="slide-5">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+    <div class="slide-label">05 — MARKET OPPORTUNITY</div>
+    <h2 class="slide-title">TAM — Cold Chain <span class="accent">IoT</span></h2>
+    <div class="two-col" style="align-items:center;">
+      <div>
+        <div class="slide-body" style="font-size:1rem; margin-bottom:1rem;">
+          The Total Addressable Market for cold-chain tracking and agricultural logistics IoT is scaling rapidly. Edge compute costs have stabilised while food-waste logistics costs are at an all-time high.
+        </div>
+        <ul class="item-list">
+          <li><strong>52%</strong> — Unmonitored Regional Transit Fleets</li>
+          <li><strong>28%</strong> — Traditional Passive Data Loggers</li>
+          <li><strong>20%</strong> — Cloud-Dependent Enterprise Solutions</li>
+        </ul>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center;">
+        <canvas id="donut-canvas" width="220" height="220"></canvas>
+        <div style="display:flex; gap:12px; margin-top:12px; flex-wrap:wrap; justify-content:center;">
+          <div style="display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--muted);">
+            <span style="width:10px;height:10px;border-radius:50%;background:var(--accent);display:inline-block;"></span>52% Unmonitored
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--muted);">
+            <span style="width:10px;height:10px;border-radius:50%;background:var(--muted);display:inline-block;"></span>28% Passive
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--muted);">
+            <span style="width:10px;height:10px;border-radius:50%;background:var(--accent2);display:inline-block;"></span>20% Cloud
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 6: COMPETITIVE LANDSCAPE ============ -->
+  <section class="slide" id="slide-6">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+    <div class="slide-label">06 — COMPETITIVE LANDSCAPE</div>
+    <h2 class="slide-title">Innovative &amp; <span class="accent2">Lower Cost</span></h2>
+    <div class="two-col" style="align-items:center;">
+      <div>
+        <ul class="item-list">
+          <li><strong>Passive Loggers</strong> (Sensitech, Testo) — Conventional, lower cost. Record temp &amp; humidity only. Failure known only after arrival.</li>
+          <li><strong>Cloud IoT Sensors</strong> — Innovative, expensive. Process via AWS/Azure. Fail completely in rural dead-zones.</li>
+          <li><strong>Edge Olfaction</strong> — Innovative + lower cost. Zero-latency local computation + biochemical olfaction (MQ-135, MQ-3, MQ-4). No cloud subscription required.</li>
+        </ul>
+      </div>
+      <div class="quadrant-wrap" id="quadrant">
+        <div class="quad-axis-h"></div>
+        <div class="quad-axis-v"></div>
+        <div class="quad-label" style="top:6px; left:50%; transform:translateX(-50%);">INNOVATIVE</div>
+        <div class="quad-label" style="bottom:6px; left:50%; transform:translateX(-50%);">CONVENTIONAL</div>
+        <div class="quad-label" style="left:6px; top:50%; transform:translateY(-50%) rotate(-90deg);">LOWER</div>
+        <div class="quad-label" style="right:6px; top:50%; transform:translateY(-50%) rotate(90deg);">HIGHER</div>
+        <!-- Passive loggers: conventional/lower -->
+        <div class="quad-dot" style="left:28%; top:72%; background:var(--muted);">
+          <div class="quad-dot-label">Passive</div>
+        </div>
+        <!-- Cloud IoT: innovative/higher -->
+        <div class="quad-dot" style="left:72%; top:28%; background:var(--warning);">
+          <div class="quad-dot-label">Cloud IoT</div>
+        </div>
+        <!-- Edge Olfaction: innovative/lower ★ -->
+        <div class="quad-dot" style="left:28%; top:28%; background:var(--accent); width:18px; height:18px; box-shadow:0 0 12px var(--accent);">
+          <div class="quad-dot-label" style="color:var(--accent); font-weight:700;">Edge-Olfaction ★</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<!-- ============ SLIDE 7: BUSINESS MODEL & SCALIN ============ -->
+<section class="slide" id="slide-7">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+    <div class="slide-label">07 — BUSINESS MODEL & SCALING</div>
+    <h2 class="slide-title">Hardware-as-a-<span class="accent2">Service</span></h2>
+    <div class="two-col">
+      <div>
+        <div class="slide-body" style="font-size:1rem; margin-bottom:1rem;">
+          Transitioning from a breadboard prototype to a scalable HaaS model for local logistics fleets.
+        </div>
+        <ul class="item-list">
+          <li><strong>Phase 1:</strong> Local ECE lab deployment & regional Khardaha warehouse testing.</li>
+          <li><strong>Phase 2:</strong> Outfitting a small fleet of regional produce transport trucks for a 6-month pilot.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="slide-label" style="color:var(--accent)">SCALABILITY LEVER</div>
+        <div class="slide-body" style="font-size:1rem;">
+          To scale, we will fabricate a <strong>unified, custom-soldered PCB</strong> that integrates the MQ sensors, operational amplifiers, and microcontroller onto a single shock-proof board designed for industrial PETG enclosures.
+        </div>
+      </div>
+    </div>
+    <div class="explain-overlay">
+      <div class="explain-title">🚧 Deep Dive: Scope & Cloud Exclusions</div>
+      <div class="explain-text">
+        <p><strong>Note for the Panel:</strong> For this current phase, we have strictly isolated the system to local edge inference. We intentionally excluded cloud database hosting and external API dependencies for the core logic.</p>
+        <br>
+        <p>This forced constraint proves the Arrhenius math can survive entirely offline. We are currently limited to a fragile breadboard architecture, which is exactly why our primary scaling lever is transitioning the prototype to a custom-soldered PCB for industrial field use.</p>
+      </div>
+    </div>
+  </section>
+  
+
+
+
+
+<!-- ============ SLIDE 8: TEAM ============ -->
+  <section class="slide" id="slide-8">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+    <div class="slide-label">08 — TEAM</div>
+    <h2 class="slide-title">The <span class="accent">Builders</span></h2>
+    
+    <div class="team-grid">
+      <div class="team-card">
+        <div class="avatar" style="background-image: url('profile.jpeg'); color: transparent;">DG</div>
+        <div class="team-name">Dibyajyotee Ghosh</div>
+        <div class="team-role">Edge AI Developer / Project Lead</div>
+        <div class="team-desc">Built the core Python serial bridge, designed the cubic exponential decay threshold math, and engineered headless network survival protocols.</div>
+      </div>
+      
+      <div class="team-card">
+        <div class="avatar" style="background-image: url('SHARMIK SEN.jpg'); border-color:var(--accent2); color: transparent;">SS</div>
+        <div class="team-name">Sharmik Sen</div>
+        <div class="team-role">Hardware &amp; Integration Lead</div>
+        <div class="team-desc">Calibrated the multivariable MQ gas array, engineered piezo transit filtering logic, and integrated the physical enclosure and JSON pipeline.</div>
+      </div>
+      
+      <div class="team-card" style="border-color:var(--muted);">
+        <div class="avatar" style="background-image: url('PROF RIMI SENGUPTA.jpg'); border-color:var(--muted); color: transparent;">M</div>
+        <div class="team-name">Ma'am</div>
+        <div class="team-role">Project Supervisor, ECE</div>
+        <div class="team-desc">Emphasizing academic rigor, component viability, and strict adherence to IEEE documentation standards.</div>
+      </div>
+    </div> <div class="slide-body" style="text-align:center; margin-top:1.4rem; font-size:0.9rem; color:var(--muted);">
+      ECE Department · IEEE documentation standards · Academic oversight
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 9: THE ASK ============ -->
+  <section class="slide" id="slide-9">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+    <div class="slide-label">09 — THE ASK</div>
+    <h2 class="slide-title">Micro-Grant: <span class="accent">₹5,000</span></h2>
+    <div class="slide-body" style="margin-bottom:1.2rem;">
+      Transitioning the prototype from breadboard to a consolidated, test-ready unit for local field validation.
+    </div>
+    <div id="dynamic-budget-container" style="width:100%;max-width:700px;">
+      </div>
+    <div class="metrics-grid" style="margin-top:1.4rem;">
+      <div class="metric-card ok">
+        <span class="metric-value">4 wk</span>
+        <span class="metric-label">To Field-Ready Unit</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-value">₹6,800</span>
+        <span class="metric-label">BOM / Node</span>
+      </div>
+      <div class="metric-card ok">
+        <span class="metric-value">168 h</span>
+        <span class="metric-label">Shelf-Life Tracking</span>
+      </div>
+      <div class="metric-card warn">
+        <span class="metric-value">&lt; 2 s</span>
+        <span class="metric-label">Telegram Alert</span>
+      </div>
+    </div>
+    <div class="explain-overlay">
+      <div class="explain-title">📅 Deep Dive: The Ultimate Validation Metric</div>
+      <div class="explain-text">
+        <p><strong>Note for the Panel:</strong> The requested funds directly support our final milestone: Live Fruit Degradation Stress-Testing.</p>
+        <br>
+        <p>Starting in mid-April, we will conduct a controlled regional logistics run. The ultimate success metric for this grant is validating that the localized AI pipeline can calculate decay and trigger a Telegram alert <strong>before visible mold appears</strong> on the cargo, proving the system acts as a preventative warning rather than a passive logger.</p>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /presentation -->
+
+<!-- =========================
+     SCRIPT SECTION
+========================== -->
+<script>
+
+// =========================
+// 📊 DATA: SLIDE INDEX MAP
+// =========================
+const SLIDE_TITLES = [
+  "Title",
+  "Executive Summary",
+  "Problem / Solution",
+  "Math Architecture",
+  "Hardware Flow", 
+  "Market Opportunity", 
+  "Business Model", 
+  "Competitive Landscape",
+  "Team",
+  "The Ask"
+];
+const TOTAL_SLIDES = SLIDE_TITLES.length;
+let currentSlide = 0;
+let isAnimating = false;
+let autoPlayTimer = null;
+
+// =========================
+// 🖥️ SLIDE NAVIGATION
+// =========================
+function navigate(dir) {
+  if (isAnimating) return;
+  const next = currentSlide + dir;
+  if (next < 0 || next >= TOTAL_SLIDES) return;
+  goToSlide(next);
+}
+
+function goToSlide(idx) {
+  if (idx === currentSlide || isAnimating) return;
+  isAnimating = true;
+
+  const slides = document.querySelectorAll('.slide');
+  const current = slides[currentSlide];
+  const target = slides[idx];
+
+  current.classList.add('exit-left');
+  current.classList.remove('active');
+  target.classList.add('active');
+
+  setTimeout(() => {
+    current.classList.remove('exit-left');
+    isAnimating = false;
+  }, CONFIG.transitionDuration * 1000 + 100);
+
+  currentSlide = idx;
+  updateUI();
+  triggerSlideAnimations(idx);
+  autoNarrateSlide(idx)
+}
+
+// =========================
+// 🔄 UI UPDATE
+// =========================
+function updateUI() {
+  const n = String(currentSlide + 1).padStart(2,'0');
+  const t = String(TOTAL_SLIDES).padStart(2,'0');
+  document.getElementById('slide-counter').textContent = `${n} / ${t}`;
+  const pct = ((currentSlide) / (TOTAL_SLIDES - 1)) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.querySelectorAll('.overview-thumb').forEach((el, i) => {
+    el.classList.toggle('active', i === currentSlide);
+  });
+}
+
+// =========================
+// 🎬 GSAP ANIMATIONS PER SLIDE
+// =========================
+function triggerSlideAnimations(idx) {
+  const slide = document.querySelector(`#slide-${idx}`);
+  if (!slide || !window.gsap) return;
+  
+  // Standard UI fade-ins
+  const targets = slide.querySelectorAll('.metric-card, .item-list li, .team-card, .math-block, .two-col > div');
+  if (targets.length) {
+    gsap.fromTo(targets,
+      { opacity: 0, y: 18 },
+      { opacity: 1, y: 0, duration: 0.45, stagger: 0.08, ease: 'power2.out', delay: 0.1 }
+    );
+  }
+
+  // Slide 3: Math typesetting
+  if (idx === 3 && window.MathJax && MathJax.typesetPromise) {
+    MathJax.typesetPromise([slide]);
+  }
+
+  // Slide 4: Hardware Flow Animation
+  // Slide 4: Hardware Flow Animation (UPGRADED)
+  if (idx === 4) {
+    const nodes = slide.querySelectorAll('.flow-node');
+    const tracks = slide.querySelectorAll('.flow-line-track');
+    const glows = slide.querySelectorAll('.flow-line-glow');
+    const payloads = slide.querySelectorAll('.flow-payload');
+    
+    // Reset states
+    gsap.set(nodes, { opacity: 0, y: 30, scale: 0.95 });
+    gsap.set(tracks, { scaleX: 0, transformOrigin: "left center" });
+    gsap.set(payloads, { opacity: 0, y: 10 });
+    gsap.killTweensOf(glows); // Kill old infinite loops to prevent overlap
+    gsap.set(glows, { left: "-100%" });
+
+    const tl = gsap.timeline({ delay: 0.3 });
+    
+    // 1. Hardware nodes boot up and drop in
+    tl.to(nodes, { opacity: 1, y: 0, scale: 1, duration: 0.5, stagger: 0.2, ease: "back.out(1.5)" })
+      // 2. The connection tracks physically draw themselves between nodes
+      .to(tracks, { scaleX: 1, duration: 0.4, stagger: 0.2, ease: "power2.inOut" }, "-=0.5")
+      // 3. Payload labels pop up
+      .to(payloads, { opacity: 1, y: 0, duration: 0.3, stagger: 0.2, ease: "back.out(2)" }, "-=0.3");
+
+    // 4. Fire the infinite data stream lasers
+    tl.add(() => {
+      gsap.to('.g1', { left: "100%", duration: 1.2, repeat: -1, ease: "none", delay: 0 });
+      gsap.to('.g2', { left: "100%", duration: 1.2, repeat: -1, ease: "none", delay: 0.4 });
+      gsap.to('.g3', { left: "100%", duration: 1.2, repeat: -1, ease: "none", delay: 0.8 });
+    });
+  }
+
+  // Slide 9 (The Ask): Dynamic Budget Bars
+  if (idx === 9) {
+    const container = document.getElementById('dynamic-budget-container');
+    container.innerHTML = ''; // Clear previous
+    
+    const colors = ['var(--accent)', 'var(--accent2)', 'var(--warning)'];
+    let colorIndex = 0;
+
+    for (const key in CONFIG.budget) {
+      const item = CONFIG.budget[key];
+      const pct = (item.amount / CONFIG.askAmount) * 100;
+      const barColor = colors[colorIndex % colors.length];
+      
+      const html = `
+        <div class="budget-item" style="opacity:0; transform:translateY(10px);">
+          <div class="budget-label">${item.label}</div>
+          <div class="budget-bar-bg">
+            <div class="budget-bar-fill" style="width: 0%; background:${barColor};" data-target="${pct}%"></div>
+          </div>
+          <div class="budget-amount">₹${item.amount.toLocaleString('en-IN')}</div>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', html);
+      colorIndex++;
+    }
+
+    // Animate the dynamically created bars
+    gsap.to('.budget-item', { opacity: 1, y: 0, duration: 0.4, stagger: 0.1, delay: 0.2 });
+    
+    // Fill the bars based on data-target
+    setTimeout(() => {
+      document.querySelectorAll('.budget-bar-fill').forEach(bar => {
+        bar.style.width = bar.getAttribute('data-target');
+      });
+    }, 400);
+  }
+}
+
+// =========================
+// ⌨️ KEYBOARD EVENTS
+// =========================
+document.addEventListener('keydown', (e) => {
+  switch(e.key) {
+    case 'ArrowRight': case 'ArrowDown': case ' ':
+      e.preventDefault(); navigate(1); break;
+    case 'ArrowLeft': case 'ArrowUp':
+      e.preventDefault(); navigate(-1); break;
+    case 'F5': case 'p': case 'P':
+      e.preventDefault(); toggleFullscreen(); break;
+    case 'Tab': case 'o': case 'O':
+      e.preventDefault(); toggleOverview(); break;
+    case 'Escape': closeOverview(); break;
+    case 'a': case 'A': toggleAutoplay(); break;
+    case 'd': case 'D': togglePerfMonitor(); break;
+    // Add this inside the switch(e.key) statement:
+    case 'e': case 'E':
+      e.preventDefault(); 
+      document.body.classList.toggle('explain-active');
+      break;
+    case 'c': case 'C':
+      e.preventDefault();
+      document.body.classList.toggle('cinematic');
+      break;
+  }
+});
+
+// =========================
+// 🖱️ TOUCH SWIPE
+// =========================
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(dx) > 50) navigate(dx < 0 ? 1 : -1);
+});
+
+// =========================
+// 🔲 FULLSCREEN
+// =========================
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+// =========================
+// 📋 OVERVIEW MODE
+// =========================
+function buildOverview() {
+  const ov = document.getElementById('overview');
+  ov.innerHTML = '';
+  SLIDE_TITLES.forEach((title, i) => {
+    const div = document.createElement('div');
+    div.className = 'overview-thumb' + (i === currentSlide ? ' active' : '');
+    div.innerHTML = `<span class="num">${String(i+1).padStart(2,'0')}</span><span>${title}</span>`;
+    div.onclick = () => { goToSlide(i); closeOverview(); };
+    ov.appendChild(div);
+  });
+}
+function toggleOverview() {
+  buildOverview();
+  document.getElementById('overview').classList.toggle('visible');
+}
+function closeOverview() {
+  document.getElementById('overview').classList.remove('visible');
+}
+
+// =========================
+// ▶ AUTOPLAY & CINEMATIC REPAIR
+// =========================
+function toggleAutoplay() {
+  const ind = document.getElementById('autoplay-indicator');
+  const speed = CONFIG.autoPlayInterval > 0 ? CONFIG.autoPlayInterval : 5000; // Default to 5s if config is 0
+
+  if (autoPlayTimer) {
+    clearInterval(autoPlayTimer);
+    autoPlayTimer = null;
+    ind.classList.remove('on');
+  } else {
+    autoPlayTimer = setInterval(() => {
+      if (currentSlide < TOTAL_SLIDES - 1) navigate(1);
+      else { clearInterval(autoPlayTimer); autoPlayTimer = null; ind.classList.remove('on'); }
+    }, speed);
+    ind.classList.add('on');
+  }
+}
+
+// =========================
+// 📈 PERFORMANCE MONITOR
+// =========================
+let perfVisible = false;
+let lastTime = performance.now();
+let frameCount = 0;
+let fps = 60;
+let reducedMode = false;
+
+function togglePerfMonitor() {
+  perfVisible = !perfVisible;
+  document.getElementById('perf-monitor').style.display = perfVisible ? 'block' : 'none';
+}
+
+function perfLoop(now) {
+  frameCount++;
+  if (now - lastTime >= 1000) {
+    fps = Math.round(frameCount * 1000 / (now - lastTime));
+    frameCount = 0;
+    lastTime = now;
+    document.getElementById('perf-fps').textContent = fps + ' fps';
+    if (performance.memory) {
+      const mb = Math.round(performance.memory.usedJSHeapSize / 1048576);
+      document.getElementById('perf-mem').textContent = mb + ' MB';
+    }
+    // Adaptive degradation
+    if (fps < CONFIG.fpsWarningThreshold && !reducedMode) {
+      reducedMode = true;
+      document.documentElement.style.setProperty('--transition', '0.3s ease');
+    }
+  }
+  requestAnimationFrame(perfLoop);
+}
+requestAnimationFrame(perfLoop);
+
+// =========================
+// 🍩 DONUT CHART (slide 4)
+// =========================
+function drawDonut() {
+  const canvas = document.getElementById('donut-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const cx = 110, cy = 110, r = 80, ir = 50;
+  const slices = [
+    { pct: 0.52, color: '#00e5ff' },
+    { pct: 0.28, color: '#5a7a9a' },
+    { pct: 0.20, color: '#64ffda' }
+  ];
+  let angle = -Math.PI / 2;
+  ctx.clearRect(0, 0, 220, 220);
+  slices.forEach(s => {
+    const end = angle + s.pct * 2 * Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, angle, end);
+    ctx.closePath();
+    ctx.fillStyle = s.color;
+    ctx.fill();
+    angle = end;
+  });
+  // Inner cut
+  ctx.beginPath();
+  ctx.arc(cx, cy, ir, 0, 2 * Math.PI);
+  ctx.fillStyle = '#050a0f';
+  ctx.fill();
+  // Center label
+  ctx.fillStyle = '#00e5ff';
+  ctx.font = 'bold 18px Space Mono, monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('TAM', cx, cy - 8);
+  ctx.fillStyle = '#5a7a9a';
+  ctx.font = '11px Space Mono, monospace';
+  ctx.fillText('COLD CHAIN', cx, cy + 10);
+}
+
+
+// =========================
+// 🌐 3D BACKGROUND ENGINE (J.A.R.V.I.S. HUD)
+// =========================
+function init3DBg() {
+  const canvas = document.getElementById('bg-canvas');
+  if (!canvas || !window.THREE) return;
+  
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x000000, 0);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 500);
+  camera.position.set(0, 0, 28);
+
+  const C = new THREE.Color(0x00e5ff);
+
+  // DATA GRID PLANE
+  const gridHelper = new THREE.GridHelper(120, 40, 0x003344, 0x001a22);
+  gridHelper.position.y = -12;
+  gridHelper.rotation.x = 0.15;
+  scene.add(gridHelper);
+
+  // SECONDARY GRID
+  const gridHelper2 = new THREE.GridHelper(80, 25, 0x002233, 0x001118);
+  gridHelper2.position.z = -30;
+  gridHelper2.rotation.x = Math.PI / 2;
+  scene.add(gridHelper2);
+
+  // SHARDS
+  const shards = [];
+  const shardGeos = [
+    new THREE.TetrahedronGeometry(0.4, 0),
+    new THREE.OctahedronGeometry(0.35, 0),
+    new THREE.TetrahedronGeometry(0.25, 0),
+    new THREE.OctahedronGeometry(0.2, 0),
+  ];
+  for (let i = 0; i < 55; i++) {
+    const geo = shardGeos[Math.floor(Math.random() * shardGeos.length)];
+    const mat = new THREE.MeshBasicMaterial({ color: C, wireframe: true, transparent: true, opacity: 0.08 + Math.random() * 0.18 });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set((Math.random() - 0.5) * 80, (Math.random() - 0.5) * 40, (Math.random() - 0.5) * 50);
+    mesh.rotation.set(Math.random()*Math.PI*2, Math.random()*Math.PI*2, Math.random()*Math.PI*2);
+    mesh.userData = { rvx: (Math.random()-.5)*0.012, rvy: (Math.random()-.5)*0.012, rvz: (Math.random()-.5)*0.008, vy: (Math.random()-.5)*0.018, vz: (Math.random()-.5)*0.01 };
+    scene.add(mesh);
+    shards.push(mesh);
+  }
+
+  // RINGS
+  function makeRing(r, tube, tiltX, tiltY, opacity, speed) {
+    const geo = new THREE.TorusGeometry(r, tube, 6, 90);
+    const mat = new THREE.MeshBasicMaterial({ color: C, transparent: true, opacity });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.rotation.set(tiltX, tiltY, 0);
+    mesh.userData.speed = speed;
+    return mesh;
+  }
+  const rings = [
+    makeRing(5, 0.025, 0, 0, 0.55, 0.003),
+    makeRing(5, 0.012, Math.PI/2, 0, 0.3, -0.005),
+    makeRing(7, 0.018, Math.PI/6, 0, 0.4, -0.002),
+    makeRing(9, 0.015, Math.PI/2, 0, 0.25, -0.0018),
+    makeRing(11, 0.012, 0, 0, 0.15, -0.0012)
+  ];
+  const ringGroup = new THREE.Group();
+  rings.forEach(r => ringGroup.add(r));
+  ringGroup.position.set(0, 2, -5);
+  scene.add(ringGroup);
+
+  // PARTICLES
+  const pCount = 300;
+  const pPos = new Float32Array(pCount*3);
+  const pVel = [];
+  for (let i=0; i<pCount; i++) {
+    pPos[i*3] = (Math.random()-.5)*100; pPos[i*3+1] = (Math.random()-.5)*60; pPos[i*3+2] = (Math.random()-.5)*60;
+    pVel.push({ vx:(Math.random()-.5)*0.02, vy:(Math.random()-.5)*0.02, vz:(Math.random()-.5)*0.015 });
+  }
+  const pGeo = new THREE.BufferGeometry();
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pPos,3));
+  const pMat = new THREE.PointsMaterial({ color: C, size:0.12, transparent:true, opacity:0.45 });
+  scene.add(new THREE.Points(pGeo, pMat));
+
+  // MOUSE PARALLAX
+  let mx = 0, my = 0, tmx = 0, tmy = 0;
+  document.addEventListener('mousemove', e => {
+    tmx = (e.clientX/window.innerWidth - 0.5) * 1.8;
+    tmy = (e.clientY/window.innerHeight - 0.5) * 1.0;
+  });
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  let t = 0;
+  (function animate() {
+    requestAnimationFrame(animate);
+    t += 0.008;
+
+    mx += (tmx - mx) * 0.025; my += (tmy - my) * 0.025;
+    camera.position.x = mx * 3; camera.position.y = -my * 2;
+    camera.lookAt(0, 0, 0);
+
+    rings.forEach(r => { r.rotation.z += r.userData.speed; r.rotation.y += r.userData.speed * 0.2; });
+    ringGroup.rotation.y += 0.0015; ringGroup.rotation.x = Math.sin(t*0.4)*0.08;
+
+    shards.forEach(s => {
+      s.rotation.x += s.userData.rvx; s.rotation.y += s.userData.rvy; s.rotation.z += s.userData.rvz;
+      s.position.y += s.userData.vy; s.position.z += s.userData.vz;
+      if (s.position.y > 22) s.position.y = -22; if (s.position.y < -22) s.position.y = 22;
+      if (s.position.z > 30) s.position.z = -30; if (s.position.z < -30) s.position.z = 30;
+    });
+
+    const pos = pGeo.attributes.position.array;
+    for (let i=0; i<pCount; i++) {
+      pos[i*3] += pVel[i].vx; pos[i*3+1] += pVel[i].vy; pos[i*3+2] += pVel[i].vz;
+      if (Math.abs(pos[i*3]) > 50) pVel[i].vx *= -1;
+      if (Math.abs(pos[i*3+1]) > 30) pVel[i].vy *= -1;
+      if (Math.abs(pos[i*3+2]) > 30) pVel[i].vz *= -1;
+    }
+    pGeo.attributes.position.needsUpdate = true;
+
+    renderer.render(scene, camera);
+  })();
+}
+
+
+// =========================
+// 🚀 INITIALISATION
+// =========================
+function init() {
+  updateUI();
+  drawDonut();
+  
+  // LAUNCH 3D ENGINE
+  if (typeof init3DBg === 'function') init3DBg();
+
+  if (window.MathJax && MathJax.typesetPromise) {
+    setTimeout(() => MathJax.typesetPromise(), 800);
+  }
+  if (window.gsap) {
+    gsap.from('#slide-0 .slide-title', { opacity: 0, y: -30, duration: 1, ease: 'power3.out', delay: 0.2 });
+    gsap.from('#slide-0 .slide-body', { opacity: 0, y: 20, duration: 0.8, ease: 'power2.out', delay: 0.5 });
+    gsap.from('#slide-0 .tag', { opacity: 0, y: 10, duration: 0.5, stagger: 0.1, ease: 'power2.out', delay: 0.9 });
+  }
+  
+  window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+}
+// ⚡ ACTUALLY FIRE THE ENGINE ⚡
+init();
+
+// =========================
+// ▶ BULLETPROOF AUTOPLAY
+// =========================
+function toggleAutoplay() {
+  const ind = document.getElementById('autoplay-indicator');
+  const speed = CONFIG.autoPlayInterval > 0 ? CONFIG.autoPlayInterval : 5000;
+
+  if (autoPlayTimer) {
+    clearInterval(autoPlayTimer);
+    autoPlayTimer = null;
+    ind.classList.remove('on');
+  } else {
+    // Navigate immediately so the user knows it started, then set the loop
+    if (currentSlide < TOTAL_SLIDES - 1) navigate(1);
+    autoPlayTimer = setInterval(() => {
+      if (currentSlide < TOTAL_SLIDES - 1) {
+        navigate(1);
+      } else { 
+        clearInterval(autoPlayTimer); 
+        autoPlayTimer = null; 
+        ind.classList.remove('on'); 
+      }
+    }, speed);
+    ind.classList.add('on');
+  }
+}
+
+// =========================
+// 🎙️ THE STARK AI VOICE SUITE (MULTI-AGENT)
+// =========================
+let voiceCoreActive = false;
+
+if (typeof FeatureFlags !== 'undefined' && FeatureFlags.enableVoice) {
+  let lastVoiceCmdTime = 0; 
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+
+  const wordToNum = {"one":1, "two":2, "three":3, "four":4, "five":5, "six":6, "seven":7, "eight":8, "nine":9, "ten":10};
+
+  if (recognition) {
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    
+    recognition.onresult = (e) => {
+      const now = Date.now();
+      if (now - lastVoiceCmdTime < 1500) return; 
+
+      let cmd = e.results[e.results.length - 1][0].transcript.toLowerCase().trim();
+      console.log("Audio Input:", cmd);
+      let commandExecuted = false;
+
+      let targetMatch = cmd.match(/slide (\d+)/) || cmd.match(/slide (one|two|three|four|five|six|seven|eight|nine|ten)/);
+      if (!targetMatch) targetMatch = cmd.match(/(?:go to|show).*(?:slide)? (\d+|one|two|three|four|five|six|seven|eight|nine|ten)/);
+
+      if (targetMatch) {
+        let numStr = targetMatch[1];
+        let targetIdx = (isNaN(numStr) ? wordToNum[numStr] : parseInt(numStr)) - 1; 
+        if (targetIdx >= 0 && targetIdx < TOTAL_SLIDES) { goToSlide(targetIdx); commandExecuted = true; }
+      }
+      else if (cmd.includes("first slide") || cmd.includes("start")) { goToSlide(0); commandExecuted = true; }
+      else if (cmd.includes("last slide") || cmd.includes("end")) { goToSlide(TOTAL_SLIDES - 1); commandExecuted = true; }
+      else if (cmd.includes("market") || cmd.includes("opportunity")) { goToSlide(5); commandExecuted = true; }
+      else if (cmd.includes("ask") || cmd.includes("budget") || cmd.includes("money")) { goToSlide(9); commandExecuted = true; }
+      else if (cmd.includes("team") || cmd.includes("builders")) { goToSlide(8); commandExecuted = true; }
+      else if (cmd.includes("next") || cmd.includes("forward") || cmd.includes("continue")) { navigate(1); commandExecuted = true; }
+      else if (cmd.includes("back") || cmd.includes("previous") || cmd.includes("return")) { navigate(-1); commandExecuted = true; }
+
+      if (commandExecuted) lastVoiceCmdTime = now; 
+    };
+    
+    // THE SELF-HEALING RESTART LOOP
+    recognition.onerror = (e) => {
+      console.warn("J.A.R.V.I.S. Audio Diagnostic: ", e.error);
+      if (e.error === 'not-allowed') voiceCoreActive = false; // Stop if permissions denied
+    };
+
+    recognition.onend = () => { 
+      // Force the mic back on if the browser tried to put it to sleep due to silence
+      if (voiceCoreActive) {
+        try { recognition.start(); } catch(err) { console.error("Mic restart collision bypass."); }
+      }
+    };
+  }
+}
+
+// Ensure the function exists globally even if voice is disabled, to prevent UI crashes
+function autoNarrateSlide(idx) {
+  if (!FeatureFlags.enableVoice || !voiceCoreActive) return;
+  window.speechSynthesis.cancel(); 
+  
+  const slide = document.querySelector(`#slide-${idx}`);
+  if (!slide) return;
+  
+  let voices = window.speechSynthesis.getVoices();
+  let vJarvis = voices.find(v => v.lang === 'en-GB' && !v.name.includes('Female')) || voices.find(v => v.lang === 'en-GB') || voices[0];
+  let vFriday = voices.find(v => (v.lang === 'en-US' || v.lang === 'en-UK') && (v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Zira'))) || voices[1] || voices[0];
+  let vMark4 = voices.find(v => v.name.includes('David') || v.name.includes('Mark')) || voices[voices.length - 1] || voices[0];
+
+  const speakAs = (text, voiceObj, pitch, rate) => {
+    if (!text || !text.trim()) return;
+    let utter = new SpeechSynthesisUtterance(text);
+    if (voiceObj) utter.voice = voiceObj;
+    utter.pitch = pitch; utter.rate = rate;
+    window.speechSynthesis.speak(utter);
+  };
+
+  let label = slide.querySelector('.slide-label');
+  if (label) speakAs("Section: " + label.innerText, vFriday, 1.2, 1.1);
+
+  let title = slide.querySelector('.slide-title');
+  if (title) speakAs(title.innerText, vJarvis, 0.9, 1.05);
+  
+  let body = slide.querySelector('.slide-body');
+  if (body) speakAs(body.innerText, vJarvis, 0.9, 1.05);
+
+  let listItems = slide.querySelectorAll('.item-list li');
+  listItems.forEach(li => { speakAs(li.innerText.replace('▹', '').trim(), vJarvis, 0.9, 1.1); });
+
+  let metrics = slide.querySelectorAll('.metric-card');
+  metrics.forEach(m => {
+    let val = m.querySelector('.metric-value')?.innerText || "";
+    let lbl = m.querySelector('.metric-label')?.innerText || "";
+    speakAs(`Metric: ${lbl} is ${val}`, vMark4, 0.3, 0.9); 
+  });
+
+  let budgets = slide.querySelectorAll('.budget-item');
+  budgets.forEach(b => {
+    let lbl = b.querySelector('.budget-label')?.innerText || "";
+    let amt = b.querySelector('.budget-amount')?.innerText || "";
+    speakAs(`Allocation: ${lbl}, ${amt}`, vMark4, 0.3, 0.9);
+  });
+}
+// =========================
+// ⌨️ KEYBOARD EVENTS (MERGED)
+// =========================
+document.addEventListener('keydown', (e) => {
+  switch(e.key) {
+    case 'ArrowRight': case 'ArrowDown': case ' ':
+      e.preventDefault(); navigate(1); break;
+    case 'ArrowLeft': case 'ArrowUp':
+      e.preventDefault(); navigate(-1); break;
+    case 'F5': case 'p': case 'P':
+      e.preventDefault(); toggleFullscreen(); break;
+    case 'Tab': case 'o': case 'O':
+      e.preventDefault(); toggleOverview(); break;
+    case 'Escape': closeOverview(); break;
+    case 'a': case 'A': toggleAutoplay(); break;
+    case 'd': case 'D': togglePerfMonitor(); break;
+    case 'e': case 'E':
+      if (typeof FeatureFlags !== 'undefined' && FeatureFlags.enableExplain) {
+        e.preventDefault(); 
+        document.body.classList.toggle('explain-active');
+      }
+      break;
+    case 'c': case 'C':
+      if (typeof FeatureFlags !== 'undefined' && FeatureFlags.enableCinematic) {
+        e.preventDefault();
+        document.body.classList.toggle('cinematic');
+      }
+      break;
+    case 'v': case 'V':
+      if (typeof FeatureFlags !== 'undefined' && FeatureFlags.enableVoice) {
+        voiceCoreActive = !voiceCoreActive;
+        const kbdHint = document.getElementById('kbd-hint');
+        
+        // Ensure recognition is defined (safeguard)
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+
+        if (voiceCoreActive) {
+          // Restart logic requires clearing errors sometimes
+          try { if (recognition) recognition.start(); } catch(err){}
+          autoNarrateSlide(currentSlide);
+          kbdHint.innerText = "🎙️ J.A.R.V.I.S. CORE: ONLINE (Mic Active)";
+          kbdHint.style.opacity = '1';
+          kbdHint.style.color = "var(--danger)";
+        } else {
+          // Stop logic
+          try { if (recognition) recognition.stop(); } catch(err){}
+          window.speechSynthesis.cancel();
+          kbdHint.innerText = "🎙️ J.A.R.V.I.S. CORE: OFFLINE";
+          setTimeout(() => { kbdHint.style.opacity = '0'; }, 2000);
+        }
+      }
+      break;
+  }
+});
+</script>
+
+<div id="kbd-hint" style="
+  position:fixed; bottom:40px; left:50%; transform:translateX(-50%);
+  font-family:'Space Mono',monospace; font-size:11px; letter-spacing:0.15em;
+  color:rgba(90,122,154,0.7); z-index:9998; pointer-events:none;
+  transition:opacity 1s; text-align:center;
+">← → NAVIGATE &nbsp;·&nbsp; [O] OVERVIEW &nbsp;·&nbsp; [A] AUTOPLAY<br>[C] CINEMATIC &nbsp;·&nbsp; [E] JUDGE NOTES &nbsp;·&nbsp; [V] J.A.R.V.I.S.</div>
+<script>
+  setTimeout(() => { document.getElementById('kbd-hint').style.opacity = '0'; }, 6000);
+</script>
+</body>
+</html>

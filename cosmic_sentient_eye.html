@@ -1,0 +1,649 @@
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+#eye-wrap{width:100%;height:580px;background:#000005;border-radius:12px;overflow:hidden;position:relative;cursor:none}
+#eye-canvas{width:100%!important;height:100%!important;display:block}
+#eye-ui{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:10px;align-items:center;background:rgba(0,0,5,0.8);border:0.5px solid rgba(80,20,140,0.4);border-radius:8px;padding:10px 18px}
+#eye-ui button{background:rgba(80,20,140,0.2);border:0.5px solid rgba(140,60,220,0.5);color:#c0a0ff;border-radius:6px;padding:7px 16px;cursor:pointer;font-size:13px;transition:all 0.2s}
+#eye-ui button:hover{background:rgba(80,20,140,0.5);border-color:rgba(180,100,255,0.8)}
+#eye-state{color:rgba(160,120,255,0.6);font-size:12px;min-width:60px;text-align:center}
+#eye-cursor{width:12px;height:12px;border:1.5px solid rgba(180,100,255,0.8);border-radius:50%;position:absolute;pointer-events:none;transform:translate(-50%,-50%);transition:width 0.2s,height 0.2s,opacity 0.2s}
+</style>
+<div id="eye-wrap">
+  <canvas id="eye-canvas"></canvas>
+  <div id="eye-cursor"></div>
+  <div id="eye-ui">
+    <button id="open-btn">Open Eye</button>
+    <span id="eye-state">Dormant</span>
+    <button id="close-btn">Close Eye</button>
+  </div>
+</div>
+<script>
+(function(){
+'use strict';
+
+const wrap = document.getElementById('eye-wrap');
+const canvas = document.getElementById('eye-canvas');
+const openBtn = document.getElementById('open-btn');
+const closeBtn = document.getElementById('close-btn');
+const stateLabel = document.getElementById('eye-state');
+const cursorEl = document.getElementById('eye-cursor');
+
+// ── Renderer ──────────────────────────────────────────────────────────────
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(wrap.clientWidth, wrap.clientHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.4;
+
+// ── Scene ─────────────────────────────────────────────────────────────────
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x000005, 0.12);
+
+// ── Camera ────────────────────────────────────────────────────────────────
+const camera = new THREE.PerspectiveCamera(42, wrap.clientWidth/wrap.clientHeight, 0.1, 100);
+camera.position.set(0, 0, 6.5);
+
+// ── State machine ─────────────────────────────────────────────────────────
+// States: 'idle' | 'opening' | 'active' | 'closing'
+let eyeState = 'idle';
+let openProgress = 0;   // 0=closed, 1=fully open
+let targetOpen = 0;
+let mouseNDC = new THREE.Vector2(0,0);
+let parallaxTarget = new THREE.Vector2(0,0);
+let parallaxCurrent = new THREE.Vector2(0,0);
+let time = 0;
+
+// ── Lights ────────────────────────────────────────────────────────────────
+const ambient = new THREE.AmbientLight(0x020c18, 1.5); // Deep JARVIS bg blue
+scene.add(ambient);
+
+const coreLight = new THREE.PointLight(0x00e5ff, 0, 8); // Cyan core
+coreLight.position.set(0,0,1);
+scene.add(coreLight);
+
+const rimLight = new THREE.PointLight(0x1565c0, 1.5, 12); // Deep blue rim
+rimLight.position.set(-4,-2,-3);
+scene.add(rimLight);
+
+const topLight = new THREE.PointLight(0x00bcd4, 2, 10); // Teal top light
+topLight.position.set(2,4,2);
+scene.add(topLight);
+
+// ── Custom GLSL Iris Material ─────────────────────────────────────────────
+const irisMat = new THREE.ShaderMaterial({
+  uniforms: {
+    uTime:     {value: 0},
+    uOpen:     {value: 0},
+    uMouse:    {value: new THREE.Vector2(0,0)},
+  },
+  vertexShader: `
+    varying vec2 vUv;
+    varying vec3 vPos;
+    void main(){
+      vUv = uv;
+      vPos = position;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform float uTime;
+    uniform float uOpen;
+    uniform vec2 uMouse;
+    varying vec2 vUv;
+    varying vec3 vPos;
+
+    vec2 hash2(vec2 p){
+      p = vec2(dot(p,vec2(127.1,311.7)), dot(p,vec2(269.5,183.3)));
+      return -1.0 + 2.0*fract(sin(p)*43758.5453123);
+    }
+
+    float noise(vec2 p){
+      vec2 i = floor(p); vec2 f = fract(p);
+      vec2 u = f*f*(3.0-2.0*f);
+      return mix(mix(dot(hash2(i+vec2(0,0)),f-vec2(0,0)),
+                     dot(hash2(i+vec2(1,0)),f-vec2(1,0)),u.x),
+                 mix(dot(hash2(i+vec2(0,1)),f-vec2(0,1)),
+                     dot(hash2(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);
+    }
+
+    float fbm(vec2 p){
+      float v=0.0,a=0.5;
+      for(int i=0;i<5;i++){v+=a*noise(p);p=p*2.1+vec2(1.3,2.7);a*=0.5;}
+      return v;
+    }
+
+    void main(){
+      vec2 uv = vUv - 0.5;
+      float dist = length(uv);
+      float angle = atan(uv.y, uv.x);
+
+      // Pupil slit
+      float pupilW = 0.08 + uOpen * 0.12;
+      float pupilH = 0.22;
+      vec2 pupilUv = vec2(uv.x/pupilW, uv.y/pupilH);
+      float pupilDist = length(pupilUv);
+      float pupil = smoothstep(0.95, 1.05, pupilDist);
+
+      // Swirling plasma base
+      float swirl = angle + uTime * 0.4 + dist * 3.0;
+      vec2 plasmaUv = vec2(cos(swirl), sin(swirl)) * dist * 3.0;
+      plasmaUv += uTime * vec2(0.12, -0.08);
+      float plasma = fbm(plasmaUv + vec2(uTime * 0.1));
+      plasma = plasma * 0.5 + 0.5;
+
+      vec2 texUv = uv + uMouse * 0.04;
+      float detail = fbm(texUv * 5.0 + uTime * 0.2) * 0.5 + 0.5;
+
+      // JARVIS Color palette: Deep blue -> Cyan -> White
+      vec3 c1 = vec3(0.01, 0.05, 0.1);   // Dark UI background
+      vec3 c2 = vec3(0.08, 0.39, 0.75);  // JARVIS blue (--blue)
+      vec3 c3 = vec3(0.0, 0.9, 1.0);     // JARVIS cyan (--cyan)
+      vec3 c4 = vec3(0.8, 1.0, 1.0);     // White hot core
+
+      float t1 = plasma * detail;
+      vec3 col = mix(c1, c2, smoothstep(0.0, 0.4, t1));
+      col = mix(col, c3, smoothstep(0.35, 0.7, t1));
+      col = mix(col, c4, smoothstep(0.72, 1.0, t1));
+
+      // 👉 ORGANIC NEURAL VEINS
+      // Distort the radial angle using FBM to create branching, biological lines
+      float vNoise = fbm(uv * 12.0 - uTime * 0.3);
+      float veinPath = sin((angle + vNoise * 0.5) * 25.0 + dist * 8.0);
+      float veinThickness = smoothstep(0.92, 0.98, veinPath);
+      // Fade veins near pupil and outer edge
+      float veinAlpha = smoothstep(0.15, 0.35, dist) * smoothstep(0.8, 0.5, dist);
+      vec3 veinColor = vec3(0.0, 0.8, 1.0); // Bright cyan blood
+      col += veinColor * veinThickness * veinAlpha * 2.0;
+
+      // Pupil dark void
+      float innerGlow = (1.0 - pupil) * exp(-pupilDist * 0.8) * 1.5;
+      col = mix(col * (1.0 - (1.0-pupil) * 0.9) + vec3(0.0, 0.2, 0.4)*innerGlow, col, pupil);
+      
+      // Depth & lightning
+      float depth = pow(1.0 - dist, 2.0);
+      col *= 1.0 + depth * 1.5;
+
+      float lightning = step(0.98, sin(angle * 20.0 + uTime * 5.0 + plasma * 3.0));
+      col += lightning * vec3(0.0, 0.9, 1.0) * 0.8 * uOpen; // Cyan lightning
+
+      float vign = 1.0 - smoothstep(0.28, 0.52, dist);
+      float alpha = vign * uOpen * smoothstep(0.52, 0.48, dist);
+
+      col *= 1.8;
+      gl_FragColor = vec4(col, alpha);
+    }
+  `,
+  transparent: true,
+  side: THREE.DoubleSide,
+  depthWrite: false,
+});
+
+const irisGeo = new THREE.CircleGeometry(1.05, 128);
+const irisMesh = new THREE.Mesh(irisGeo, irisMat);
+irisMesh.position.z = 0.02;
+scene.add(irisMesh);
+
+// Sclera (white/dark base of eyeball)
+const scleraMat = new THREE.MeshStandardMaterial({
+  color: 0x060010, roughness: 0.3, metalness: 0.6,
+  emissive: 0x0a0020, emissiveIntensity: 0.4,
+});
+const scleraMesh = new THREE.Mesh(new THREE.SphereGeometry(1.05, 48, 32), scleraMat);
+scleraMesh.position.z = -0.3;
+scene.add(scleraMesh);
+
+// ── Mechanical Eyelids ────────────────────────────────────────────────────
+const lidMat = new THREE.MeshStandardMaterial({
+  color: 0x020c18, roughness: 0.25, metalness: 0.85, // Deep JARVIS Blue
+  emissive: 0x001133, emissiveIntensity: 0.4,
+});
+const lidEdgeMat = new THREE.MeshStandardMaterial({
+  color: 0x00e5ff, roughness: 0.1, metalness: 1.0,   // Cyan Edges
+  emissive: 0x00bcd4, emissiveIntensity: 0.5,
+});
+
+const lidSegments = [];
+const SEG_COUNT = 7; // segments per lid half
+
+function buildLidSegment(index, total, isUpper) {
+  const group = new THREE.Group();
+  const frac = index / total;
+  const startAngle = (isUpper ? Math.PI : 0) + frac * Math.PI;
+  const endAngle = startAngle + Math.PI / total;
+  const midAngle = (startAngle + endAngle) / 2;
+
+  // Main segment plate — using ring sector approximation
+  const innerR = 0.98, outerR = 1.48;
+  const pts = [];
+  const steps = 8;
+  for (let i = 0; i <= steps; i++) {
+    const a = startAngle + (i/steps)*(endAngle-startAngle);
+    pts.push(new THREE.Vector2(Math.cos(a)*outerR, Math.sin(a)*outerR));
+  }
+  for (let i = steps; i >= 0; i--) {
+    const a = startAngle + (i/steps)*(endAngle-startAngle);
+    pts.push(new THREE.Vector2(Math.cos(a)*innerR, Math.sin(a)*innerR));
+  }
+  const shape = new THREE.Shape(pts);
+  const extrudeSettings = { depth: 0.18, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 2 };
+  const segGeo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+  const segMesh = new THREE.Mesh(segGeo, lidMat);
+  segMesh.position.z = -0.09;
+
+  // Edge accent strip
+  const edgePts = [];
+  for (let i = 0; i <= steps; i++) {
+    const a = startAngle + (i/steps)*(endAngle-startAngle);
+    edgePts.push(new THREE.Vector2(Math.cos(a)*innerR, Math.sin(a)*innerR));
+  }
+  for (let i = steps; i >= 0; i--) {
+    const a = startAngle + (i/steps)*(endAngle-startAngle);
+    edgePts.push(new THREE.Vector2(Math.cos(a)*(innerR-0.04), Math.sin(a)*(innerR-0.04)));
+  }
+  const edgeShape = new THREE.Shape(edgePts);
+  const edgeGeo = new THREE.ExtrudeGeometry(edgeShape, {depth: 0.2, bevelEnabled: false});
+  const edgeMesh = new THREE.Mesh(edgeGeo, lidEdgeMat);
+  edgeMesh.position.z = -0.08;
+
+  group.add(segMesh, edgeMesh);
+
+  // Pivot at eyeball center for open/close motion
+  group.userData = { midAngle, isUpper, index, frac };
+  return group;
+}
+
+const lidGroup = new THREE.Group();
+scene.add(lidGroup);
+
+for (let i = 0; i < SEG_COUNT; i++) {
+  const upper = buildLidSegment(i, SEG_COUNT, true);
+  const lower = buildLidSegment(i, SEG_COUNT, false);
+  lidGroup.add(upper);
+  lidGroup.add(lower);
+  lidSegments.push(upper, lower);
+}
+
+// Outer mechanical ring
+const ringGeo = new THREE.TorusGeometry(1.52, 0.055, 12, 80);
+const ringMat = new THREE.MeshStandardMaterial({
+  color: 0x020c18, roughness: 0.15, metalness: 0.95, // Deep JARVIS bg
+  emissive: 0x00e5ff, emissiveIntensity: 0.15,       // Cyan glow
+});
+const outerRing = new THREE.Mesh(ringGeo, ringMat);
+scene.add(outerRing);
+
+// Secondary decorative ring
+const ring2 = new THREE.Mesh(
+  new THREE.TorusGeometry(1.65, 0.03, 8, 60),
+  new THREE.MeshStandardMaterial({
+    color:0x040f1e, roughness:0.2, metalness:1.0, 
+    emissive:0x1565c0, emissiveIntensity:0.2 // Blue glow
+  })
+);
+scene.add(ring2);
+
+// Engraved runes on outer ring
+for (let i = 0; i < 24; i++) {
+  const a = (i/24)*Math.PI*2;
+  const notch = new THREE.Mesh(
+    new THREE.BoxGeometry(0.04, 0.12, 0.04),
+    new THREE.MeshStandardMaterial({
+      color:0x00e5ff, emissive:0x00bcd4, emissiveIntensity:0.5, 
+      roughness:0.1, metalness:1.0
+    })
+  );
+  notch.position.set(Math.cos(a)*1.65, Math.sin(a)*1.65, 0.02);
+  notch.rotation.z = a;
+  scene.add(notch);
+}
+
+// ── Particle System (cosmic dust / embers) ────────────────────────────────
+const PART_COUNT = 800;
+const partGeo = new THREE.BufferGeometry();
+const partPos = new Float32Array(PART_COUNT * 3);
+const partVel = new Float32Array(PART_COUNT * 3);
+const partLife = new Float32Array(PART_COUNT);
+const partCol = new Float32Array(PART_COUNT * 3);
+
+function resetParticle(i) {
+  const a = Math.random() * Math.PI * 2;
+  const r = 0.1 + Math.random() * 0.4;
+  partPos[i*3]   = Math.cos(a)*r;
+  partPos[i*3+1] = Math.sin(a)*r;
+  partPos[i*3+2] = (Math.random()-0.5)*0.3;
+  const speed = 0.003 + Math.random()*0.006;
+  const outAngle = a + (Math.random()-0.5)*0.8;
+  partVel[i*3]   = Math.cos(outAngle)*speed;
+  partVel[i*3+1] = Math.sin(outAngle)*speed;
+  partVel[i*3+2] = (Math.random()-0.5)*0.003;
+  partLife[i] = Math.random();
+  // Color: orange-white to purple
+  const t = Math.random();
+  partCol[i*3]   = 1.0 - t*0.5;
+  partCol[i*3+1] = 0.4 - t*0.35;
+  partCol[i*3+2] = t;
+}
+
+for (let i = 0; i < PART_COUNT; i++) {
+  partLife[i] = Math.random(); // start at random phase
+  resetParticle(i);
+}
+
+partGeo.setAttribute('position', new THREE.BufferAttribute(partPos, 3));
+partGeo.setAttribute('color', new THREE.BufferAttribute(partCol, 3));
+
+const partMat = new THREE.PointsMaterial({
+  size: 0.025, vertexColors: true, transparent: true,
+  opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false,
+  sizeAttenuation: true,
+});
+const particles = new THREE.Points(partGeo, partMat);
+scene.add(particles);
+
+// ── Deep space background stars ───────────────────────────────────────────
+const starGeo = new THREE.BufferGeometry();
+const starPos = new Float32Array(1200*3);
+for (let i = 0; i < 1200; i++) {
+  const theta = Math.random()*Math.PI*2;
+  const phi = Math.acos(2*Math.random()-1);
+  const r = 8 + Math.random()*4;
+  starPos[i*3]   = r*Math.sin(phi)*Math.cos(theta);
+  starPos[i*3+1] = r*Math.sin(phi)*Math.sin(theta);
+  starPos[i*3+2] = r*Math.cos(phi);
+}
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos,3));
+const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({
+  size:0.04, color:0xffffff, transparent:true, opacity:0.6,
+  blending:THREE.AdditiveBlending, depthWrite:false
+}));
+scene.add(stars);
+
+// ── Glow disk (soft bloom substitute) ────────────────────────────────────
+const glowMat = new THREE.ShaderMaterial({
+  uniforms: { uOpen:{value:0}, uTime:{value:0} },
+  vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+  fragmentShader: `
+      uniform float uTime;
+      uniform float uOpen;
+      uniform vec2 uMouse;
+      varying vec2 vUv;
+      varying vec3 vPos;
+
+      vec2 hash2(vec2 p){
+        p = vec2(dot(p,vec2(127.1,311.7)), dot(p,vec2(269.5,183.3)));
+        return -1.0 + 2.0*fract(sin(p)*43758.5453123);
+      }
+
+      float noise(vec2 p){
+        vec2 i = floor(p); vec2 f = fract(p);
+        vec2 u = f*f*(3.0-2.0*f);
+        return mix(mix(dot(hash2(i+vec2(0,0)),f-vec2(0,0)),
+                       dot(hash2(i+vec2(1,0)),f-vec2(1,0)),u.x),
+                   mix(dot(hash2(i+vec2(0,1)),f-vec2(0,1)),
+                       dot(hash2(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);
+      }
+
+      float fbm(vec2 p){
+        float v=0.0,a=0.5;
+        for(int i=0;i<5;i++){v+=a*noise(p);p=p*2.1+vec2(1.3,2.7);a*=0.5;}
+        return v;
+      }
+
+      void main(){
+        vec2 uv = vUv - 0.5;
+        float dist = length(uv);
+        float angle = atan(uv.y, uv.x);
+
+        // Pupil slit
+        float pupilW = 0.08 + uOpen * 0.12;
+        float pupilH = 0.22;
+        vec2 pupilUv = vec2(uv.x/pupilW, uv.y/pupilH);
+        float pupilDist = length(pupilUv);
+        float pupil = smoothstep(0.95, 1.05, pupilDist);
+
+        // Base plasma (Brightened so it's not a pure black void)
+        float swirl = angle + uTime * 0.4 + dist * 3.0;
+        vec2 plasmaUv = vec2(cos(swirl), sin(swirl)) * dist * 3.0;
+        plasmaUv += uTime * vec2(0.12, -0.08);
+        float plasma = fbm(plasmaUv + vec2(uTime * 0.1));
+        
+        // JARVIS Base Blues
+        vec3 c1 = vec3(0.02, 0.08, 0.25);  // Deep blue base
+        vec3 c2 = vec3(0.0, 0.4, 0.8);     // Mid blue
+        vec3 c3 = vec3(0.0, 0.8, 1.0);     // Cyan highlight
+        
+        vec3 col = mix(c1, c2, plasma);
+        col = mix(col, c3, smoothstep(0.6, 1.0, plasma) * 0.5);
+
+        // 👉 THE FIX: RIDGE NOISE NEURAL VEINS 
+        // This guarantees thick, connected web-like lines flowing outward
+        vec2 veinUv = uv * 8.0; 
+        veinUv -= normalize(uv) * uTime * 0.8; 
+        
+        float n = fbm(veinUv);
+        // Ridge noise math: flips the noise inside out to create sharp peaks
+        float ridge = 1.0 - abs(n * 2.0 - 1.0); 
+        float veins = smoothstep(0.5, 0.9, ridge); 
+        
+        // Mask it so it fades naturally near the pupil and outer edge
+        float veinMask = smoothstep(0.15, 0.35, dist) * smoothstep(0.9, 0.5, dist);
+        
+        // Blast it with 400% pure cyan
+        vec3 veinColor = vec3(0.0, 1.0, 1.0);
+        col += veinColor * veins * veinMask * 4.0; 
+
+        // Pupil dark void
+        float innerGlow = (1.0 - pupil) * exp(-pupilDist * 0.8) * 1.5;
+        col = mix(col * (1.0 - (1.0-pupil) * 0.9) + vec3(0.0, 0.2, 0.4)*innerGlow, col, pupil);
+        
+        // Depth
+        float depth = pow(1.0 - dist, 2.0);
+        col *= 1.0 + depth * 1.5;
+
+        // Open mask
+        float vign = 1.0 - smoothstep(0.28, 0.52, dist);
+        float alpha = vign * uOpen * smoothstep(0.52, 0.48, dist);
+
+        col *= 1.8;
+        gl_FragColor = vec4(col, alpha);
+      }
+    `,
+  transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide,
+});
+const glowDisk = new THREE.Mesh(new THREE.PlaneGeometry(3.5,3.5), glowMat);
+glowDisk.position.z = -0.15;
+scene.add(glowDisk);
+
+// ── Eyelid animation logic ────────────────────────────────────────────────
+// Each lid segment slides radially outward when "opening"
+function updateLids(openAmt) {
+  lidSegments.forEach((seg, idx) => {
+    const { midAngle, isUpper, frac } = seg.userData;
+    // Staggered open: segments near corner open last for organic feel
+    const delay = Math.abs(frac - 0.5) * 0.6;
+    const localOpen = Math.max(0, Math.min(1, (openAmt - delay) / (1-delay)));
+    const ease = localOpen < 0.5 ? 2*localOpen*localOpen : -1+(4-2*localOpen)*localOpen;
+
+    // Slide outward radially + slight Z separation
+    const slideOut = ease * 0.7;
+    seg.position.x = Math.cos(midAngle) * slideOut;
+    seg.position.y = Math.sin(midAngle) * slideOut;
+    seg.position.z = ease * 0.15;
+
+    // Slight rotation of each segment as it opens
+    seg.rotation.z = (isUpper ? -1 : 1) * ease * 0.12 * (frac - 0.5);
+  });
+}
+
+// ── Mouse tracking ────────────────────────────────────────────────────────
+wrap.addEventListener('mousemove', (e) => {
+  const rect = wrap.getBoundingClientRect();
+  mouseNDC.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  mouseNDC.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  cursorEl.style.left = (e.clientX - rect.left) + 'px';
+  cursorEl.style.top  = (e.clientY - rect.top) + 'px';
+  parallaxTarget.set(mouseNDC.x, mouseNDC.y);
+});
+wrap.addEventListener('mouseenter', () => { cursorEl.style.opacity='1'; });
+wrap.addEventListener('mouseleave', () => {
+  cursorEl.style.opacity='0';
+  parallaxTarget.set(0,0);
+});
+
+// ── Public API ────────────────────────────────────────────────────────────
+function triggerEyeOpen() {
+  if (eyeState === 'idle' || eyeState === 'closing') {
+    eyeState = 'opening';
+    targetOpen = 1;
+    stateLabel.textContent = 'Awakening';
+    openBtn.style.opacity = '0.4';
+    closeBtn.style.opacity = '1';
+  }
+}
+function triggerEyeClose() {
+  if (eyeState === 'active' || eyeState === 'opening') {
+    eyeState = 'closing';
+    targetOpen = 0;
+    stateLabel.textContent = 'Dormant';
+    openBtn.style.opacity = '1';
+    closeBtn.style.opacity = '0.4';
+  }
+}
+function initEye(containerId) { /* hook for external usage */ }
+
+openBtn.addEventListener('click', triggerEyeOpen);
+closeBtn.addEventListener('click', triggerEyeClose);
+closeBtn.style.opacity = '0.4';
+
+// ── Animation Loop ────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const delta = Math.min(clock.getDelta(), 0.05);
+  time += delta;
+
+  // Smooth open progress
+  const openSpeed = eyeState === 'opening' ? 0.55 : 0.45;
+  openProgress += (targetOpen - openProgress) * openSpeed * delta * 3.5;
+  openProgress = Math.max(0, Math.min(1, openProgress));
+
+  // State transitions
+  if (eyeState === 'opening' && openProgress > 0.98) {
+    eyeState = 'active';
+    stateLabel.textContent = 'Aware';
+  }
+  if (eyeState === 'closing' && openProgress < 0.02) {
+    eyeState = 'idle';
+    openProgress = 0;
+  }
+
+  // Parallax eye tracking (only when active)
+  const trackAmt = eyeState === 'active' ? 1 : 0;
+  parallaxCurrent.lerp(parallaxTarget.clone().multiplyScalar(trackAmt), 0.06);
+
+  // Iris position follows cursor
+  irisMesh.position.x = parallaxCurrent.x * 0.18;
+  irisMesh.position.y = parallaxCurrent.y * 0.12;
+  scleraMesh.position.x = parallaxCurrent.x * 0.06;
+  scleraMesh.position.y = parallaxCurrent.y * 0.04;
+
+  // Update iris shader
+  irisMat.uniforms.uTime.value = time;
+  irisMat.uniforms.uOpen.value = openProgress;
+  irisMat.uniforms.uMouse.value.set(parallaxCurrent.x, parallaxCurrent.y);
+
+  // Glow disk
+  glowMat.uniforms.uOpen.value = openProgress;
+  glowMat.uniforms.uTime.value = time;
+
+  // Core light pulse
+  const pulse = Math.sin(time * 3.5) * 0.15 + 0.85;
+  coreLight.intensity = openProgress * 6 * pulse;
+  coreLight.position.x = parallaxCurrent.x * 0.2;
+  coreLight.position.y = parallaxCurrent.y * 0.2;
+
+  // Outer ring emissive pulse + slow rotation
+  ringMat.emissiveIntensity = 0.05 + openProgress * 0.35 * pulse;
+  outerRing.rotation.z = time * 0.08;
+  ring2.rotation.z = -time * 0.05;
+
+  // Idle pulsation on sclera
+  const idlePulse = Math.sin(time * 1.2) * 0.04;
+  scleraMesh.scale.setScalar(1 + idlePulse * (1 - openProgress) * 0.5);
+
+  // Lid edge glow intensifies on open
+  lidEdgeMat.emissiveIntensity = 0.15 + openProgress * 0.65 * pulse;
+
+  // Update eyelid segments
+  updateLids(openProgress);
+
+  // Very slow lid group rotation for character
+  lidGroup.rotation.z = Math.sin(time * 0.22) * 0.04 + parallaxCurrent.x * 0.05;
+
+  // Particles
+  const posAttr = partGeo.attributes.position;
+  const colAttr = partGeo.attributes.color;
+  for (let i = 0; i < PART_COUNT; i++) {
+    partLife[i] += delta * (0.3 + Math.random()*0.2);
+    if (partLife[i] >= 1.0) {
+      resetParticle(i);
+      partLife[i] = 0;
+    }
+    const fade = Math.sin(partLife[i] * Math.PI);
+    posAttr.array[i*3]   += partVel[i*3];
+    posAttr.array[i*3+1] += partVel[i*3+1];
+    posAttr.array[i*3+2] += partVel[i*3+2];
+  }
+  posAttr.needsUpdate = true;
+  partMat.opacity = openProgress * 0.85;
+
+  // 👉 1. MICRO-CHAOS (Saccades / Eye Twitches)
+  if (eyeState === 'active' && Math.random() < 0.04) {
+    parallaxTarget.x += (Math.random() - 0.5) * 0.15;
+    parallaxTarget.y += (Math.random() - 0.5) * 0.15;
+  }
+
+  // 👉 2. OPENING IMPACT (Surge & Shake)
+  let shake = 0;
+  if (eyeState === 'opening') {
+    const burst = Math.sin(openProgress * Math.PI); 
+    shake = burst * 0.08; 
+    coreLight.intensity += burst * 15; 
+    glowDisk.scale.setScalar(1 + burst * 0.8);
+  } else {
+    glowDisk.scale.setScalar(1 + Math.sin(time * 2) * 0.05);
+  }
+
+  // 👉 5. ENVIRONMENT REACTION
+  // Stars spin faster and get brighter as the eye opens
+  stars.rotation.z += 0.0005 + (openProgress * 0.008);
+  stars.material.opacity = 0.2 + (openProgress * 0.8);
+
+  // 👉 CAMERA FIX (Must go AFTER shake is calculated)
+  const targetZ = 6.5 - openProgress * 1.8;
+  camera.position.z += (targetZ - camera.position.z) * 0.04;
+  camera.position.x += (parallaxCurrent.x * 0.3 - camera.position.x) * 0.05 + (Math.random() - 0.5) * shake;
+  camera.position.y += (parallaxCurrent.y * 0.2 - camera.position.y) * 0.05 + (Math.random() - 0.5) * shake;
+  camera.position.y += Math.sin(time * 0.4) * 0.008; // breathing
+  camera.lookAt(0, 0, 0);
+
+  renderer.render(scene, camera);
+}
+animate();
+
+// ── Resize ────────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w/h;
+  camera.updateProjectionMatrix();
+});
+
+// Expose API
+window.cosmicEyeAPI = { initEye, triggerEyeOpen, triggerEyeClose };
+})();
+</script>
+
