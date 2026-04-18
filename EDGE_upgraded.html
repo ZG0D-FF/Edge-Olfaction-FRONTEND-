@@ -63,6 +63,11 @@
             background: #cbd5e1;
             border-radius: 3px;
         }
+        /* Force the mini sparkline graphs into a strict horizontal oscilloscope view */
+        canvas[id^="spark-"] {
+            max-height: 40px !important;
+            width: 100% !important;
+        }
     </style>
 </head>
 <body class="bg-stone-50 text-slate-800 antialiased selection:bg-orange-200 selection:text-orange-900">
@@ -312,7 +317,7 @@
                             Live Edge Telemetry
                         </h2>
                         <p class="text-slate-600 text-lg leading-relaxed">
-                            Connects live to JARVIS Pi at <code class="text-xs bg-slate-100 px-1.5 py-0.5 rounded border font-mono">192.168.0.6:8080/data</code>. When Pi is offline, shows last cached session. No Pi, no fake data.
+                            Connects live to JARVIS via Cloudflare at <code class="text-xs bg-slate-100 px-1.5 py-0.5 rounded border font-mono">aeo1.sharmiksen21.workers.dev</code>. When the worker is unreachable, shows last cached session. No cloud, no fake data.
                         </p>
                     </div>
                     <!-- Connection badge + Pi URL config -->
@@ -322,9 +327,6 @@
                             <span id="conn-text">Connecting to Pi...</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <input id="pi-url-input" type="text" value="http://192.168.0.6:8080" placeholder="Pi URL" 
-                                class="flex-1 text-xs font-mono border border-stone-300 rounded px-2 py-1.5 bg-white text-slate-700 focus:outline-none focus:border-orange-400"/>
-                            <button id="btn-set-url" class="px-3 py-1.5 bg-slate-800 text-white text-xs font-bold rounded hover:bg-orange-600 transition-colors">Set</button>
                             <button id="export-btn" class="px-3 py-1.5 bg-emerald-600 border border-emerald-500 text-white text-xs font-bold rounded hover:bg-emerald-500 transition-colors">
     ⬇ CSV
 </button>
@@ -341,8 +343,8 @@
                 <!-- No-data state (shown when no Pi and no cache) -->
                 <div id="no-data-state" class="hidden py-20 text-center rounded-2xl border-2 border-dashed border-stone-200 bg-stone-50 mb-8">
                     <div class="text-5xl mb-4">📡</div>
-                    <p class="text-slate-500 font-semibold">No Pi connected and no cached data found.</p>
-                    <p class="text-slate-400 text-sm mt-2">Connect your Raspberry Pi to <code class="font-mono">192.168.0.6:8080</code> to begin live telemetry.</p>
+                    <p class="text-slate-500 font-semibold">No data from Cloudflare Worker and no cached data found.</p>
+                    <p class="text-slate-400 text-sm mt-2">Ensure the Worker at <code class="font-mono">aeo1.sharmiksen21.workers.dev</code> is active to begin live telemetry.</p>
                 </div>
 
                 <!-- Sensor Cards Grid (8 sensors, each with mini sparkline) -->
@@ -418,6 +420,8 @@
                             </div>
                             <canvas id="spark-dist" height="36"></canvas>
                         </div>
+                        
+                        
 
                         <!-- Risk -->
                         <div class="sensor-card bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-sm border-l-4 border-l-red-500">
@@ -427,6 +431,42 @@
                                 <div class="text-xs font-mono text-slate-400 mb-1">%</div>
                             </div>
                             <canvas id="spark-risk" height="36"></canvas>
+                        </div>
+
+                    </div>
+                    <h3 class="font-bold text-slate-800 mt-8 mb-4">Acoustic & Pest Telemetry</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        
+                        <div class="sensor-card bg-white p-4 rounded-xl border border-stone-200 shadow-sm border-l-4 border-l-indigo-500">
+                            <div class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Piezo · Peak Amp</div>
+                            <div class="flex items-end justify-between mb-2">
+                                <div class="text-3xl font-mono text-slate-800 font-bold" id="dash-vib-max">—</div>
+                                <div class="text-xs font-mono text-slate-400 mb-1">RAW</div>
+                            </div>
+                            <canvas id="spark-vib" height="36"></canvas>
+                        </div>
+
+                        <div class="sensor-card bg-white p-4 rounded-xl border border-stone-200 shadow-sm border-l-4 border-l-cyan-500">
+                            <div class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Crest Factor</div>
+                            <div class="flex items-end justify-between mb-2">
+                                <div class="text-3xl font-mono text-slate-800 font-bold" id="dash-crest">—</div>
+                                <div class="text-xs font-mono text-slate-400 mb-1">RATIO</div>
+                            </div>
+                            <canvas id="spark-crest" height="36"></canvas>
+                        </div>
+
+                        <div class="sensor-card bg-white p-4 rounded-xl border border-stone-200 shadow-sm border-l-4 border-l-purple-500">
+                            <div class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Zero-Crossings</div>
+                            <div class="flex items-end justify-between mb-2">
+                                <div class="text-3xl font-mono text-slate-800 font-bold" id="dash-zcr">—</div>
+                                <div class="text-xs font-mono text-slate-400 mb-1">15s WIN</div>
+                            </div>
+                            <canvas id="spark-zcr" height="36"></canvas>
+                        </div>
+
+                        <div class="sensor-card bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-sm border-l-4 border-l-amber-500 flex flex-col justify-center">
+                            <div class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Vibration Status</div>
+                            <div class="text-sm font-bold text-amber-400 mt-2 leading-tight" id="dash-activity">AWAITING...</div>
                         </div>
 
                     </div>
@@ -456,7 +496,7 @@
     </footer>
 
     <!-- Mandatory JS Logic -->
-    <script>
+<script>
         // --- 1. Interactive Math Engine Logic ---
         const mathMq = document.getElementById('math-mq');
         const mathTemp = document.getElementById('math-temp');
@@ -504,31 +544,31 @@
         // Initialize math engine
         updateMathEngine();
 
-
         // ============================================================
         // --- 2. LIVE PI DATA ENGINE (replaces simulation loop) ---
         // ============================================================
 
         const CACHE_KEY = 'jarvis_last_data';
         // --- NEW FEATURES SETUP ---
-const alertSound = new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg");
-let audioUnlocked = false;
+        const alertSound = new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg");
+        let audioUnlocked = false;
 
-// Unlock audio on first click anywhere (or bind to your Launch button)
-document.body.addEventListener('click', () => {
-    if (!audioUnlocked) {
-        alertSound.play().then(() => { alertSound.pause(); audioUnlocked = true; }).catch(()=>{});
-    }
-}, { once: true });
+        // Unlock audio on first click anywhere (or bind to your Launch button)
+        document.body.addEventListener('click', () => {
+            if (!audioUnlocked) {
+                alertSound.play().then(() => { alertSound.pause(); audioUnlocked = true; }).catch(()=>{});
+            }
+        }, { once: true });
 
-function detectSpike(arr, threshold = 50) {
-    if (arr.length < 2) return false;
-    let last = arr[arr.length - 1] || 0;
-    let prev = arr[arr.length - 2] || 0;
-    return Math.abs(last - prev) > threshold;
-}
+        function detectSpike(arr, threshold = 50) {
+            if (arr.length < 2) return false;
+            let last = arr[arr.length - 1] || 0;
+            let prev = arr[arr.length - 2] || 0;
+            return Math.abs(last - prev) > threshold;
+        }
+
         const N = 40; // sparkline history points
-        let PI_URL = 'http://192.168.0.6:8080';
+        const CLOUD_URL = 'https://aeo1.sharmiksen21.workers.dev/';
         let isLive = false;
         let dataReady = false;
 
@@ -537,11 +577,12 @@ function detectSpike(arr, threshold = 50) {
             m135: Array(N).fill(null), m3: Array(N).fill(null),
             m4:   Array(N).fill(null), m2: Array(N).fill(null),
             t:    Array(N).fill(null), h:  Array(N).fill(null),
-            dist: Array(N).fill(null), risk: Array(N).fill(null)
+            dist: Array(N).fill(null), risk: Array(N).fill(null),
+            vib:  Array(N).fill(null), crest: Array(N).fill(null), zcr: Array(N).fill(null) // <-- ADDED
         };
         const timeLabels = Array(N).fill('');
 
-        // ---- Sparkline chart factory ----
+        // ---- Sparkline chart factory (HIGH PERFORMANCE OSCILLOSCOPE) ----
         function makeSparkline(canvasId, color, fillColor) {
             const ctx = document.getElementById(canvasId);
             if (!ctx) return null;
@@ -549,62 +590,80 @@ function detectSpike(arr, threshold = 50) {
                 type: 'line',
                 data: {
                     labels: Array(N).fill(''),
-                    datasets: [{ data: Array(N).fill(null), borderColor: color,
-                        backgroundColor: fillColor, borderWidth: 1.5, tension: 0.4,
-                        pointRadius: 0, fill: true }]
+                    datasets: [{ 
+                        data: Array(N).fill(null), 
+                        borderColor: color,
+                        borderWidth: 2, 
+                        tension: 0, // 🚀 Straight lines, zero curve math!
+                        pointRadius: 0, 
+                        fill: false // 🚀 Removes the laggy translucent background fill
+                    }]
                 },
                 options: {
-                    responsive: true, maintainAspectRatio: false, animation: false,
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    animation: false,
+                    normalized: true, // 🚀 Skips heavy data validation for speed
                     plugins: { legend: { display: false }, tooltip: { enabled: false } },
                     scales: {
                         x: { display: false },
-                        y: { display: false, grace: '10%' }
+                        y: { display: false, grace: '5%' }
                     }
                 }
             });
         }
 
+        // --- MINI SPARKLINE GRAPHS ---
         const sparks = {
-            m135: makeSparkline('spark-mq135', '#3b82f6', 'rgba(59,130,246,0.12)'),
-            m3:   makeSparkline('spark-mq3',   '#8b5cf6', 'rgba(139,92,246,0.12)'),
-            m4:   makeSparkline('spark-mq4',   '#14b8a6', 'rgba(20,184,166,0.12)'),
-            m2:   makeSparkline('spark-mq2',   '#ec4899', 'rgba(236,72,153,0.12)'),
-            t:    makeSparkline('spark-temp',  '#f97316', 'rgba(249,115,22,0.12)'),
-            h:    makeSparkline('spark-hum',   '#22c55e', 'rgba(34,197,94,0.12)'),
-            dist: makeSparkline('spark-dist',  '#eab308', 'rgba(234,179,8,0.12)'),
-            risk: makeSparkline('spark-risk',  '#ef4444', 'rgba(239,68,68,0.15)')
+            m135: makeSparkline('spark-mq135', '#3b82f6'),
+            m3:   makeSparkline('spark-mq3',   '#8b5cf6'),
+            m4:   makeSparkline('spark-mq4',   '#14b8a6'),
+            m2:   makeSparkline('spark-mq2',   '#ec4899'),
+            t:    makeSparkline('spark-temp',  '#f97316'),
+            h:    makeSparkline('spark-hum',   '#22c55e'),
+            dist: makeSparkline('spark-dist',  '#eab308'),
+            risk: makeSparkline('spark-risk',  '#ef4444'),
+            vib:  makeSparkline('spark-vib',   '#6366f1'), // <-- ADDED
+            crest:makeSparkline('spark-crest', '#06b6d4'), // <-- ADDED
+            zcr:  makeSparkline('spark-zcr',   '#a855f7')  // <-- ADDED
         };
+        
+        
 
-        // ---- Main multi-sensor chart ----
+        // ---- Main multi-sensor chart (HIGH PERFORMANCE OSCILLOSCOPE MODE) ----
         const mainCtx = document.getElementById('liveChart').getContext('2d');
         const liveChart = new Chart(mainCtx, {
             type: 'line',
             data: {
                 labels: timeLabels,
                 datasets: [
-                    { label: 'MQ-135', data: history.m135, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.08)', borderWidth: 2, tension: 0.3, pointRadius: 0, yAxisID: 'y', fill: true },
-                    { label: 'MQ-3',   data: history.m3,   borderColor: '#8b5cf6', borderWidth: 1.5, tension: 0.3, pointRadius: 0, yAxisID: 'y' },
-                    { label: 'MQ-4',   data: history.m4,   borderColor: '#14b8a6', borderWidth: 1.5, tension: 0.3, pointRadius: 0, yAxisID: 'y' },
-                    { label: 'MQ-2',   data: history.m2,   borderColor: '#ec4899', borderWidth: 1.5, tension: 0.3, pointRadius: 0, yAxisID: 'y' },
-                    { label: 'Temp °C',data: history.t,    borderColor: '#f97316', borderWidth: 2, borderDash: [4,3], tension: 0.3, pointRadius: 0, yAxisID: 'y' },
-                    { label: 'Risk %', data: history.risk, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.12)', borderWidth: 2.5, tension: 0.2, pointRadius: 0, fill: true, yAxisID: 'y1' }
+                    { label: 'MQ-135', data: history.m135, borderColor: '#3b82f6', borderWidth: 2, tension: 0, pointRadius: 0, yAxisID: 'y' },
+                    { label: 'MQ-3',   data: history.m3,   borderColor: '#8b5cf6', borderWidth: 1.5, tension: 0, pointRadius: 0, yAxisID: 'y' },
+                    { label: 'MQ-4',   data: history.m4,   borderColor: '#14b8a6', borderWidth: 1.5, tension: 0, pointRadius: 0, yAxisID: 'y' },
+                    { label: 'MQ-2',   data: history.m2,   borderColor: '#ec4899', borderWidth: 1.5, tension: 0, pointRadius: 0, yAxisID: 'y' },
+                    { label: 'Temp °C',data: history.t,    borderColor: '#f97316', borderWidth: 2, borderDash: [4,3], tension: 0, pointRadius: 0, yAxisID: 'y' },
+                    { label: 'Risk %', data: history.risk, borderColor: '#ef4444', borderWidth: 2.5, tension: 0, pointRadius: 0, yAxisID: 'y1' }
                 ]
             },
             options: {
-                responsive: true, maintainAspectRatio: false, animation: false,
+                responsive: true, 
+                maintainAspectRatio: false, 
+                animation: false,
+                normalized: true, // 🚀 HUGE performance boost for Chart.js
                 interaction: { mode: 'index', intersect: false },
                 plugins: {
                     legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 6, font: { size: 11 } } },
                     tooltip: {
                         backgroundColor: 'rgba(15,23,42,0.92)', titleFont: { family: 'monospace' },
-                        bodyFont: { family: 'monospace' }, padding: 10, cornerRadius: 8,
+                        bodyFont: { family: 'monospace' }, padding: 8, cornerRadius: 4,
+                        animation: false, // 🚀 No tooltip lag
                         filter: item => item.parsed.y !== null
                     }
                 },
                 scales: {
                     x: { grid: { display: false }, ticks: { display: false } },
-                    y: { type: 'linear', position: 'left', title: { display: true, text: 'ADC / Temp', font: { size: 11 } }, min: 0, grid: { color: '#f1f5f9' } },
-                    y1: { type: 'linear', position: 'right', title: { display: true, text: 'Risk %', font: { size: 11 } }, min: 0, max: 100, grid: { drawOnChartArea: false } }
+                    y: { type: 'linear', position: 'left', title: { display: false }, min: 0, grid: { color: '#f1f5f9' } },
+                    y1: { type: 'linear', position: 'right', title: { display: false }, min: 0, max: 100, grid: { drawOnChartArea: false } }
                 }
             }
         });
@@ -614,7 +673,9 @@ function detectSpike(arr, threshold = 50) {
             mq: document.getElementById('dash-mq'), mq3: document.getElementById('dash-mq3'),
             mq4: document.getElementById('dash-mq4'), mq2: document.getElementById('dash-mq2'),
             temp: document.getElementById('dash-temp'), hum: document.getElementById('dash-hum'),
-            dist: document.getElementById('dash-dist'), risk: document.getElementById('dash-risk')
+            dist: document.getElementById('dash-dist'), risk: document.getElementById('dash-risk'),
+            vib: document.getElementById('dash-vib-max'), crest: document.getElementById('dash-crest'), // <-- ADDED
+            zcr: document.getElementById('dash-zcr'), activity: document.getElementById('dash-activity')  // <-- ADDED
         };
         const liveDot = document.getElementById('live-dot');
         const connBadge = document.getElementById('conn-badge');
@@ -632,13 +693,13 @@ function detectSpike(arr, threshold = 50) {
             if (live) {
                 liveDot.className = 'w-3 h-3 rounded-full bg-emerald-500 animate-pulse transition-all duration-500';
                 connBadge.className = 'flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-200 text-xs font-mono text-emerald-700 transition-all';
-                connIcon.textContent = '●'; connText.textContent = 'Pi LIVE · ' + PI_URL;
+                connIcon.textContent = '●'; connText.textContent = 'Cloudflare LIVE · aeo1.sharmiksen21.workers.dev';
                 chartModeBadge.textContent = 'LIVE · 1Hz';
                 chartModeBadge.className = 'text-xs font-mono bg-emerald-50 text-emerald-700 px-2 py-1 rounded border border-emerald-200';
             } else {
                 liveDot.className = 'w-3 h-3 rounded-full bg-amber-400 transition-all duration-500';
                 connBadge.className = 'flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-xs font-mono text-amber-700 transition-all';
-                connIcon.textContent = '◑'; connText.textContent = 'Pi offline · showing cache';
+                connIcon.textContent = '◑'; connText.textContent = 'Worker offline · showing cache';
                 chartModeBadge.textContent = 'CACHED · last session';
                 chartModeBadge.className = 'text-xs font-mono bg-amber-50 text-amber-700 px-2 py-1 rounded border border-amber-200';
             }
@@ -664,12 +725,55 @@ function detectSpike(arr, threshold = 50) {
             const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
             timeLabels.push(ts); timeLabels.shift();
 
+            // Read EVERYTHING from the fully loaded Cloudflare payload
             const vals = {
-                m135: d.m135 ?? 0, m3: d.m3 ?? 0, m4: d.m4 ?? 0, m2: d.m2 ?? 0,
-                t: d.t ?? 0, h: d.h ?? 0, dist: d.dist ?? 0, risk: d.risk ?? 0
+                m135: d.m135 ?? 0, 
+                m3: d.m3 ?? 0, 
+                m4: d.m4 ?? 0, 
+                m2: d.m2 ?? 0,
+                t: d.t ?? 0, 
+                h: d.h ?? 0, 
+                dist: d.dist ?? 0, 
+                risk: d.risk ?? 0,
+                // --- NEW ACOUSTIC DATA ---
+                vib: d.vib_max ?? 0,
+                crest: d.crest_factor ?? 0,
+                zcr: d.zero_crossings ?? 0
             };
 
-            // Update cards
+            // --- 🚀 NEW: AUTO-LINK MATH ENGINE 🚀 ---
+            // Destroy the invisible slider walls and force them to mirror the Pi
+            if (vals.m135 > 0) {
+                document.getElementById('math-mq').min = 0; 
+                document.getElementById('math-mq').value = vals.m135;
+            }
+            if (vals.t > 0) {
+                document.getElementById('math-temp').min = 0; 
+                document.getElementById('math-temp').value = vals.t;
+            }
+            
+            // Bypass the HTML fake math and inject the TRUE Pi risk directly!
+            document.getElementById('math-mq-val').innerText = Math.round(vals.m135);
+            document.getElementById('math-temp-val').innerText = vals.t.toFixed(1);
+            
+            document.getElementById('out-base').innerText = "LIVE PI";
+            document.getElementById('out-total').innerText = vals.risk.toFixed(1);
+            
+            const liveStatus = document.getElementById('out-status');
+            if (vals.risk > 80) {
+                liveStatus.className = "mt-4 inline-block px-3 py-1 rounded bg-red-500/20 text-red-400 text-xs font-bold border border-red-500/30";
+                liveStatus.innerText = "SPOILAGE IMMINENT";
+            } else if (vals.risk > 40) {
+                liveStatus.className = "mt-4 inline-block px-3 py-1 rounded bg-orange-500/20 text-orange-400 text-xs font-bold border border-orange-500/30";
+                liveStatus.innerText = "WARNING: HIGH DECAY RATE";
+            } else {
+                liveStatus.className = "mt-4 inline-block px-3 py-1 rounded bg-emerald-500/20 text-emerald-400 text-xs font-bold border border-emerald-500/30";
+                liveStatus.innerText = "CARGO SAFE";
+            }
+            // ----------------------------------------
+            // ----------------------------------------
+
+            // Update cards — no more N/A!
             elMap.mq.textContent   = Math.round(vals.m135);
             elMap.mq3.textContent  = Math.round(vals.m3);
             elMap.mq4.textContent  = Math.round(vals.m4);
@@ -678,13 +782,25 @@ function detectSpike(arr, threshold = 50) {
             elMap.hum.textContent  = vals.h.toFixed(1);
             elMap.dist.textContent = vals.dist > 0 ? vals.dist.toFixed(1) : 'FAULT';
             elMap.risk.textContent = vals.risk.toFixed(1);
+            // Update Acoustic UI Cards
+            elMap.vib.textContent = vals.vib.toFixed(1);
+            elMap.crest.textContent = vals.crest.toFixed(1);
+            elMap.zcr.textContent = vals.zcr;
+            
+            // Handle the Activity String!
+            if (d.activity) {
+                elMap.activity.innerHTML = d.activity; // Using innerHTML so your terminal colors/emojis render!
+            } else {
+                elMap.activity.textContent = "STABLE";
+            }
             elMap.risk.className = `text-3xl font-mono font-bold ${vals.risk > 50 ? 'text-red-500' : vals.risk > 20 ? 'text-orange-400' : 'text-emerald-400'}`;
 
             // Push to sparklines + main chart history
             Object.keys(vals).forEach(k => pushHistory(k, vals[k]));
             liveChart.update('none');
+            
             // --- INJECT: Anomaly & Audio ---
-            if (detectSpike(history.m135, 30)) { // Adjusted threshold for MQ135 ADC
+            if (detectSpike(history.m135, 30)) {
                 console.warn("⚠️ VOC SPIKE DETECTED in Edge Node");
             }
             if (vals.risk > 80 && audioUnlocked) {
@@ -696,14 +812,23 @@ function detectSpike(arr, threshold = 50) {
                 decayBanner.classList.remove('hidden');
                 decayVal.textContent = d.decay_str;
             }
-            // Security
-            if (d.mot === 1) { secBanner.classList.remove('hidden'); }
-            else { secBanner.classList.add('hidden'); }
+            
+            // Security banner is back online!
+            if (d.mot === 1) { 
+                secBanner.classList.remove('hidden'); 
+            } else { 
+                secBanner.classList.add('hidden'); 
+            }
         }
 
-        async function fetchFromPi() {
+        async function fetchFromCloud() {
             try {
-                const res = await fetch(PI_URL + '/data', { signal: AbortSignal.timeout(1500) });
+                const res = await fetch(CLOUD_URL, {
+                    method: 'GET',
+                    cache: 'no-store', // 🚀 FORCE BROWSER TO PULL FRESH DATA
+                    signal: AbortSignal.timeout(4000),
+                    headers: { 'Authorization': 'KUTTUSH_DJ' }
+                });
                 if (!res.ok) throw new Error('bad status');
                 const d = await res.json();
                 // Store full json with timestamp
@@ -725,7 +850,7 @@ function detectSpike(arr, threshold = 50) {
                             liveDashboard.classList.add('hidden');
                             liveDot.className = 'w-3 h-3 rounded-full bg-slate-400 transition-all duration-500';
                             connBadge.className = 'flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 border border-slate-200 text-xs font-mono text-slate-500 transition-all';
-                            connIcon.textContent = '○'; connText.textContent = 'Pi offline · no cache';
+                            connIcon.textContent = '○'; connText.textContent = 'Worker offline · no cache';
                         }
                     } catch(ce) {
                         noDataState.classList.remove('hidden');
@@ -736,84 +861,33 @@ function detectSpike(arr, threshold = 50) {
         }
 
         // Start polling
-        fetchFromPi();
-        setInterval(fetchFromPi, 1000);
+        fetchFromCloud();
+        setInterval(fetchFromCloud, 1000);
 
-        // URL config
-        document.getElementById('btn-set-url').addEventListener('click', () => {
-            const v = document.getElementById('pi-url-input').value.trim().replace(/\/$/, '');
-            if (v) { PI_URL = v; dataReady = false; fetchFromPi(); }
+        // --- INJECT: CSV Export ---
+        document.getElementById("export-btn").addEventListener("click", () => {
+            let csv = "time,mq135,mq3,mq4,mq2,temp,hum,dist,risk\n";
+            for (let i = 0; i < history.m135.length; i++) {
+                if (!timeLabels[i]) continue; // Skip empty history
+                csv += `${timeLabels[i]},${history.m135[i]},${history.m3[i]},${history.m4[i]},${history.m2[i]},${history.t[i]},${history.h[i]},${history.dist[i]},${history.risk[i]}\n`;
+            }
+            const blob = new Blob([csv], { type: "text/csv" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = `edge-olfaction-log-${new Date().getTime()}.csv`;
+            a.click();
         });
 
-// --- INJECT: CSV Export ---
-document.getElementById("export-btn").addEventListener("click", () => {
-    let csv = "time,mq135,mq3,mq4,mq2,temp,hum,dist,risk\n";
-    for (let i = 0; i < history.m135.length; i++) {
-        if (!timeLabels[i]) continue; // Skip empty history
-        csv += `${timeLabels[i]},${history.m135[i]},${history.m3[i]},${history.m4[i]},${history.m2[i]},${history.t[i]},${history.h[i]},${history.dist[i]},${history.risk[i]}\n`;
-    }
-    const blob = new Blob([csv], { type: "text/csv" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `edge-olfaction-log-${new Date().getTime()}.csv`;
-    a.click();
-});
-// --- INJECT: True Network Status ---
-window.addEventListener("offline", () => {
-    connBadge.className = 'flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-xs font-mono text-red-700 transition-all';
-    connIcon.textContent = '✖'; 
-    connText.textContent = "HOST OFFLINE";
-});
-window.addEventListener("online", () => {
-    connText.textContent = "Reconnecting to Edge Network...";
-    fetchFromPi();
-});
-// ════════════════════════════════════════
-        // AUTO-DISCOVERY & CONNECTION LOGIC
-        // ════════════════════════════════════════
-        
-        async function discoverPi() {
-            console.log("🔍 Sweeping local subnet (192.168.0.0 - 255)...");
-            const baseIP = "192.168.0.6"; // Change to 192.168.1. if your router uses that
-            
-            // Quick ping function
-            const ping = async (ip) => {
-                try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 600); // 600ms timeout
-                    const res = await fetch(`http://${ip}:8080/data`, { signal: controller.signal });
-                    if (res.ok) {
-                        clearTimeout(timeoutId);
-                        return `http://${ip}:8080`;
-                    }
-                } catch (e) {} // Ignore timeouts and blocks
-                return null;
-            };
-
-            // Batch sweep loop (Checks 15 IPs at a time to prevent browser crashes)
-            for (let i = 0; i <= 255; i += 15) {
-                let promises = [];
-                for (let j = i; j < i + 15 && j <= 255; j++) {
-                    promises.push(ping(baseIP + j));
-                }
-                
-                let results = await Promise.all(promises);
-                let found = results.find(r => r !== null);
-                
-                if (found) {
-                    console.log(`✅ JARVIS Locked at: ${found}`);
-                    PI_URL = found;
-                    
-                    // Update UI Box
-                    const urlInput = document.getElementById('pi-url-input');
-                    if (urlInput) urlInput.value = PI_URL;
-                    
-                    fetchFromPi(); // Ignite the dashboard
-                    return;
-                }
-            }
-            console.log("❌ Target Node Not Found");
-        }
+        // --- INJECT: True Network Status ---
+        window.addEventListener("offline", () => {
+            connBadge.className = 'flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-xs font-mono text-red-700 transition-all';
+            connIcon.textContent = '✖'; 
+            connText.textContent = "HOST OFFLINE";
+        });
+        window.addEventListener("online", () => {
+            connText.textContent = "Reconnecting to Cloudflare Worker...";
+            fetchFromCloud();
+        });
 
         // --- INJECT: Performance Monitor ---
         let frameCount = 0;
@@ -831,15 +905,6 @@ window.addEventListener("online", () => {
         }
         monitorFPS();
 
-        // ════════════════════════════════════════
-        // IGNITION
-        // ════════════════════════════════════════
-        // Start the discovery sweep as soon as the page loads
-        discoverPi();
-
     </script>
-</body>
-</html>
-</script>
 </body>
 </html>
