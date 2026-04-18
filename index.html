@@ -584,6 +584,8 @@ const FeatureFlags = {
     font-size: clamp(2.8rem, 7vw, 6rem);
     letter-spacing: 0.08em;
     text-shadow: 0 0 40px rgba(0,229,255,0.3);
+    /* 🪞 THE MIRROR REFLECTION */
+    -webkit-box-reflect: below -12px linear-gradient(transparent, transparent 60%, rgba(0,229,255,0.35));
   }
   .team-byline {
     font-family: var(--mono); font-size: 12px;
@@ -639,6 +641,9 @@ const FeatureFlags = {
 </style>
 </head>
 <body>
+<body>
+<iframe id="eye-iframe" src="cosmic_sentient_eye.html" style="position:fixed; inset:0; width:100vw; height:100vh; border:none; z-index:0; pointer-events:none; opacity:0.85;"></iframe>
+
 <canvas id="bg-canvas"></canvas>
 
 <!-- =========================
@@ -651,9 +656,13 @@ const FeatureFlags = {
 <div id="perf-monitor"><span id="perf-fps">-- fps</span> &nbsp; <span id="perf-mem">-- MB</span></div>
 <div id="autoplay-indicator">● AUTO</div>
 
-<!-- =========================
-     OVERVIEW MODE
-========================== -->
+<div id="mission-control-overlay" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(2,12,24,0.85); backdrop-filter:blur(10px); padding:4vh 4vw;">
+  <div style="width:100%; height:100%; border:1px solid var(--accent); border-radius:12px; box-shadow: 0 0 40px rgba(0,229,255,0.15); overflow:hidden; position:relative;">
+    <iframe src="EDGE_upgraded.html" style="width:100%; height:100%; border:none;"></iframe>
+    <button onclick="document.dispatchEvent(new KeyboardEvent('keydown', {key: 't'}))" style="position:absolute; top:10px; right:15px; background:var(--danger); color:#fff; border:none; padding:5px 15px; border-radius:4px; font-family:var(--mono); cursor:pointer;">[X] CLOSE HUD</button>
+  </div>
+</div>
+
 <div id="overview"></div>
 
 <!-- =========================
@@ -1709,9 +1718,18 @@ document.addEventListener('keydown', (e) => {
     case 'd': case 'D': togglePerfMonitor(); break;
     
     // 🚀 LAUNCH MISSION CONTROL
+    // 🚀 LAUNCH MISSION CONTROL HUD (SEAMLESS IFRAME)
     case 't': case 'T':
       e.preventDefault();
-      window.open('EDGE_upgraded.html', '_blank');
+      (function toggleMissionControlHUD() {
+        const hud = document.getElementById('mission-control-overlay');
+        if (hud.style.display === 'none') {
+          hud.style.display = 'block';
+          gsap.fromTo(hud, {opacity: 0, scale: 0.95}, {opacity: 1, scale: 1, duration: 0.4, ease: 'power3.out'});
+        } else {
+          gsap.to(hud, {opacity: 0, scale: 0.95, duration: 0.3, onComplete: () => hud.style.display = 'none'});
+        }
+      })();
       break;
     case 'e': case 'E':
       if (typeof FeatureFlags !== 'undefined' && FeatureFlags.enableExplain) {
@@ -1729,20 +1747,30 @@ document.addEventListener('keydown', (e) => {
       if (typeof FeatureFlags !== 'undefined' && FeatureFlags.enableVoice) {
         voiceCoreActive = !voiceCoreActive;
         const kbdHint = document.getElementById('kbd-hint');
+        const eyeFrame = document.getElementById('eye-iframe'); // Get the Eye!
 
         if (voiceCoreActive) {
-          // Restart logic utilizing the globally defined microphone
           try { if (globalRecognition) globalRecognition.start(); } catch(err){}
           autoNarrateSlide(currentSlide);
           kbdHint.innerText = "🎙️ J.A.R.V.I.S. CORE: ONLINE (Mic Active)";
           kbdHint.style.opacity = '1';
           kbdHint.style.color = "var(--danger)";
+          
+          // 👁️ WAKE UP THE EYE safely
+          if(eyeFrame && eyeFrame.contentWindow) {
+            eyeFrame.contentWindow.postMessage('WAKE_UP', '*');
+          }
+          
         } else {
-          // Stop logic utilizing the globally defined microphone
           try { if (globalRecognition) globalRecognition.stop(); } catch(err){}
           window.speechSynthesis.cancel();
           kbdHint.innerText = "🎙️ J.A.R.V.I.S. CORE: OFFLINE";
           setTimeout(() => { kbdHint.style.opacity = '0'; }, 2000);
+          
+          // 👁️ PUT THE EYE TO SLEEP safely
+          if(eyeFrame && eyeFrame.contentWindow) {
+            eyeFrame.contentWindow.postMessage('SLEEP', '*');
+          }
         }
       }
       break;
