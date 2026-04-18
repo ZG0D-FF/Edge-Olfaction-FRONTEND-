@@ -325,6 +325,7 @@
                         <div id="conn-badge" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 border border-slate-200 text-xs font-mono text-slate-500 transition-all">
                             <span id="conn-icon">○</span>
                             <span id="conn-text">Connecting to Pi...</span>
+                            <span id="last-update-text" class="ml-2 pl-2 border-l border-slate-300 text-slate-400"></span>
                         </div>
                         <div class="flex items-center gap-2">
                             <button id="export-btn" class="px-3 py-1.5 bg-emerald-600 border border-emerald-500 text-white text-xs font-bold rounded hover:bg-emerald-500 transition-colors">
@@ -758,6 +759,7 @@
             
             document.getElementById('out-base').innerText = "LIVE PI";
             document.getElementById('out-total').innerText = vals.risk.toFixed(1);
+            document.getElementById('last-update-text').textContent = "Updated: " + new Date().toLocaleTimeString();
             
             const liveStatus = document.getElementById('out-status');
             if (vals.risk > 80) {
@@ -823,9 +825,10 @@
 
         async function fetchFromCloud() {
             try {
-                const res = await fetch(CLOUD_URL, {
+                // THE FIX: Add ?nocache= timestamp to shatter the browser cache
+                const res = await fetch(CLOUD_URL + "?nocache=" + new Date().getTime(), {
                     method: 'GET',
-                    cache: 'no-store', // 🚀 FORCE BROWSER TO PULL FRESH DATA
+                    cache: 'no-store', 
                     signal: AbortSignal.timeout(4000),
                     headers: { 'Authorization': 'KUTTUSH_DJ' }
                 });
