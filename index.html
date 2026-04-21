@@ -134,20 +134,22 @@ const FeatureFlags = {
     overflow: hidden;
   }
 
+/* ---- SLIDE CONTAINER (UPDATED FOR J.A.R.V.I.S. RANDOMIZER) ---- */
   .slide {
     position: absolute; inset: 0;
     width: 100vw; height: 100vh;
     display: flex; flex-direction: column;
     justify-content: center; align-items: center;
     padding: 5vh 6vw;
+    visibility: hidden; /* Better performance than opacity */
     opacity: 0;
-    transform: translateX(60px);
-    transition: opacity var(--transition), transform var(--transition);
     pointer-events: none;
     overflow: hidden;
+    /* We removed the CSS transition here so GSAP can take over! */
   }
   .slide.active {
-    opacity: 1; transform: translateX(0);
+    visibility: visible;
+    opacity: 1; 
     pointer-events: all;
     z-index: 10;
   }
@@ -638,6 +640,67 @@ const FeatureFlags = {
     0% { transform: scale(1); }
     100% { transform: scale(1.08); }
   }
+  
+  /* ---- PPTX FRAGMENT BUILDS ---- */
+.ppt-fragment {
+  opacity: 0;
+  transform: translateY(15px);
+  visibility: hidden;
+}
+.ppt-fragment.revealed {
+  visibility: visible;
+  /* GSAP handles the actual animation, this class acts as a state tracker */
+}
+/* ---- PPTX MORPH/ZOOM STATE (NO DIMMING) ---- */
+.morph-focus {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) scale(1.5) !important;
+  z-index: 99999 !important;
+  box-shadow: 0 0 50px rgba(0, 229, 255, 0.4) !important;
+  transition: all 0.5s cubic-bezier(0.77, 0, 0.175, 1) !important;
+}
+/* ---- PPTX LASER POINTER ---- */
+#laser-dot {
+  position: fixed; width: 10px; height: 10px;
+  background: #ff0044; border-radius: 50%;
+  box-shadow: 0 0 10px #ff0044, 0 0 20px #ff0044, 0 0 30px #ff0044;
+  pointer-events: none; z-index: 100000;
+  transform: translate(-50%, -50%);
+  display: none;
+}
+body.laser-mode { cursor: none; }
+body.laser-mode #laser-dot { display: block; }
+
+/* ---- PRO POWERPOINT SHAPES ---- */
+.pro-bg-shape {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 45%;
+  background: linear-gradient(135deg, var(--surface), var(--surface2));
+  clip-path: polygon(20% 0, 100% 0, 100% 100%, 0% 100%);
+  border-left: 2px solid var(--accent);
+  z-index: 0;
+}
+.pro-content {
+  position: relative;
+  z-index: 2;
+  width: 50%;
+  padding-left: 4vw;
+}
+.pro-floating-box {
+  position: absolute;
+  right: 10%;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(2, 12, 24, 0.9);
+  border: 1px solid var(--border);
+  padding: 2rem;
+  box-shadow: 0 15px 35px rgba(0,229,255,0.1);
+  z-index: 3;
+  width: 30%;
+}
 </style>
 </head>
 <body>
@@ -645,7 +708,8 @@ const FeatureFlags = {
 <iframe id="eye-iframe" src="cosmic_sentient_eye.html" style="position:fixed; inset:0; width:100vw; height:100vh; border:none; z-index:0; pointer-events:none; opacity:0.85;"></iframe>
 
 <canvas id="bg-canvas"></canvas>
-
+<canvas id="ink-layer" style="position:fixed; inset:0; z-index:9990; pointer-events:none;"></canvas>
+<div id="laser-dot"></div>
 <!-- =========================
      NAVIGATION UI
 ========================== -->
@@ -669,104 +733,126 @@ const FeatureFlags = {
      PRESENTATION CONTAINER
 ========================== -->
 <div id="presentation">
+    
+    
+    
 
-  <!-- ============ SLIDE 0: TITLE ============ -->
   <section class="slide active" id="slide-0">
-    <div class="corner tl"></div><div class="corner tr"></div>
-    <div class="corner bl"></div><div class="corner br"></div>
-    <div class="logo-mark">
-      <div class="logo-dot"></div><div class="logo-dot"></div><div class="logo-dot"></div>
-      <div class="logo-dot"></div><div class="logo-dot"></div><div class="logo-dot"></div>
-    </div>
-    <div class="slide-label">TECHTRONIX — KHARDAHA, WEST BENGAL</div>
-    <h1 class="slide-title"><span class="accent">EDGE</span> OLFACTION</h1>
-    <p class="slide-body" style="text-align:center; max-width:600px; font-size:1.15rem;">
-      Zero-Latency Agricultural Spoilage Detection at the Edge.<br>
-      No Cloud. No Delay. No Loss.
-    </p>
-    <div class="divider" style="margin: 1.2rem auto;"></div>
-    <div class="team-byline">
-      Presented by &nbsp; DIBYAJYOTEE GHOSH &nbsp;·&nbsp; SHARMIK SEN &nbsp;·&nbsp; PROF. RIMI SENGUPTA<br>
-      <span style="opacity:0.55;">Electronics &amp; Communication Engineering — TECHTRONIX</span>
-    </div>
-    <div style="margin-top:2.4rem; display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
-      <span class="tag">ARDUINO UNO</span>
-      <span class="tag">RASPBERRY PI 3B+</span>
-      <span class="tag">MQ SENSOR ARRAY</span>
-      <span class="tag">PIEZO-ELECTRIC DISCS</span>
-      <span class="tag">EDGE AI</span>
+    <div class="pro-bg-shape" style="width: 100%; clip-path: polygon(0 60%, 100% 30%, 100% 100%, 0% 100%); bottom:0; top:auto; height: 50vh;"></div>
+    
+    <div style="position: relative; z-index: 2; text-align: center; width: 100%;">
+      <div class="logo-mark" style="margin: 0 auto 1rem;">
+        <div class="logo-dot"></div><div class="logo-dot"></div><div class="logo-dot"></div>
+        <div class="logo-dot"></div><div class="logo-dot"></div><div class="logo-dot"></div>
+      </div>
+      <div class="slide-label">TECHTRONIX — KHARDAHA, WEST BENGAL</div>
+      <h1 class="slide-title"><span class="accent">EDGE</span> OLFACTION</h1>
+      <p class="slide-body" style="margin: 0 auto; max-width:600px; font-size:1.15rem;">
+        Zero-Latency Agricultural Spoilage Detection at the Edge.<br>
+        No Cloud. No Delay. No Loss.
+      </p>
+      <div class="divider" style="margin: 1.2rem auto;"></div>
+      <div class="team-byline">
+        Presented by &nbsp; DIBYAJYOTEE GHOSH &nbsp;·&nbsp; SHARMIK SEN &nbsp;·&nbsp; PROF. RIMI SENGUPTA<br>
+        <span style="opacity:0.55;">Electronics &amp; Communication Engineering — TECHTRONIX</span>
+      </div>
+      <div style="margin-top:2.4rem; display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
+        <span class="tag">ARDUINO UNO</span>
+        <span class="tag">RASPBERRY PI 3B+</span>
+        <span class="tag">MQ SENSOR ARRAY</span>
+        <span class="tag">PIEZO-ELECTRIC DISCS</span>
+        <span class="tag">EDGE AI</span>
+      </div>
     </div>
   </section>
 
-  <!-- ============ SLIDE 1: EXECUTIVE SUMMARY ============ -->
-  <section class="slide" id="slide-1">
-    <div class="corner tl"></div><div class="corner tr"></div>
-    <div class="corner bl"></div><div class="corner br"></div>
-    <div class="slide-label">01 — EXECUTIVE SUMMARY</div>
-    <h2 class="slide-title">What Is <span class="accent">Edge Olfaction</span>?</h2>
-    <div class="slide-body">
-      A localised, <strong style="color:var(--accent2)">zero-latency Electronic Nose</strong> that predicts agricultural spoilage in transit — without any cloud dependency. It fuses an Arduino-driven multivariable gas sensor array with a Raspberry Pi edge inference engine.
+<section class="slide" id="slide-1">
+    
+    <div style="width: 100%; max-width: 1000px; margin: 0 auto;">
+      <div class="slide-label">01 — EXECUTIVE SUMMARY</div>
+      <h2 class="slide-title">What Is <span class="accent">Edge Olfaction</span>?</h2>
     </div>
-    <ul class="item-list" style="margin-top:1.2rem;">
-      <li><strong>Decentralised Architecture</strong> — Separates raw ADC polling (Arduino) from mathematical inference (Raspberry Pi)</li>
-      <li><strong>Dynamic Cargo Profiling</strong> — Swappable algorithmic profiles per produce type (ethylene for apples, sulfur/methane for onions)</li>
-      <li><strong>Transit Acoustic Filtering</strong> — Piezo impact disc array tracks baselines to distinguish truck rumble from pest activity</li>
-      <li><strong>Headless Survival Mode</strong> — Immutable SSH file locks &amp; hardcoded nmcli WPA-PSK overrides survive mobile hotspot drops</li>
-    </ul>
+
+    <div style="display: flex; gap: 3rem; width: 100%; max-width: 1000px; align-items: center; justify-content: space-between; margin: 0 auto;">
+      
+      <div class="pro-content" style="flex: 1; min-width: 50%; padding: 0; z-index: 5;">
+        <div class="slide-body" style="font-size: 1.05rem; margin-bottom: 1.2rem;">
+          A localised, <strong style="color:var(--accent2)">zero-latency Electronic Nose</strong> that predicts agricultural spoilage in transit — without any cloud dependency. It fuses an Arduino-driven multivariable gas sensor array with a Raspberry Pi edge inference engine.
+        </div>
+        <ul class="item-list ppt-fragment" style="margin-top:0;">
+          <li><strong>Decentralised Architecture</strong> — Separates raw ADC polling from Pi inference.</li>
+          <li><strong>Dynamic Cargo Profiling</strong> — Swappable algorithms (ethylene, sulfur, etc).</li>
+          <li><strong>Transit Acoustic Filtering</strong> — Piezo array ignores truck rumble.</li>
+          <li><strong>Headless Survival Mode</strong> — Immutable SSH & hardcoded WPA-PSK.</li>
+        </ul>
+      </div>
+
+      <div class="ppt-fragment" style="flex: 0 0 320px; background: rgba(11, 21, 32, 0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(0, 229, 255, 0.15); border-top: 3px solid var(--accent); padding: 2rem 1.5rem; border-radius: 6px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); text-align: center; z-index: 5;">
+        
+        <div style="font-family: var(--mono); font-size: 11px; color: var(--accent2); letter-spacing: 2px; margin-bottom: 12px;">SYSTEM STATUS</div>
+        
+        <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
+          <span style="font-family: var(--mono); font-size: 4.5rem; font-weight: bold; color: var(--text); line-height: 0.8; text-shadow: 0 0 20px rgba(0,229,255,0.3);">0</span>
+          <div style="text-align: left; line-height: 1.2;">
+            <span style="font-family: var(--sans); font-size: 1.4rem; color: var(--muted); letter-spacing: 1px; display: block;">CLOUD</span>
+            <span style="font-family: var(--mono); font-size: 0.65rem; color: rgba(224,240,255,0.5); letter-spacing: 0;">DEPENDENCIES</span>
+          </div>
+        </div>
+        
+        <div class="divider" style="width: 80%; margin: 20px auto; background: linear-gradient(90deg, transparent, rgba(0,229,255,0.3), transparent);"></div>
+        
+        <div style="font-family: var(--mono); font-size: 0.9rem; color: var(--accent2); letter-spacing: 1px;">> 100% Edge AI Engine</div>
+      </div>
+
+    </div>
+
     <div class="explain-overlay">
       <div class="explain-title">📡 Deep Dive: Headless Field Survival</div>
       <div class="explain-text">
-        <p><strong>Note for the Panel:</strong> Standard dynamic networking fails during mobile transit[cite: 133]. To ensure the Raspberry Pi does not drop the mobile hotspot connection, we enforce aggressive network overrides.</p>
+        <p><strong>Note for the Panel:</strong> Standard dynamic networking fails during mobile transit. To ensure the Raspberry Pi does not drop the mobile hotspot connection, we enforce aggressive network overrides.</p>
         <br>
-        <p>We hardcode the WPA-PSK via terminal <code>nmcli</code> commands and apply an immutable file lock to the SSH configuration using <code>sudo chattr +i /etc/ssh/sshd_config</code>[cite: 134, 142]. This guarantees unrestricted IPv4 SSH listening on Port 22, allowing the node to be accessible to engineers even without a GUI[cite: 139, 194, 230].</p>
+        <p>We hardcode the WPA-PSK via terminal <code>nmcli</code> commands and apply an immutable file lock to the SSH configuration using <code>sudo chattr +i /etc/ssh/sshd_config</code>. This guarantees unrestricted IPv4 SSH listening on Port 22, allowing the node to be accessible to engineers even without a GUI.</p>
       </div>
     </div>
   </section>
 
-  <!-- ============ SLIDE 2: PROBLEM / SOLUTION ============ -->
   <section class="slide" id="slide-2">
-    <div class="corner tl"></div><div class="corner tr"></div>
-    <div class="corner bl"></div><div class="corner br"></div>
-    <div class="slide-label">02 — PROBLEM / SOLUTION</div>
-    <h2 class="slide-title">The <span class="accent">Dead-Zone</span> Problem</h2>
-    <div class="two-col">
-      <div>
-        <div class="slide-label" style="color:var(--danger)">PROBLEM</div>
-        <div class="slide-body" style="font-size:1rem;">
+    <div class="pro-bg-shape" style="left:0; right:auto; clip-path: polygon(0 0, 80% 0, 100% 100%, 0% 100%); width: 40%;"></div>
+    
+    <div class="pro-floating-box ppt-fragment" style="left: 5%; right: auto; width: 28%; padding: 1.5rem; background: rgba(5, 15, 25, 0.95);">
+      <div class="metrics-grid" style="grid-template-columns: 1fr; gap: 12px; margin-top:0;">
+        <div class="metric-card ok" style="padding: 0.8rem;"><span class="metric-value">&lt; 2s</span><span class="metric-label">Alert Latency</span></div>
+        <div class="metric-card" style="padding: 0.8rem;"><span class="metric-value">168 h</span><span class="metric-label">Shelf-Life Baseline</span></div>
+        <div class="metric-card ok" style="padding: 0.8rem;"><span class="metric-value">30%</span><span class="metric-label">Spoilage Reduction</span></div>
+        <div class="metric-card warn" style="padding: 0.8rem;"><span class="metric-value">₹6,800</span><span class="metric-label">BOM Cost / Node</span></div>
+      </div>
+    </div>
+
+    <div class="pro-content" style="margin-left: 42%; width: 55%;">
+      <div class="slide-label">02 — PROBLEM / SOLUTION</div>
+      <h2 class="slide-title">The <span class="accent">Dead-Zone</span> Problem</h2>
+      
+      <div class="ppt-fragment">
+        <div class="slide-label" style="color:var(--danger); margin-top:1.5rem;">PROBLEM</div>
+        <div class="slide-body" style="font-size:1.05rem;">
           Agricultural supply chains lose millions to transit spoilage. Current IoT sensors require stable cloud APIs. If the truck loses Wi-Fi, data is buffered — and by the time the system reconnects, the entire batch of produce is already rotting.
         </div>
       </div>
-      <div>
-        <div class="slide-label" style="color:var(--accent2)">SOLUTION</div>
-        <div class="slide-body" style="font-size:1rem;">
+
+      <div class="ppt-fragment">
+        <div class="slide-label" style="color:var(--accent2); margin-top:1.5rem;">SOLUTION</div>
+        <div class="slide-body" style="font-size:1.05rem;">
           Intelligence moved to the edge. The system monitors Volatile Organic Compounds (VOCs) locally, interpolates ADC readings against calibrated <em>Fresh</em> / <em>Rot</em> constants, and executes asynchronous Telegram payloads the second it hits a hotspot.
         </div>
       </div>
     </div>
-    <div class="metrics-grid" style="margin-top:1.4rem;">
-      <div class="metric-card ok">
-        <span class="metric-value">&lt; 2s</span>
-        <span class="metric-label">Alert Latency</span>
-      </div>
-      <div class="metric-card">
-        <span class="metric-value">168 h</span>
-        <span class="metric-label">Shelf-Life Baseline</span>
-      </div>
-      <div class="metric-card ok">
-        <span class="metric-value">30%</span>
-        <span class="metric-label">Spoilage Reduction</span>
-      </div>
-      <div class="metric-card warn">
-        <span class="metric-value">₹6,800</span>
-        <span class="metric-label">BOM Cost / Node</span>
-      </div>
-    </div>
+
     <div class="explain-overlay">
       <div class="explain-title">🎛️ Deep Dive: Transit Acoustic Filtering</div>
       <div class="explain-text">
-        <p><strong>Note for the Panel:</strong> To prevent false positives from physical movement, the system categorizes vibrations using a Piezo impact disc array[cite: 160, 195].</p>
+        <p><strong>Note for the Panel:</strong> To prevent false positives from physical movement, the system categorizes vibrations using a Piezo impact disc array.</p>
         <br>
-        <p>Our dynamic baseline tracking mathematically filters this noise: a sudden vibration spike of >100 triggers a 5-second hardware lockout to ignore transit rumble[cite: 195, 196]. Conversely, a continuous micro-spike of >10 flags potential pest activity, successfully separating truck movement from organic threats[cite: 196].</p>
+        <p>Our dynamic baseline tracking mathematically filters this noise: a sudden vibration spike of >100 triggers a 5-second hardware lockout to ignore transit rumble. Conversely, a continuous micro-spike of >10 flags potential pest activity, successfully separating truck movement from organic threats.</p>
       </div>
     </div>
   </section>
@@ -905,39 +991,76 @@ const FeatureFlags = {
 
   <!-- ============ SLIDE 6: COMPETITIVE LANDSCAPE ============ -->
   <section class="slide" id="slide-6">
-    <div class="corner tl"></div><div class="corner tr"></div>
-    <div class="corner bl"></div><div class="corner br"></div>
-    <div class="slide-label">06 — COMPETITIVE LANDSCAPE</div>
-    <h2 class="slide-title">Innovative &amp; <span class="accent2">Lower Cost</span></h2>
-    <div class="two-col" style="align-items:center;">
-      <div>
+    
+    <div style="width: 100%; max-width: 1100px; margin: 0 auto; position: relative; z-index: 5;">
+      <div class="slide-label">06 — COMPETITIVE LANDSCAPE</div>
+      <h2 class="slide-title">Innovative &amp; <span class="accent2">Lower Cost</span></h2>
+    </div>
+
+    <div style="display: flex; gap: 4rem; width: 100%; max-width: 1100px; align-items: center; justify-content: space-between; margin: 2rem auto 0; position: relative; z-index: 5;">
+      
+      <div class="pro-content" style="flex: 1; min-width: 50%; padding: 0;">
         <ul class="item-list">
-          <li><strong>Passive Loggers</strong> (Sensitech, Testo) — Conventional, lower cost. Record temp &amp; humidity only. Failure known only after arrival.</li>
-          <li><strong>Cloud IoT Sensors</strong> — Innovative, expensive. Process via AWS/Azure. Fail completely in rural dead-zones.</li>
-          <li><strong>Edge Olfaction</strong> — Innovative + lower cost. Zero-latency local computation + biochemical olfaction (MQ-135, MQ-3, MQ-4). No cloud subscription required.</li>
+          <li class="ppt-fragment" style="flex-direction: column; gap: 4px; padding-bottom: 15px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="color:var(--muted); font-family:var(--mono);">[01]</span>
+              <strong style="color:var(--text); font-size: 1.2rem; letter-spacing: 1px;">Passive Loggers</strong> 
+              <span style="font-size: 0.85rem; color: var(--muted);">(Sensitech, Testo)</span>
+            </div>
+            <div style="color:rgba(224,240,255,0.7); font-size: 0.95rem; padding-left: 35px;">
+              Conventional, lower cost. Record temp &amp; humidity only. Failure known only after arrival.
+            </div>
+          </li>
+          
+          <li class="ppt-fragment" style="flex-direction: column; gap: 4px; padding-bottom: 15px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="color:var(--warning); font-family:var(--mono);">[02]</span>
+              <strong style="color:var(--warning); font-size: 1.2rem; letter-spacing: 1px;">Cloud IoT Sensors</strong>
+            </div>
+            <div style="color:rgba(224,240,255,0.7); font-size: 0.95rem; padding-left: 35px;">
+              Innovative, expensive. Process via AWS/Azure. Fail completely in rural dead-zones.
+            </div>
+          </li>
+          
+          <li class="ppt-fragment" style="flex-direction: column; gap: 4px; padding-bottom: 15px; border-bottom: none;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="color:var(--accent); font-family:var(--mono);">[03]</span>
+              <strong style="color:var(--accent); font-size: 1.3rem; letter-spacing: 1px; text-shadow: 0 0 10px rgba(0,229,255,0.4);">Edge Olfaction ★</strong>
+            </div>
+            <div style="color:rgba(224,240,255,0.9); font-size: 1rem; padding-left: 35px; border-left: 2px solid var(--accent); margin-left: 10px; padding-top: 4px; padding-bottom: 4px;">
+              Innovative + lower cost. Zero-latency local computation + biochemical olfaction (MQ-135, MQ-3, MQ-4). No cloud subscription required.
+            </div>
+          </li>
         </ul>
       </div>
-      <div class="quadrant-wrap" id="quadrant">
-        <div class="quad-axis-h"></div>
-        <div class="quad-axis-v"></div>
-        <div class="quad-label" style="top:6px; left:50%; transform:translateX(-50%);">INNOVATIVE</div>
-        <div class="quad-label" style="bottom:6px; left:50%; transform:translateX(-50%);">CONVENTIONAL</div>
-        <div class="quad-label" style="left:6px; top:50%; transform:translateY(-50%) rotate(-90deg);">LOWER</div>
-        <div class="quad-label" style="right:6px; top:50%; transform:translateY(-50%) rotate(90deg);">HIGHER</div>
-        <!-- Passive loggers: conventional/lower -->
-        <div class="quad-dot" style="left:28%; top:72%; background:var(--muted);">
-          <div class="quad-dot-label">Passive</div>
-        </div>
-        <!-- Cloud IoT: innovative/higher -->
-        <div class="quad-dot" style="left:72%; top:28%; background:var(--warning);">
-          <div class="quad-dot-label">Cloud IoT</div>
-        </div>
-        <!-- Edge Olfaction: innovative/lower ★ -->
-        <div class="quad-dot" style="left:28%; top:28%; background:var(--accent); width:18px; height:18px; box-shadow:0 0 12px var(--accent);">
-          <div class="quad-dot-label" style="color:var(--accent); font-weight:700;">Edge-Olfaction ★</div>
+
+      <div style="flex: 0 0 420px; background: rgba(11, 21, 32, 0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(0, 229, 255, 0.2); box-shadow: inset 0 0 30px rgba(0,229,255,0.05), 0 20px 40px rgba(0,0,0,0.5); border-radius: 8px; padding: 2.5rem;">
+        
+        <div class="quadrant-wrap" id="quadrant" style="width: 100%; height: 320px; border: 1px solid rgba(0,229,255,0.15); border-radius: 4px; position: relative;">
+          
+          <div class="quad-axis-h" style="background: linear-gradient(90deg, transparent, rgba(0,229,255,0.4), transparent); box-shadow: 0 0 8px rgba(0,229,255,0.2);"></div>
+          <div class="quad-axis-v" style="background: linear-gradient(0deg, transparent, rgba(0,229,255,0.4), transparent); box-shadow: 0 0 8px rgba(0,229,255,0.2);"></div>
+          
+          <div class="quad-label" style="top:8px; left:50%; transform:translateX(-50%); color: var(--accent2);">INNOVATIVE</div>
+          <div class="quad-label" style="bottom:8px; left:50%; transform:translateX(-50%);">CONVENTIONAL</div>
+          <div class="quad-label" style="left:8px; top:50%; transform:translateY(-50%) rotate(-90deg);">LOWER COST</div>
+          <div class="quad-label" style="right:8px; top:50%; transform:translateY(-50%) rotate(90deg); color: var(--warning);">HIGHER COST</div>
+          
+          <div class="quad-dot ppt-fragment" style="left:28%; top:72%; background:var(--muted); box-shadow: 0 0 10px var(--muted);">
+            <div class="quad-dot-label" style="opacity: 0.6;">Passive</div>
+          </div>
+          <div class="quad-dot ppt-fragment" style="left:72%; top:28%; background:var(--warning); box-shadow: 0 0 15px var(--warning);">
+            <div class="quad-dot-label" style="color: var(--warning);">Cloud IoT</div>
+          </div>
+          <div class="quad-dot ppt-fragment" style="left:28%; top:28%; background:var(--accent); width:20px; height:20px; box-shadow:0 0 20px var(--accent); border: 2px solid #fff;">
+            <div class="quad-dot-label" style="color:var(--accent); font-weight:bold; font-size: 11px; text-shadow: 0 0 8px var(--accent); top: -22px;">Edge-Olfaction</div>
+            <div style="position: absolute; inset: -10px; border: 1px solid var(--accent); border-radius: 50%; animation: ping 2s infinite ease-out;"></div>
+          </div>
         </div>
       </div>
+
     </div>
+
     <div class="explain-overlay">
       <div class="explain-title">⚔️ Deep Dive: The Algorithmic Moat</div>
       <div class="explain-text">
@@ -948,29 +1071,75 @@ const FeatureFlags = {
     </div>
   </section>
 
+  <style>
+    @keyframes ping {
+      0% { transform: scale(0.5); opacity: 1; }
+      100% { transform: scale(2.5); opacity: 0; }
+    }
+  </style>
+
 <!-- ============ SLIDE 7: BUSINESS MODEL & SCALIN ============ -->
 <section class="slide" id="slide-7">
-    <div class="corner tl"></div><div class="corner tr"></div>
-    <div class="corner bl"></div><div class="corner br"></div>
-    <div class="slide-label">07 — BUSINESS MODEL & SCALING</div>
-    <h2 class="slide-title">Hardware-as-a-<span class="accent2">Service</span></h2>
-    <div class="two-col">
-      <div>
-        <div class="slide-body" style="font-size:1rem; margin-bottom:1rem;">
+    
+    <div style="width: 100%; max-width: 1100px; margin: 0 auto; position: relative; z-index: 5;">
+      <div class="slide-label">07 — BUSINESS MODEL & SCALING</div>
+      <h2 class="slide-title">Hardware-as-a-<span class="accent2">Service</span></h2>
+    </div>
+
+    <div style="display: flex; gap: 4rem; width: 100%; max-width: 1100px; align-items: center; justify-content: space-between; margin: 2rem auto 0; position: relative; z-index: 5;">
+      
+      <div class="pro-content" style="flex: 1; min-width: 50%; padding: 0;">
+        <div class="slide-body" style="font-size: 1.05rem; margin-bottom: 2.5rem; color: rgba(224,240,255,0.9);">
           Transitioning from a breadboard prototype to a scalable HaaS model for local logistics fleets.
         </div>
-        <ul class="item-list">
-          <li><strong>Phase 1:</strong> Local ECE lab deployment & regional Khardaha warehouse testing.</li>
-          <li><strong>Phase 2:</strong> Outfitting a small fleet of regional produce transport trucks for a 6-month pilot.</li>
-        </ul>
-      </div>
-      <div>
-        <div class="slide-label" style="color:var(--accent)">SCALABILITY LEVER</div>
-        <div class="slide-body" style="font-size:1rem;">
-          To scale, we will fabricate a <strong>unified, custom-soldered PCB</strong> that integrates the MQ sensors, operational amplifiers, and microcontroller onto a single shock-proof board designed for industrial PETG enclosures.
+        
+        <div style="position: relative; border-left: 2px solid rgba(0,229,255,0.2); margin-left: 10px; padding-left: 30px;">
+          
+          <div class="ppt-fragment" style="position: relative; margin-bottom: 2.5rem;">
+            <div style="position: absolute; left: -37px; top: 2px; width: 12px; height: 12px; background: var(--surface2); border: 2px solid var(--accent); border-radius: 50%; box-shadow: 0 0 10px var(--accent);"></div>
+            <strong style="color:var(--text); font-size: 1.15rem; letter-spacing: 1px; font-family: var(--sans);">PHASE 01: Lab & Regional Test</strong>
+            <div style="color:rgba(224,240,255,0.65); font-size: 0.95rem; margin-top: 6px; line-height: 1.5;">
+              Local ECE lab deployment & regional Khardaha warehouse testing to validate the core Arrhenius logic.
+            </div>
+          </div>
+          
+          <div class="ppt-fragment" style="position: relative;">
+            <div style="position: absolute; left: -37px; top: 2px; width: 12px; height: 12px; background: var(--accent2); box-shadow: 0 0 15px var(--accent2); border-radius: 50%;"></div>
+            <strong style="color:var(--accent2); font-size: 1.15rem; letter-spacing: 1px; font-family: var(--sans);">PHASE 02: Fleet Pilot Pipeline</strong>
+            <div style="color:rgba(224,240,255,0.8); font-size: 0.95rem; margin-top: 6px; line-height: 1.5;">
+              Outfitting a small fleet of regional produce transport trucks for a live 6-month logistics pilot.
+            </div>
+          </div>
+
         </div>
       </div>
+
+      <div id="fabricator-box" class="ppt-fragment" style="flex: 0 0 420px; position: relative; background: rgba(5, 12, 20, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(0, 229, 255, 0.2); border-radius: 8px; padding: 2.5rem; overflow: hidden; cursor: crosshair; box-shadow: 0 15px 35px rgba(0,0,0,0.5); min-height: 320px; display: flex; flex-direction: column; justify-content: center; transition: border-color 0.3s;">
+        
+        <div id="fab-laser" style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: #fff; box-shadow: 0 0 20px var(--accent2), 0 0 40px var(--accent2); opacity: 0; z-index: 10;"></div>
+
+        <svg style="position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none;" viewBox="0 0 400 320">
+          <path id="fab-trace-1" d="M -10 250 L 80 250 L 120 200 L 120 50 L 350 50" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="800" stroke-dashoffset="800" opacity="0.8"/>
+          <path id="fab-trace-2" d="M 410 280 L 300 280 L 250 220 L 250 120 L 80 120" fill="none" stroke="var(--accent2)" stroke-width="2" stroke-dasharray="800" stroke-dashoffset="800" opacity="0.8"/>
+          <circle class="fab-node" cx="350" cy="50" r="5" fill="var(--accent)" opacity="0" />
+          <circle class="fab-node" cx="80" cy="120" r="5" fill="var(--accent2)" opacity="0" />
+          <circle class="fab-node" cx="120" cy="200" r="4" fill="#fff" opacity="0" />
+          <circle class="fab-node" cx="250" cy="220" r="4" fill="#fff" opacity="0" />
+        </svg>
+
+        <div style="position: relative; z-index: 2;">
+          <div id="fab-status" style="font-family: var(--mono); font-size: 11px; letter-spacing: 2px; color: var(--danger); margin-bottom: 12px; transition: color 0.3s;">[ STATUS: PROTOTYPE ]</div>
+          
+          <h3 id="fab-title" style="color:#fff; font-family:var(--hud); letter-spacing:1px; font-size:1.8rem; margin-bottom: 12px; transition: color 0.3s;">Breadboard Wiring</h3>
+          
+          <p id="fab-desc" style="font-size: 0.95rem; color: rgba(224,240,255,0.6); line-height: 1.6; transition: all 0.3s;">
+            Currently relying on fragile jumper cables. <strong style="color:var(--accent);">Hover over this panel</strong> to initiate the industrial PCB scaling sequence.
+          </p>
+        </div>
+      </div>
+
     </div>
+
     <div class="explain-overlay">
       <div class="explain-title">🚧 Deep Dive: Scope & Cloud Exclusions</div>
       <div class="explain-text">
@@ -980,6 +1149,67 @@ const FeatureFlags = {
       </div>
     </div>
   </section>
+
+  <script>
+    const fabBox = document.getElementById('fabricator-box');
+    let isFabricated = false;
+
+    fabBox.addEventListener('mouseenter', () => {
+      if(isFabricated || !window.gsap) return;
+      isFabricated = true;
+
+      const title = document.getElementById('fab-title');
+      const desc = document.getElementById('fab-desc');
+      const status = document.getElementById('fab-status');
+
+      // 1. Text enters "Scramble" mode
+      status.innerText = "[ STATUS: FABRICATING... ]";
+      status.style.color = "var(--accent)";
+      fabBox.style.borderColor = "var(--accent2)";
+
+      // 2. The Laser Sweep Animation
+      gsap.fromTo('#fab-laser', 
+        {y: 0, opacity: 1}, 
+        {y: 320, duration: 1.5, ease: "power2.inOut", onComplete: () => gsap.set('#fab-laser', {opacity: 0})}
+      );
+
+      // 3. Circuit Traces Draw Themselves mathematically
+      gsap.to(['#fab-trace-1', '#fab-trace-2'], {strokeDashoffset: 0, duration: 1.5, ease: "power2.inOut"});
+      
+      // 4. Circuit Nodes light up at the end of the lines
+      gsap.to('.fab-node', {opacity: 1, duration: 0.2, stagger: 0.2, delay: 0.8});
+
+      // 5. Final Text Swap (Syncs perfectly with laser reaching the bottom)
+      setTimeout(() => {
+        title.innerHTML = 'Unified Custom PCB <span style="display:inline-block; margin-left:8px; padding:2px 6px; background:var(--accent2); color:#000; font-family:var(--mono); font-size:0.4em; border-radius:2px; vertical-align:middle;">SCALED</span>';
+        title.style.color = 'var(--accent2)';
+        
+        desc.innerHTML = 'Integrates the MQ sensors, operational amplifiers, and microcontroller onto a single shock-proof board designed for industrial PETG enclosures.';
+        desc.style.color = 'rgba(224,240,255,1)';
+        
+        status.innerText = "[ STATUS: READY FOR HaaS ]";
+        status.style.color = "var(--accent2)";
+      }, 900);
+    });
+
+    // Reset the interaction when you change slides so you can show it off again
+    const oldGoToSlide = goToSlide;
+    goToSlide = function(idx) {
+      if (isFabricated) {
+        isFabricated = false;
+        document.getElementById('fab-status').innerText = "[ STATUS: PROTOTYPE ]";
+        document.getElementById('fab-status').style.color = "var(--danger)";
+        document.getElementById('fab-title').innerText = "Breadboard Wiring";
+        document.getElementById('fab-title').style.color = "#fff";
+        document.getElementById('fab-desc').innerHTML = "Currently relying on fragile jumper cables. <strong style=\"color:var(--accent);\">Hover over this panel</strong> to initiate the industrial PCB scaling sequence.";
+        document.getElementById('fab-desc').style.color = "rgba(224,240,255,0.6)";
+        document.getElementById('fabricator-box').style.borderColor = "rgba(0, 229, 255, 0.2)";
+        gsap.set(['#fab-trace-1', '#fab-trace-2'], {strokeDashoffset: 800});
+        gsap.set('.fab-node', {opacity: 0});
+      }
+      oldGoToSlide(idx);
+    };
+  </script>
   
 
 
@@ -987,35 +1217,143 @@ const FeatureFlags = {
 
 <!-- ============ SLIDE 8: TEAM ============ -->
   <section class="slide" id="slide-8">
-    <div class="corner tl"></div><div class="corner tr"></div>
-    <div class="corner bl"></div><div class="corner br"></div>
-    <div class="slide-label">08 — TEAM</div>
-    <h2 class="slide-title">The <span class="accent">Builders</span></h2>
     
-    <div class="team-grid">
-      <div class="team-card">
-        <div class="avatar" style="background-image: url('profile.jpeg'); color: transparent;">DG</div>
-        <div class="team-name">Dibyajyotee Ghosh</div>
-        <div class="team-role">Edge AI Developer / Project Lead</div>
-        <div class="team-desc">Built the core Python serial bridge, designed the cubic exponential decay threshold math, and engineered headless network survival protocols.</div>
-      </div>
+    <style>
+      .pro-team-card {
+        flex: 1; min-width: 260px; max-width: 320px;
+        background: rgba(11, 21, 32, 0.45);
+        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(0, 229, 255, 0.15);
+        border-top: 3px solid var(--accent);
+        border-radius: 8px;
+        padding: 2.5rem 1.5rem;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        display: flex; flex-direction: column; align-items: center;
+      }
+      .pro-team-card:hover {
+        transform: translateY(-15px) scale(1.02);
+        box-shadow: 0 25px 50px rgba(0,0,0,0.6), inset 0 0 25px rgba(0,229,255,0.1);
+        border-color: var(--accent);
+        z-index: 10;
+      }
+      /* Card Variants */
+      .pro-team-card.hardware { border-top-color: var(--accent2); }
+      .pro-team-card.hardware:hover { border-color: var(--accent2); box-shadow: 0 25px 50px rgba(0,0,0,0.6), inset 0 0 25px rgba(0,255,200,0.1); }
+      .pro-team-card.supervisor { border-top-color: var(--muted); }
+      .pro-team-card.supervisor:hover { border-color: rgba(255,255,255,0.4); box-shadow: 0 25px 50px rgba(0,0,0,0.6), inset 0 0 25px rgba(255,255,255,0.05); }
+
+      /* The Avatar & Scanner */
+      .avatar-wrapper {
+        position: relative; width: 85px; height: 85px; margin-bottom: 1.5rem;
+        border-radius: 50%; padding: 4px; border: 1px dashed var(--muted);
+        transition: transform 0.5s;
+      }
+      .pro-team-card:hover .avatar-wrapper { transform: rotate(90deg); border-color: var(--accent); }
+      .pro-team-card.hardware:hover .avatar-wrapper { border-color: var(--accent2); }
       
-      <div class="team-card">
-        <div class="avatar" style="background-image: url('SHARMIK_SEN.jpg'); border-color:var(--accent2); color: transparent;">SS</div>
-        <div class="team-name">Sharmik Sen</div>
-        <div class="team-role">Hardware &amp; Integration Lead</div>
-        <div class="team-desc">Calibrated the multivariable MQ gas array, engineered piezo transit filtering logic, and integrated the physical enclosure and JSON pipeline.</div>
-      </div>
+      .avatar-img {
+        width: 100%; height: 100%; border-radius: 50%;
+        background-color: var(--bg); background-size: cover; background-position: center;
+        border: 2px solid var(--accent);
+        transition: all 0.5s; position: relative; overflow: hidden;
+      }
+      .pro-team-card.hardware .avatar-img { border-color: var(--accent2); }
+      .pro-team-card.supervisor .avatar-img { border-color: var(--muted); }
       
-      <div class="team-card" style="border-color:var(--muted);">
-        <div class="avatar" style="background-image: url('PROF_RIMI_SENGUPTA.jpg'); border-color:var(--muted); color: transparent;">M</div>
-        <div class="team-name">PROF. RIMI SENGUPTA</div>
-        <div class="team-role">Project Supervisor, ECE</div>
-        <div class="team-desc">Emphasizing academic rigor, component viability, and strict adherence to IEEE documentation standards.</div>
-      </div>
-    </div> <div class="slide-body" style="text-align:center; margin-top:1.4rem; font-size:0.9rem; color:var(--muted);">
-      ECE Department · IEEE documentation standards · Academic oversight
+      /* The Laser Sweep */
+      .avatar-img::after {
+        content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 20px;
+        background: linear-gradient(to bottom, transparent, rgba(0,229,255,0.6), transparent);
+        transform: translateY(-100px) rotate(45deg); transition: transform 0s;
+      }
+      .pro-team-card.hardware .avatar-img::after { background: linear-gradient(to bottom, transparent, rgba(100,255,218,0.6), transparent); }
+      
+      .pro-team-card:hover .avatar-img::after {
+        transform: translateY(150px) rotate(45deg);
+        transition: transform 1.2s ease-in-out;
+      }
+
+      /* 🚀 NEW: Floating Holographic Security Badges (Replaces the ugly inner text) */
+      .dossier-badge {
+        position: absolute; bottom: -5px; right: -15px;
+        background: var(--bg); border: 1px solid var(--accent);
+        color: var(--accent); font-family: var(--mono); font-size: 11px;
+        padding: 2px 6px; box-shadow: 0 0 10px var(--accent);
+        transition: all 0.4s; z-index: 5; font-weight: bold;
+        border-radius: 3px;
+        /* Counter-rotate so it stays upright when the dashed border spins! */
+        transform: rotate(0deg); 
+      }
+      .pro-team-card:hover .dossier-badge { transform: rotate(-90deg) scale(1.1); }
+      
+      .pro-team-card.hardware .dossier-badge { border-color: var(--accent2); color: var(--accent2); box-shadow: 0 0 10px var(--accent2); }
+      .pro-team-card.supervisor .dossier-badge { border-color: var(--text); color: var(--text); box-shadow: 0 0 10px rgba(255,255,255,0.3); }
+
+      /* Inner Text Styling */
+      .dossier-id { position: absolute; top: 10px; left: 10px; font-family: var(--mono); font-size: 8px; color: var(--muted); letter-spacing: 2px; }
+      .dossier-status { position: absolute; top: 10px; right: 10px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+      .pro-team-card.hardware .dossier-status { background: var(--accent2); box-shadow: 0 0 8px var(--accent2); }
+      .pro-team-card.supervisor .dossier-status { background: var(--muted); box-shadow: none; }
+      
+      /* Target for JS Decrypt */
+      .team-name { font-size: 1.3rem; letter-spacing: 1px; font-family: var(--mono); font-weight: bold; }
+    </style>
+
+    <div style="width: 100%; max-width: 1050px; margin: 0 auto; position: relative; z-index: 5; text-align: center;">
+      <div class="slide-label">08 — TEAM DOSSIERS</div>
+      <h2 class="slide-title">The <span class="accent">Builders</span></h2>
     </div>
+
+    <div style="display: flex; gap: 2.5rem; width: 100%; max-width: 1050px; justify-content: center; align-items: stretch; margin: 2rem auto 0; position: relative; z-index: 5;">
+      
+      <div class="pro-team-card ppt-fragment">
+        <div class="dossier-id">ID: ECE-DJ</div><div class="dossier-status"></div>
+        <div class="avatar-wrapper">
+          <div class="avatar-img" style="background-image: url('profile.jpeg');"></div>
+          <div class="dossier-badge">DG</div>
+        </div>
+        <div class="team-name" data-value="Dibyajyotee Ghosh">Dibyajyotee Ghosh</div>
+        <div class="team-role" style="color: var(--accent); margin-bottom: 12px; font-weight: bold;">Edge AI / Project Lead</div>
+        <div class="team-desc" style="font-size: 0.9rem; text-align: center;">
+          Built the core Python serial bridge, designed the cubic exponential decay threshold math, and engineered headless network survival protocols.
+        </div>
+      </div>
+      
+      <div class="pro-team-card hardware ppt-fragment">
+        <div class="dossier-id">ID: ECE-SS</div><div class="dossier-status"></div>
+        <div class="avatar-wrapper">
+          <div class="avatar-img" style="background-image: url('SHARMIKSEN.jpg');"></div>
+          <div class="dossier-badge">SS</div>
+        </div>
+        <div class="team-name" data-value="Sharmik Sen">Sharmik Sen</div>
+        <div class="team-role" style="color: var(--accent2); margin-bottom: 12px; font-weight: bold;">Hardware &amp; Integration Lead</div>
+        <div class="team-desc" style="font-size: 0.9rem; text-align: center;">
+          Calibrated the multivariable MQ gas array, engineered piezo transit filtering logic, and integrated the physical enclosure and JSON pipeline.
+        </div>
+      </div>
+      
+      <div class="pro-team-card supervisor ppt-fragment">
+        <div class="dossier-id">ID: SUP-RS</div><div class="dossier-status"></div>
+        <div class="avatar-wrapper">
+          <div class="avatar-img" style="background-image: url('PROFRIMISENGUPTA.jpg');"></div>
+          <div class="dossier-badge">RS</div>
+        </div>
+        <div class="team-name" data-value="Prof. Rimi Sengupta" style="color: rgba(255,255,255,0.9);">Prof. Rimi Sengupta</div>
+        <div class="team-role" style="color: rgba(255,255,255,0.6); margin-bottom: 12px; font-weight: bold;">Project Supervisor, ECE</div>
+        <div class="team-desc" style="font-size: 0.9rem; text-align: center;">
+          Emphasizing academic rigor, component viability, and strict adherence to IEEE documentation standards.
+        </div>
+      </div>
+
+    </div> 
+
+    <div class="slide-body ppt-fragment" style="text-align:center; margin-top:2.5rem; font-size:0.9rem; color:var(--muted); font-family: var(--mono); letter-spacing: 1px; z-index: 5;">
+      [ ECE Department · IEEE Standards · Academic Oversight ]
+    </div>
+
     <div class="explain-overlay">
       <div class="explain-title">🎓 Deep Dive: Departmental Objectives</div>
       <div class="explain-text">
@@ -1026,35 +1364,175 @@ const FeatureFlags = {
     </div>
   </section>
 
+  <script>
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%*";
+    
+    document.querySelectorAll('.pro-team-card').forEach(card => {
+      const nameEl = card.querySelector('.team-name');
+      
+      card.addEventListener('mouseenter', () => {
+        let iterations = 0;
+        clearInterval(nameEl.interval);
+        
+        nameEl.interval = setInterval(() => {
+          nameEl.innerText = nameEl.innerText.split("")
+            .map((letter, index) => {
+              if(index < iterations) {
+                return nameEl.dataset.value[index];
+              }
+              return letters[Math.floor(Math.random() * 41)]
+            })
+            .join("");
+          
+          if(iterations >= nameEl.dataset.value.length) {
+            clearInterval(nameEl.interval);
+          }
+          iterations += 1/3;
+        }, 30);
+      });
+    });
+  </script>
+
   <!-- ============ SLIDE 9: THE ASK ============ -->
   <section class="slide" id="slide-9">
-    <div class="corner tl"></div><div class="corner tr"></div>
-    <div class="corner bl"></div><div class="corner br"></div>
-    <div class="slide-label">09 — THE ASK</div>
-    <h2 class="slide-title">Micro-Grant: <span class="accent">₹5,000</span></h2>
-    <div class="slide-body" style="margin-bottom:1.2rem;">
-      Transitioning the prototype from breadboard to a consolidated, test-ready unit for local field validation.
+    
+    <style>
+      #slide-9 .grant-amount {
+        font-size: clamp(3.5rem, 5vw, 4.5rem); font-family: var(--mono); color: var(--accent);
+        text-shadow: 0 0 25px rgba(0,229,255,0.4); font-weight: bold; line-height: 1; margin-top: 10px;
+      }
+      #slide-9 .finance-hud {
+        background: rgba(11, 21, 32, 0.55); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(0, 229, 255, 0.2); border-top: 3px solid var(--accent2);
+        border-radius: 8px; padding: 2.2rem; box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        position: relative; overflow: hidden;
+      }
+      #slide-9 .bom-row {
+        display: flex; justify-content: space-between; align-items: center; padding: 12px 10px;
+        border-bottom: 1px dashed rgba(0,229,255,0.15); transition: background 0.2s, padding-left 0.2s;
+      }
+      #slide-9 .bom-row:hover { background: rgba(0,229,255,0.05); padding-left: 15px; border-left: 2px solid var(--accent); }
+      #slide-9 .bom-link {
+        color: var(--accent); text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+        transition: all 0.2s; font-family: var(--mono); font-size: 0.95rem; cursor: pointer;
+      }
+      #slide-9 .bom-link:hover { color: #fff; text-shadow: 0 0 10px var(--accent); }
+      #slide-9 .live-ping {
+        width: 6px; height: 6px; background: var(--accent2); border-radius: 50%;
+        box-shadow: 0 0 8px var(--accent2); display: inline-block;
+      }
+      #slide-9 .live-ping.pulse { animation: hudPing 1.5s infinite; }
+      @keyframes hudPing { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
+      
+      #slide-9 .metrics-grid { grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 2rem; width: 100%; max-width: 500px; }
+      #slide-9 .metric-badge {
+        background: rgba(2, 12, 24, 0.6); border: 1px solid var(--border); border-left: 3px solid var(--accent);
+        padding: 1.2rem; border-radius: 4px; display: flex; flex-direction: column; justify-content: center;
+      }
+      #slide-9 .metric-badge.warn { border-left-color: var(--warning); }
+      #slide-9 .metric-badge.ok { border-left-color: var(--accent2); }
+    </style>
+
+    <div style="width: 100%; max-width: 1100px; margin: 0 auto; position: relative; z-index: 5;">
+      <div class="slide-label">09 — THE ASK</div>
+      <h2 class="slide-title">Micro-Grant <span class="accent2">Proposal</span></h2>
     </div>
-    <div id="dynamic-budget-container" style="width:100%;max-width:700px;">
+
+    <div style="display: flex; gap: 4rem; width: 100%; max-width: 1100px; align-items: flex-start; justify-content: space-between; margin: 1.5rem auto 0; position: relative; z-index: 5;">
+      
+      <div class="pro-content" style="flex: 1; padding: 0;">
+        <div style="font-family: var(--mono); color: var(--muted); font-size: 11px; letter-spacing: 2px;">REQUESTED SEED FUNDING</div>
+        <div class="grant-amount">₹5,000</div>
+        <div class="slide-body" style="font-size: 1.05rem; margin-top: 1rem; color: rgba(224,240,255,0.9);">
+          Transitioning the prototype from breadboard to a consolidated, test-ready unit for local field validation in regional logistics fleets.
+        </div>
+
+        <div class="metrics-grid">
+          <div class="metric-badge ok ppt-fragment">
+            <span class="metric-value" style="font-size: 1.8rem;">4 wk</span>
+            <span class="metric-label">To Field-Ready Unit</span>
+          </div>
+          <div class="metric-badge ppt-fragment">
+            <span class="metric-value" style="font-size: 1.8rem;">₹6,800</span>
+            <span class="metric-label">Actual BOM / Node</span>
+          </div>
+          <div class="metric-badge ok ppt-fragment">
+            <span class="metric-value" style="font-size: 1.8rem;">168 h</span>
+            <span class="metric-label">Shelf-Life Tracking</span>
+          </div>
+          <div class="metric-badge warn ppt-fragment">
+            <span class="metric-value" style="font-size: 1.8rem;">&lt; 2 s</span>
+            <span class="metric-label">Telegram Alert</span>
+          </div>
+        </div>
       </div>
-    <div class="metrics-grid" style="margin-top:1.4rem;">
-      <div class="metric-card ok">
-        <span class="metric-value">4 wk</span>
-        <span class="metric-label">To Field-Ready Unit</span>
+
+      <div class="finance-hud ppt-fragment" style="flex: 0 0 480px;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,255,200,0.3); padding-bottom: 12px; margin-bottom: 15px;">
+          <div style="font-family: var(--mono); color: var(--accent2); font-size: 12px; letter-spacing: 2px; display: flex; align-items: center; gap: 8px;">
+            <div style="position:relative;"><div class="live-ping pulse"></div></div>
+            LIVE PROCUREMENT DB
+          </div>
+          <div id="live-clock" style="font-family: var(--mono); font-size: 10px; color: var(--muted);">SYNCING...</div>
+        </div>
+
+        <div id="bom-list">
+          <div class="bom-row">
+            <a href="https://robu.in/product/raspberry-pi-3-model-b-plus/" target="_blank" class="bom-link">
+              <span style="opacity:0.5;">[↗]</span> Raspberry Pi 3B+ (Robu.in)
+            </a>
+            <span style="font-family: var(--mono); color: #fff;">₹3,499</span>
+          </div>
+          
+          <div class="bom-row">
+            <a href="https://robu.in/product/arduino-uno-r3-ch340g-atmega328p-dev-board/" target="_blank" class="bom-link">
+              <span style="opacity:0.5;">[↗]</span> Arduino Uno R3 (Robu.in)
+            </a>
+            <span style="font-family: var(--mono); color: #fff;">₹420</span>
+          </div>
+
+          <div class="bom-row">
+            <a href="https://robu.in/product/mq-135-air-quality-hazardous-gas-sensor-module/" target="_blank" class="bom-link">
+              <span style="opacity:0.5;">[↗]</span> MQ Sensor Array [x3] (Robu.in)
+            </a>
+            <span style="font-family: var(--mono); color: #fff;">₹450</span>
+          </div>
+
+          <div class="bom-row">
+            <a href="https://jlcpcb.com/" target="_blank" class="bom-link">
+              <span style="opacity:0.5;">[↗]</span> Custom PCB x5 (JLCPCB)
+            </a>
+            <span style="font-family: var(--mono); color: #fff;">~₹1,500</span>
+          </div>
+
+          <div class="bom-row" style="border-bottom: none;">
+            <span class="bom-link" style="color:var(--muted); cursor:default;">
+              <span style="opacity:0.5;">[-]</span> Enclosure, Piezo, Wiring
+            </span>
+            <span style="font-family: var(--mono); color: #fff;">~₹931</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(0,229,255,0.3); display: flex; justify-content: space-between; align-items: baseline;">
+          <span style="font-family: var(--hud); font-size: 1rem; color: var(--accent); letter-spacing: 1px;">TOTAL BOM ESTIMATE</span>
+          <span style="font-family: var(--mono); font-size: 1.8rem; color: var(--accent2); font-weight: bold; text-shadow: 0 0 15px var(--accent2);">₹6,800</span>
+        </div>
+        
+        <script>
+          // Live Clock updater for that authentic terminal feel
+          setInterval(() => {
+            const el = document.getElementById('live-clock');
+            if(el) {
+              const now = new Date();
+              el.innerText = `LAST SYNC: ` + now.toLocaleTimeString('en-IN', { hour12: false }) + ` IST`;
+            }
+          }, 1000);
+        </script>
       </div>
-      <div class="metric-card">
-        <span class="metric-value">₹6,800</span>
-        <span class="metric-label">BOM / Node</span>
-      </div>
-      <div class="metric-card ok">
-        <span class="metric-value">168 h</span>
-        <span class="metric-label">Shelf-Life Tracking</span>
-      </div>
-      <div class="metric-card warn">
-        <span class="metric-value">&lt; 2 s</span>
-        <span class="metric-label">Telegram Alert</span>
-      </div>
+
     </div>
+
     <div class="explain-overlay">
       <div class="explain-title">📅 Deep Dive: The Ultimate Validation Metric</div>
       <div class="explain-text">
@@ -1064,7 +1542,6 @@ const FeatureFlags = {
       </div>
     </div>
   </section>
-
 </div><!-- /presentation -->
 
 <!-- =========================
@@ -1097,11 +1574,45 @@ let autoPlayTimer = null;
 // =========================
 function navigate(dir) {
   if (isAnimating) return;
+
+  // 1. Intercept Forward Navigation for PPT Step-by-Step Builds
+  if (dir === 1) {
+    const activeSlide = document.querySelectorAll('.slide')[currentSlide];
+    const hiddenFragments = activeSlide.querySelectorAll('.ppt-fragment:not(.revealed)');
+    
+    if (hiddenFragments.length > 0) {
+      // Reveal the next item in sequence
+      const nextFrag = hiddenFragments[0];
+      nextFrag.classList.add('revealed');
+      gsap.to(nextFrag, {
+        opacity: 1, 
+        y: 0, 
+        duration: 0.5, 
+        ease: 'power2.out',
+        autoAlpha: 1 // ensures visibility is handled
+      });
+      return; // Stop here! Do not change slides.
+    }
+  }
+
+  // 2. Normal Slide Navigation
   const next = currentSlide + dir;
   if (next < 0 || next >= TOTAL_SLIDES) return;
   goToSlide(next);
 }
 
+// =========================
+// 🃏 THE "SHUFFLE BAG" MEMORY
+// =========================
+let fxBag = [];
+const allFxTypes = [
+  'neural_magnet', 'scanline', 'glitch_warp', 'holo_scrub', 
+  'deep_dive', 'binary_rain', 'time_scrub', 'pro_push', 
+  'center_morph', 'panel_morph'
+];
+// =========================
+// 🎲 J.A.R.V.I.S. "CHESTER" RANDOM TRANSITIONS (V2 - CHAOS MODE)
+// =========================
 function goToSlide(idx) {
   if (idx === currentSlide || isAnimating) return;
   isAnimating = true;
@@ -1110,19 +1621,241 @@ function goToSlide(idx) {
   const current = slides[currentSlide];
   const target = slides[idx];
 
-  current.classList.add('exit-left');
-  current.classList.remove('active');
+  // Prep the layers
   target.classList.add('active');
+  gsap.set(target, { zIndex: 10 });
+  gsap.set(current, { zIndex: 5 });
 
-  setTimeout(() => {
-    current.classList.remove('exit-left');
-    isAnimating = false;
-  }, CONFIG.transitionDuration * 1000 + 100);
+  // 🧠 REAL RANDOMNESS: Direction and Glitch Multipliers
+  const dir = Math.random() > 0.5 ? 1 : -1; // 1 = Right, -1 = Left
+  const glitchIntensity = 0.5 + Math.random() * 1.5; // Random intensity
 
+  // 🃏 The "Tetris Bag" Randomizer (Guarantees Equal Attendance)
+  if (fxBag.length === 0) {
+    // If the bag is empty, refill it with a fresh copy of all transitions
+    fxBag = [...allFxTypes];
+    // Shake the bag (Fisher-Yates Shuffle)
+    for (let i = fxBag.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [fxBag[i], fxBag[j]] = [fxBag[j], fxBag[i]];
+    }
+  }
+  
+  // Pull the next guaranteed unique transition out of the bag
+  const fx = fxBag.pop();
+
+  // 🚨 NUCLEAR CLEANUP: Aggressively strip ALL inline styles when done
+  const tl = gsap.timeline({
+    onComplete: () => {
+      current.classList.remove('active');
+      // 'all' guarantees no stuck blurs, skews, or glitches are left behind
+      gsap.set(document.querySelectorAll('.slide'), { clearProps: "all" });
+      isAnimating = false;
+    }
+  });
+
+  // Execute the randomly chosen transition
+  switch(fx) {
+  
+    case 'panel_morph':
+      // Inspired by BJ4ePOMaL6o (4 Vertical Step Panels Morph)
+      const colors = ['rgba(0, 229, 255, 0.9)', 'rgba(0, 184, 212, 0.95)', 'rgba(0, 145, 234, 1)', 'rgba(0, 121, 107, 1)'];
+      const panels = [];
+      const panelContainer = document.createElement('div');
+      panelContainer.style.cssText = `position:fixed; inset:0; z-index:9; display:flex; pointer-events:none;`;
+      document.body.appendChild(panelContainer);
+
+      for (let i = 0; i < 4; i++) {
+        const p = document.createElement('div');
+        // Create 4 distinct vertical columns that will slide in
+        p.style.cssText = `flex:1; height:100vh; background:${colors[i]}; transform: translateY(${dir * window.innerHeight}px); box-shadow: -10px 0 20px rgba(0,0,0,0.4); border-left: 1px solid rgba(255,255,255,0.2);`;
+        panelContainer.appendChild(p);
+        panels.push(p);
+      }
+
+      tl.set(target, { opacity: 1, visibility: 'visible' }, 0)
+        // 1. Panels slide in one by one (Staggered)
+        .to(panels, { y: 0, duration: 0.5, stagger: 0.1, ease: "power3.out" }, 0)
+        // 2. Hide current slide while screen is covered
+        .set(current, { opacity: 0 }, 0.6)
+        // 3. Panels slide out the opposite way, revealing target slide
+        .to(panels, { y: -dir * window.innerHeight, duration: 0.5, stagger: 0.1, ease: "power3.in" }, 0.6)
+        .add(() => panelContainer.remove());
+      break;
+
+    case 'center_morph':
+      // Inspired by JLs6Yk0dYEE (Floating Center Abstract Shape & Drop Shadow Expand)
+      const iris = document.createElement('div');
+      // Create a glowing, pill-like geometric shape in the dead center
+      iris.style.cssText = `position:fixed; top:50%; left:50%; width:0px; height:0px; background:var(--surface2); border: 2px solid var(--accent); border-radius:30px; transform:translate(-50%, -50%); z-index:9; box-shadow: 0 10px 50px 20px rgba(0,229,255,0.3); pointer-events:none;`;
+      document.body.appendChild(iris);
+
+      tl.set(target, { opacity: 1, clipPath: "circle(0% at 50% 50%)" }, 0)
+        // 1. The geometric shape "drops" in and bounces
+        .to(iris, { width: 350, height: 200, duration: 0.5, ease: "back.out(1.5)" }, 0)
+        .to(current, { filter: "blur(8px)", scale: 0.95, duration: 0.5 }, 0)
+        // 2. The shape suddenly explodes outward to reveal the next slide
+        .to(iris, { width: window.innerWidth * 2, height: window.innerWidth * 2, borderRadius: 0, duration: 0.7, ease: "power4.inOut" }, 0.6)
+        .to(target, { clipPath: "circle(150% at 50% 50%)", duration: 0.7, ease: "power4.inOut" }, 0.6)
+        .to(current, { opacity: 0 }, 0.8)
+        .add(() => { 
+          iris.remove(); 
+          gsap.set(target, { clearProps: "clipPath" }); // Reset clip-path so the slide functions normally
+        });
+      break;
+    
+    case 'neural_magnet':
+      // IDEA 1 & 6: Magnetic Slide Pull + Neural Skew
+      tl.set(target, { opacity: 0, x: dir * window.innerWidth, skewX: dir * 15 })
+        .to(current, { x: -dir * 150, scale: 0.9, filter: "blur(4px)", opacity: 0, duration: 0.5, ease: "power2.in" })
+        .to(target, { x: 0, skewX: 0, opacity: 1, filter: "blur(0px)", duration: 0.7, ease: "back.out(1.2)" }, "-=0.2");
+      break;
+    
+    case 'pro_push':
+      // 🚀 THE "PRO PUSH" TRANSITION (Continuous Vertical Canvas)
+      // Replicates the seamless PowerPoint push from the YouTube short
+      // Uses the existing 'dir' variable to randomly push Up (+1) or Down (-1)
+      tl.set(target, { opacity: 1, y: dir * window.innerHeight })
+        .to(current, { y: -dir * window.innerHeight, duration: 0.9, ease: "expo.inOut" }, 0)
+        .to(target, { y: 0, duration: 0.9, ease: "expo.inOut" }, 0);
+      break;
+
+    case 'scanline':
+      // IDEA 2: AI Scanline Sweep
+      // Dynamically create the laser beam
+      const laser = document.createElement('div');
+      laser.style.cssText = `position:fixed; top:0; left:0; width:6px; height:100vh; background:var(--accent); box-shadow:0 0 25px var(--accent); z-index:9999;`;
+      document.body.appendChild(laser);
+      
+      gsap.set(laser, { x: dir === 1 ? -20 : window.innerWidth + 20 });
+      tl.set(target, { opacity: 1, clipPath: dir === 1 ? "inset(0 100% 0 0)" : "inset(0 0 0 100%)" })
+        .to(laser, { x: dir === 1 ? window.innerWidth + 20 : -20, duration: 0.6, ease: "none" })
+        .to(target, { clipPath: "inset(0 0% 0 0%)", duration: 0.6, ease: "none" }, "<")
+        .to(current, { opacity: 0, duration: 0.1 }, "<0.5")
+        .add(() => laser.remove()); // Destroy laser after sweep
+      break;
+
+    case 'glitch_warp':
+      // IDEA 3: Data Glitch Warp (Controlled Chaos)
+      tl.set(target, { opacity: 0 })
+        // Stutter 1
+        .to(current, { x: dir * (30 * glitchIntensity), skewX: 20, filter: "hue-rotate(90deg) brightness(2)", duration: 0.1 })
+        // Stutter 2 (Inverted)
+        .to(current, { x: -dir * (40 * glitchIntensity), skewX: -20, filter: "invert(1)", opacity: 0.3, duration: 0.1 })
+        .to(current, { opacity: 0, duration: 0.05 })
+        // Target Snaps In
+        .to(target, { opacity: 0.5, x: dir * (50 * glitchIntensity), skewX: 30, filter: "brightness(3)", duration: 0.1 })
+        .to(target, { opacity: 1, x: 0, skewX: 0, filter: "brightness(1) hue-rotate(0deg) invert(0)", duration: 0.4, ease: "power4.out" });
+      break;
+
+    case 'holo_scrub':
+      // IDEA 4 & 5: Hologram Shift + Time Scrub Ghosting
+      tl.set(target, { opacity: 0, x: dir * 60, filter: "blur(12px) brightness(1.5)", scale: 1.05 })
+        .to(current, { opacity: 0, x: -dir * 60, filter: "blur(8px)", duration: 0.4, ease: "power2.in" })
+        // The Scrub Effect (Rapid opacity/position toggling to simulate ghost frames)
+        .to(target, { opacity: 0.2, x: dir * 30, duration: 0.08 })
+        .to(target, { opacity: 0.1, x: dir * 45, duration: 0.08 })
+        .to(target, { opacity: 0.5, x: dir * 15, duration: 0.08 })
+        .to(target, { opacity: 1, x: 0, filter: "blur(0px) brightness(1)", scale: 1, duration: 0.5, ease: "power2.out" });
+      break;
+
+    case 'deep_dive':
+      // JARVIS Core Plunge
+      tl.set(target, { opacity: 0, scale: 2.5, filter: "blur(15px)" })
+        .to(current, { opacity: 0, scale: 0.3, filter: "blur(8px)", duration: 0.5, ease: "power3.in" })
+        .to(target, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.7, ease: "power3.out" }, "-=0.2");
+      break;
+    case 'binary_rain':
+      // IDEA 7: Binary Rain (The Matrix Emergence) - UPGRADED
+      const rainBox = document.createElement('div');
+      rainBox.style.cssText = `position:fixed; inset:0; z-index:8; background:rgba(2,12,24,0.95); overflow:hidden; display:flex; justify-content:space-around; pointer-events:none;`;
+      document.body.appendChild(rainBox);
+
+      const columns = [];
+      // Calculate how many vertical streams we need based on screen width
+      const colCount = Math.floor(window.innerWidth / 25); 
+
+      // Build individual falling streams
+      for (let i = 0; i < colCount; i++) {
+        const col = document.createElement('div');
+        let binString = "";
+        const chars = Math.floor(20 + Math.random() * 40); // Random stream length
+        
+        // Build the column with HTML line breaks
+        for(let j=0; j<chars; j++) {
+          // Make the bottom character (the "head" of the stream) bright white
+          if (j === chars - 1) {
+            binString += `<span style="color:#fff; text-shadow:0 0 15px #fff;">${Math.random() > 0.5 ? "1" : "0"}</span>`;
+          } else {
+            binString += (Math.random() > 0.5 ? "1" : "0") + "<br>";
+          }
+        }
+
+        col.innerHTML = binString;
+        // Randomize opacity and font size slightly to create 3D depth
+        col.style.cssText = `font-family:var(--mono); color:var(--accent2); font-size:${14 + Math.random()*8}px; line-height:1.1; text-shadow: 0 0 8px var(--accent2); opacity: ${0.3 + Math.random()*0.7}; transform: translateY(-100%);`;
+        
+        rainBox.appendChild(col);
+        columns.push(col);
+      }
+
+      // The Timeline execution
+      tl.set(target, { opacity: 0, scale: 0.8, filter: "brightness(2)" }, 0)
+        .to(current, { x: -dir * window.innerWidth, opacity: 0, duration: 0.5, ease: "power3.in" }, 0)
+        // GSAP randomly staggers the fall of each individual column
+        .fromTo(columns, 
+          { y: -window.innerHeight }, 
+          { y: window.innerHeight + 200, duration: 1.2, stagger: { amount: 0.5, from: "random" }, ease: "none" }, 
+          0
+        )
+        // The new slide punches through the rain
+        .to(target, { opacity: 1, scale: 1, filter: "brightness(1)", duration: 0.8, ease: "expo.out" }, 0.4)
+        // Vaporize the rain container
+        .to(rainBox, { opacity: 0, filter: "blur(10px)", duration: 0.6 }, 0.7)
+        .add(() => rainBox.remove()); 
+      break;
+
+    case 'time_scrub':
+      // IDEA 5: Time Scrub Effect (Ghost Clones)
+      const clones = [];
+      // Create 3 physical clones of the target slide
+      for(let i=1; i<=3; i++) {
+        let clone = target.cloneNode(true);
+        clone.id = ""; // prevent duplicate IDs
+        clone.style.cssText = `position:absolute; inset:0; z-index:${9-i}; pointer-events:none; opacity:0;`;
+        target.parentNode.appendChild(clone);
+        clones.push(clone);
+      }
+
+      // Shove current slide out of the way
+      tl.to(current, { x: -dir * window.innerWidth, filter: "blur(5px)", opacity: 0, duration: 0.5, ease: "power2.in" }, 0);
+
+      // Rapidly snap the clones into place, one after the other
+      clones.forEach((clone, i) => {
+        let offset = dir * (window.innerWidth / (i+1));
+        tl.fromTo(clone,
+          { x: offset, opacity: 0.2 + (0.1 * i), filter: "hue-rotate(90deg) blur(4px)" },
+          { x: 0, opacity: 0, filter: "hue-rotate(0deg) blur(0px)", duration: 0.3 + (i*0.15), ease: "power3.out" },
+          0.1 + (i*0.08)
+        );
+      });
+
+      // The real slide lands on top
+      tl.fromTo(target,
+        { x: dir * window.innerWidth, opacity: 0 },
+        { x: 0, opacity: 1, duration: 0.6, ease: "power3.out" },
+        0.2
+      ).add(() => {
+        clones.forEach(c => c.remove()); // Vaporize the clones
+      });
+      break;
+  }
+
+  // Update the rest of the presentation data
   currentSlide = idx;
   updateUI();
   triggerSlideAnimations(idx);
-  autoNarrateSlide(idx)
+  autoNarrateSlide(idx);
 }
 
 // =========================
@@ -1139,11 +1872,41 @@ function updateUI() {
   });
 }
 
+
+
 // =========================
 // 🎬 GSAP ANIMATIONS PER SLIDE
 // =========================
 function triggerSlideAnimations(idx) {
   const slide = document.querySelector(`#slide-${idx}`);
+  // Look for elements with the class 'metric-value' that contain numbers
+  const metrics = slide.querySelectorAll('.metric-value');
+  metrics.forEach(metric => {
+    // Extract only the numbers from the text (e.g., "₹6,800" -> 6800)
+    let text = metric.innerText;
+    let numMatch = text.match(/[\d,.]+/);
+    if (numMatch) {
+      let rawNum = parseFloat(numMatch[0].replace(/,/g, ''));
+      let prefix = text.split(numMatch[0])[0]; // captures ₹ or <
+      let suffix = text.split(numMatch[0])[1] || ''; // captures % or h
+
+      // GSAP counter animation
+      gsap.fromTo(metric, 
+        { innerHTML: 0 }, 
+        { 
+          innerHTML: rawNum, 
+          duration: 1.5, 
+          ease: 'power3.out',
+          delay: 0.3,
+          onUpdate: function() {
+            // Re-format the changing number with commas and original symbols
+            let currentNum = Math.round(this.targets()[0].innerHTML);
+            metric.innerText = prefix + currentNum.toLocaleString('en-IN') + suffix;
+          }
+        }
+      );
+    }
+  });
   if (!slide || !window.gsap) return;
   
   // Standard UI fade-ins
@@ -1357,23 +2120,47 @@ function closeOverview() {
   document.getElementById('overview').classList.remove('visible');
 }
 
+
 // =========================
-// ▶ AUTOPLAY & CINEMATIC REPAIR
+// ▶ BULLETPROOF AUTOPLAY (KIOSK MODE)
 // =========================
 function toggleAutoplay() {
   const ind = document.getElementById('autoplay-indicator');
-  const speed = CONFIG.autoPlayInterval > 0 ? CONFIG.autoPlayInterval : 5000; // Default to 5s if config is 0
+  const speed = CONFIG.autoPlayInterval > 0 ? CONFIG.autoPlayInterval : 5000;
 
   if (autoPlayTimer) {
-    clearInterval(autoPlayTimer);
+    // 🛑 TURN OFF
+    clearTimeout(autoPlayTimer);
     autoPlayTimer = null;
     ind.classList.remove('on');
+    ind.innerText = "● AUTO (OFF)";
+    setTimeout(() => { if(!autoPlayTimer) ind.innerText = "● AUTO"; }, 2000);
   } else {
-    autoPlayTimer = setInterval(() => {
-      if (currentSlide < TOTAL_SLIDES - 1) navigate(1);
-      else { clearInterval(autoPlayTimer); autoPlayTimer = null; ind.classList.remove('on'); }
-    }, speed);
+    // 🟢 TURN ON
     ind.classList.add('on');
+    ind.innerText = "● AUTO (ON)";
+    
+    // Recursive loop: Waits for animations to finish before counting down
+    function playNext() {
+      if (!autoPlayTimer) return; // Safety kill switch
+
+      // If we are at the end, seamlessly loop back to the title slide
+      if (currentSlide < TOTAL_SLIDES - 1) {
+        navigate(1);
+      } else { 
+        goToSlide(0); 
+      }
+      
+      // Schedule the next slide. 
+      // We add 1500ms to the speed to account for the actual transition animation time!
+      autoPlayTimer = setTimeout(playNext, speed + 1500);
+    }
+
+    // Trigger the first jump immediately so the user knows it activated
+    if (currentSlide < TOTAL_SLIDES - 1) navigate(1); else goToSlide(0);
+    
+    // Start the infinite loop
+    autoPlayTimer = setTimeout(playNext, speed + 1500);
   }
 }
 
@@ -1716,7 +2503,23 @@ document.addEventListener('keydown', (e) => {
     case 'a': case 'A': toggleAutoplay(); break;
     case 'd': case 'D': togglePerfMonitor(); break;
     case 'd': case 'D': togglePerfMonitor(); break;
-    
+    // Press 'I' to toggle the Ink Pen
+    case 'i': case 'I':
+      e.preventDefault();
+      inkActive = !inkActive;
+      if (inkActive) {
+        inkCanvas.style.pointerEvents = 'all';
+        document.body.style.cursor = 'crosshair';
+      } else {
+        inkCanvas.style.pointerEvents = 'none';
+        document.body.style.cursor = 'default';
+      }
+      break;
+    // Add this case to your switch statement:
+    case 'l': case 'L':
+      e.preventDefault();
+      document.body.classList.toggle('laser-mode');
+      break;
     // 🚀 LAUNCH MISSION CONTROL
     // 🚀 LAUNCH MISSION CONTROL HUD (SEAMLESS IFRAME)
     case 't': case 'T':
@@ -1775,6 +2578,108 @@ document.addEventListener('keydown', (e) => {
       }
       break;
   }
+});
+
+// Add click-to-morph listeners to cards
+document.querySelectorAll('.metric-card, .team-card').forEach(card => {
+  card.style.cursor = 'pointer';
+  card.addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent triggering other clicks
+    const isMorphed = card.classList.contains('morph-focus');
+    
+    // Reset all others
+    document.querySelectorAll('.morph-focus').forEach(c => c.classList.remove('morph-focus'));
+    
+    if (!isMorphed) {
+      card.classList.add('morph-focus');
+      document.body.classList.add('morph-active');
+    } else {
+      document.body.classList.remove('morph-active');
+    }
+  });
+});
+
+// Click background to close morph
+document.addEventListener('click', () => {
+  if (document.body.classList.contains('morph-active')) {
+    document.querySelectorAll('.morph-focus').forEach(c => c.classList.remove('morph-focus'));
+    document.body.classList.remove('morph-active');
+  }
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (document.body.classList.contains('laser-mode')) {
+    const laser = document.getElementById('laser-dot');
+    laser.style.left = e.clientX + 'px';
+    laser.style.top = e.clientY + 'px';
+  }
+});
+// =========================
+// 🖊️ LIVE PPTX DIGITAL INK
+// =========================
+const inkCanvas = document.getElementById('ink-layer');
+const inkCtx = inkCanvas.getContext('2d');
+let isDrawing = false;
+let inkActive = false;
+
+// Resize canvas to fit screen
+function resizeInk() {
+  inkCanvas.width = window.innerWidth;
+  inkCanvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeInk);
+resizeInk();
+
+// Ink Style (Classic PPT Red Pen)
+inkCtx.strokeStyle = '#ff0044';
+inkCtx.lineWidth = 4;
+inkCtx.lineCap = 'round';
+inkCtx.lineJoin = 'round';
+
+// Draw logic
+inkCanvas.addEventListener('mousedown', (e) => {
+  if (!inkActive) return;
+  isDrawing = true;
+  inkCtx.beginPath();
+  inkCtx.moveTo(e.clientX, e.clientY);
+});
+inkCanvas.addEventListener('mousemove', (e) => {
+  if (!isDrawing || !inkActive) return;
+  inkCtx.lineTo(e.clientX, e.clientY);
+  inkCtx.stroke();
+});
+inkCanvas.addEventListener('mouseup', () => { isDrawing = false; });
+// Clear ink when changing slides
+const originalGoToSlide = goToSlide;
+goToSlide = function(idx) {
+  inkCtx.clearRect(0, 0, inkCanvas.width, inkCanvas.height);
+  originalGoToSlide(idx);
+};
+// =========================
+// 🧊 3D PPTX SHAPE TILT
+// =========================
+document.querySelectorAll('.metric-card, .team-card, .flow-node').forEach(card => {
+  card.addEventListener('mousemove', (e) => {
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left; // x position within the element
+    const y = e.clientY - rect.top;  // y position within the element
+    
+    // Calculate rotation (-10 to 10 degrees)
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const rotateX = ((y - centerY) / centerY) * -10;
+    const rotateY = ((x - centerX) / centerX) * 10;
+    
+    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+    card.style.transition = 'transform 0.1s ease-out';
+    card.style.zIndex = '10';
+  });
+
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)';
+    card.style.transition = 'transform 0.5s ease-out';
+    card.style.zIndex = '1';
+  });
 });
 </script>
 
