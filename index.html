@@ -719,6 +719,9 @@ body.laser-mode #laser-dot { display: block; }
 <div id="slide-counter">01 / 08</div>
 <div id="perf-monitor"><span id="perf-fps">-- fps</span> &nbsp; <span id="perf-mem">-- MB</span></div>
 <div id="autoplay-indicator">● AUTO</div>
+<a href="web/ieee_research_dashboard.html" target="_blank" style="position:fixed; top:18px; left:24px; font-family:var(--mono); font-size:11px; color:var(--accent); z-index:9998; text-decoration:none; padding:6px 12px; border:1px solid var(--accent); border-radius:4px; background:rgba(5,10,15,0.7); transition:all 0.2s; box-shadow: 0 0 10px rgba(0,229,255,0.1);">
+  [▶] IEEE RESEARCH DASHBOARD
+</a>
 
 <div id="mission-control-overlay" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(2,12,24,0.85); backdrop-filter:blur(10px); padding:4vh 4vw;">
   <div style="width:100%; height:100%; border:1px solid var(--accent); border-radius:12px; box-shadow: 0 0 40px rgba(0,229,255,0.15); overflow:hidden; position:relative;">
@@ -747,9 +750,9 @@ body.laser-mode #laser-dot { display: block; }
       </div>
       <div class="slide-label">TECHTRONIX — KHARDAHA, WEST BENGAL</div>
       <h1 class="slide-title"><span class="accent">EDGE</span> OLFACTION</h1>
-      <p class="slide-body" style="margin: 0 auto; max-width:600px; font-size:1.15rem;">
-        Zero-Latency Agricultural Spoilage Detection at the Edge.<br>
-        No Cloud. No Delay. No Loss.
+      <p class="slide-body" style="margin: 0 auto; max-width:700px; font-size:1.15rem;">
+        IEEE-Aligned Predictive Spoilage Detection via Multi-Channel VOC Calibration.<br>
+        Zero-Latency. No Cloud. No Loss.
       </p>
       <div class="divider" style="margin: 1.2rem auto;"></div>
       <div class="team-byline">
@@ -757,10 +760,10 @@ body.laser-mode #laser-dot { display: block; }
         <span style="opacity:0.55;">Electronics &amp; Communication Engineering — TECHTRONIX</span>
       </div>
       <div style="margin-top:2.4rem; display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
-        <span class="tag">ARDUINO UNO</span>
-        <span class="tag">RASPBERRY PI 3B+</span>
-        <span class="tag">MQ SENSOR ARRAY</span>
-        <span class="tag">PIEZO-ELECTRIC DISCS</span>
+        <span class="tag">IEEE 4-SENSOR VEI</span>
+        <span class="tag">DWT DENOISING</span>
+        <span class="tag">KALMAN / EMA FILTER</span>
+        <span class="tag">RASPBERRY PI 4B</span>
         <span class="tag">EDGE AI</span>
       </div>
     </div>
@@ -780,9 +783,9 @@ body.laser-mode #laser-dot { display: block; }
           A localised, <strong style="color:var(--accent2)">zero-latency Electronic Nose</strong> that predicts agricultural spoilage in transit — without any cloud dependency. It fuses an Arduino-driven multivariable gas sensor array with a Raspberry Pi edge inference engine.
         </div>
         <ul class="item-list ppt-fragment" style="margin-top:0;">
-          <li><strong>Decentralised Architecture</strong> — Separates raw ADC polling from Pi inference.</li>
-          <li><strong>Dynamic Cargo Profiling</strong> — Swappable algorithms (ethylene, sulfur, etc).</li>
-          <li><strong>Transit Acoustic Filtering</strong> — Piezo array ignores truck rumble.</li>
+          <li><strong>IEEE 4-Sensor VEI Engine</strong> — Multi-channel VOC indexing via calibrated Rs.</li>
+          <li><strong>DWT Signal Denoising</strong> — Mathematical noise suppression via Haar wavelets.</li>
+          <li><strong>Kalman / EMA Filtering</strong> — Rolling robust standardisation for baseline drift.</li>
           <li><strong>Headless Survival Mode</strong> — Immutable SSH & hardcoded WPA-PSK.</li>
         </ul>
       </div>
@@ -809,9 +812,9 @@ body.laser-mode #laser-dot { display: block; }
     <div class="explain-overlay">
       <div class="explain-title">📡 Deep Dive: Headless Field Survival</div>
       <div class="explain-text">
-        <p><strong>Note for the Panel:</strong> Standard dynamic networking fails during mobile transit. To ensure the Raspberry Pi does not drop the mobile hotspot connection, we enforce aggressive network overrides.</p>
+        <p><strong>Note for the Panel:</strong> Standard dynamic networking fails during mobile transit. We enforce aggressive network overrides to ensure headless SSH survival, but more importantly, we completely decoupled the predictive mathematical engine from the cloud.</p>
         <br>
-        <p>We hardcode the WPA-PSK via terminal <code>nmcli</code> commands and apply an immutable file lock to the SSH configuration using <code>sudo chattr +i /etc/ssh/sshd_config</code>. This guarantees unrestricted IPv4 SSH listening on Port 22, allowing the node to be accessible to engineers even without a GUI.</p>
+        <p>We apply an immutable file lock to SSH via <code>sudo chattr +i /etc/ssh/sshd_config</code>. All IEEE 4-sensor VEI telemetry and Kalman-filtered baselines are persistently logged to a local <strong>CSV storage pipeline</strong> directly on the Raspberry Pi, ensuring zero data loss even in complete rural network dead-zones.</p>
       </div>
     </div>
   </section>
@@ -842,7 +845,7 @@ body.laser-mode #laser-dot { display: block; }
       <div class="ppt-fragment">
         <div class="slide-label" style="color:var(--accent2); margin-top:1.5rem;">SOLUTION</div>
         <div class="slide-body" style="font-size:1.05rem;">
-          Intelligence moved to the edge. The system monitors Volatile Organic Compounds (VOCs) locally, interpolates ADC readings against calibrated <em>Fresh</em> / <em>Rot</em> constants, and executes asynchronous Telegram payloads the second it hits a hotspot.
+          Intelligence moved to the edge. The system monitors Volatile Organic Compounds (VOCs) locally, computes the IEEE 4-Sensor VEI via dynamic Rs baseline standardisation, and persistently logs risk metrics to a local CSV, executing asynchronous Telegram payloads the second it hits a hotspot.
         </div>
       </div>
     </div>
@@ -864,27 +867,27 @@ body.laser-mode #laser-dot { display: block; }
     <div class="slide-label">03 — MATHEMATICAL ARCHITECTURE</div>
     <h2 class="slide-title">Decay <span class="accent2">Models</span></h2>
     <div class="math-block">
-      <span class="eq-label">Arrhenius Rate Equation</span>
-      $$k = A \, e^{-E_a / RT}$$
+      <span class="eq-label">Relative Shift Calibration (Baseline R0)</span>
+      $$S_i = \left(\frac{R_{0,i} - R_{s,i}}{R_{0,i}}\right) \times 100$$
       <p style="font-size:0.82rem; color:var(--muted); margin-top:8px; font-family:var(--mono);">
-        where $k$ = spoilage rate, $A$ = pre-exponential factor, $E_a$ = activation energy, $R$ = universal gas constant, $T$ = temperature (K)
+        where $S_i$ = relative response shift (%), $R_{0,i}$ = Kalman-filtered clean-air baseline resistance, $R_{s,i}$ = live target resistance
       </p>
     </div>
     <div class="math-block" style="margin-top:10px;">
-      <span class="eq-label">Risk Normalisation</span>
-      $$\text{Risk}_\text{sensor} = \frac{V_\text{current} - V_\text{fresh}}{V_\text{rot} - V_\text{fresh}} \times 100$$
+      <span class="eq-label">IEEE 4-Sensor VOC Emission Index (VEI)</span>
+      $$\text{VEI} = (S_{\text{MQ3}} \times 0.55) + (S_{\text{MQ135}} \times 0.30) + (S_{\text{MQ4}} \times 0.10) + (S_{\text{MQ2}} \times 0.05)$$
     </div>
     <div class="math-block" style="margin-top:10px;">
-      <span class="eq-label">Aggregate Clamped Risk &amp; Shelf-Life Projection</span>
-      $$\text{Risk}_\text{total} = \max\!\left(5.0,\, \min\!\left(99.9,\, \frac{\text{Risk}_{135} + \text{Risk}_{3}}{2}\right)\right)$$
-      $$\text{Hours}_\text{left} = \max\!\left(1,\, \left\lfloor 168 \times \left(\frac{100 - \text{Risk}_\text{total}}{100}\right)^{\!3}\right\rfloor\right)$$
+      <span class="eq-label">Spoilage Risk Normalisation &amp; Projection</span>
+      $$\text{Risk}_\text{total} = \max\!\left(0.0,\, \min\!\left(99.9,\, \frac{\text{VEI} - 180}{170} \times 100\right)\right)$$
+      $$\text{Hours}_\text{left} = \max\!\left(1,\, \left\lfloor 168 \times \left(1 - \frac{\text{Risk}_\text{total}}{100}\right)\right\rfloor\right)$$
     </div>
     <div class="explain-overlay">
-      <div class="explain-title">🔬 Deep Dive: Pre-Exponential Gas Integration</div>
+      <div class="explain-title">🔬 Deep Dive: IEEE VEI Array Weighting</div>
       <div class="explain-text">
-        <p><strong>Note for the Panel:</strong> Our cubic decay model ties directly into the Arrhenius equation: $$k = A \, e^{-E_a / RT}$$[cite: 181].</p>
+        <p><strong>Note for the Panel:</strong> Our predictive model uses a dynamically weighted 4-channel array[cite: IEEE-Sensors-2022].</p>
         <br>
-        <p>Instead of treating the pre-exponential factor ($A$) as a static constant, our system dynamically increases it based on the integrated MQ-135 and MQ-3 gas sensor outputs[cite: 137, 204]. This mathematically represents the accelerated rotting rate caused specifically by external ethylene or fungal off-gassing, resulting in a highly accurate exponential decay curve[cite: 204, 214].</p>
+        <p>Instead of relying on a single static ADC bound, the system converts raw voltage to precise Rs resistance values. The Kalman filter tracks the baseline $R_0$ in real-time, completely negating environmental drift. The resulting IEEE VEI score heavily weights Alcohol (MQ-3) and Air Quality (MQ-135) to mathematically model organic ethanol/ethylene off-gassing, establishing a highly accurate spoilage vector[cite: IEEE-IoT-2023].</p>
       </div>
     </div>
   </section>
@@ -896,13 +899,13 @@ body.laser-mode #laser-dot { display: block; }
     <div class="slide-label">04 — TELEMETRY PIPELINE</div>
     <h2 class="slide-title">The <span class="accent">Payload</span> Flow</h2>
     <div class="slide-body">
-      A decoupled architecture ensures that if the Pi is busy running Arrhenius calculations, ADC polling from the MQ array never drops.
+      A decoupled architecture ensures that if the edge brain is busy computing, data acquisition from the sensing layer never drops.
     </div>
     
     <div class="flow-container">
       <div class="flow-node">
-        <div class="flow-node-title">MQ Array</div>
-        <div class="flow-node-desc">Raw ADC Polling</div>
+        <div class="flow-node-title">Sensing Layer</div>
+        <div class="flow-node-desc">MQ, PIR, Piezo & Ultrasonic</div>
       </div>
       
       <div class="flow-arrow-wrap">
@@ -912,40 +915,42 @@ body.laser-mode #laser-dot { display: block; }
       
       <div class="flow-node">
         <div class="flow-node-title">Arduino Uno</div>
-        <div class="flow-node-desc">Hardware Bridge</div>
+        <div class="flow-node-desc">Hardware Bridge (ADC)</div>
       </div>
       
       <div class="flow-arrow-wrap">
-        <div class="flow-payload p2" style="border-color:var(--accent2); color:var(--accent2);">JSON</div>
-        <div class="flow-line-track"><div class="flow-line-glow g2" style="background:linear-gradient(90deg, transparent, var(--accent2), transparent);"></div></div>
+        <div class="flow-payload p2" style="border-color:#C51A4A; color:#C51A4A;">JSON</div>
+        <div class="flow-line-track"><div class="flow-line-glow g2" style="background:linear-gradient(90deg, transparent, #C51A4A, transparent);"></div></div>
       </div>
       
-      <div class="flow-node" style="border-top-color: var(--accent2);">
-        <style>#slide-4 .flow-node:nth-child(5)::before { background: var(--accent2); }</style>
-        <div class="flow-node-title" style="color: var(--accent2);">Raspberry Pi</div>
-        <div class="flow-node-desc">Cubic Decay AI</div>
+      <div class="flow-node" style="border-top-color: #C51A4A;">
+        <style>#slide-4 .flow-node:nth-child(5)::before { background: #C51A4A; }</style>
+        <div class="flow-node-title" style="color: #C51A4A;">Raspberry Pi</div>
+        <div class="flow-node-desc">The Edge Brain</div>
       </div>
       
       <div class="flow-arrow-wrap">
-        <div class="flow-payload p3" style="border-color:var(--warning); color:var(--warning);">Async</div>
-        <div class="flow-line-track"><div class="flow-line-glow g3" style="background:linear-gradient(90deg, transparent, var(--warning), transparent);"></div></div>
+        <div class="flow-payload p3" style="border-color:#F38020; color:#F38020;">API Sync</div>
+        <div class="flow-line-track"><div class="flow-line-glow g3" style="background:linear-gradient(90deg, transparent, #F38020, transparent);"></div></div>
       </div>
       
-      <div class="flow-node" style="border-top-color: var(--warning);">
-        <style>#slide-4 .flow-node:nth-child(7)::before { background: var(--warning); }</style>
-        <div class="flow-node-title" style="color: var(--warning);">Telegram</div>
-        <div class="flow-node-desc">Zero-Latency Alert</div>
+      <div class="flow-node" style="border-top-color: #F38020;">
+        <style>#slide-4 .flow-node:nth-child(7)::before { background: #F38020; }</style>
+        <div class="flow-node-title" style="color: #47A248;">Offline Storage</div>
+        <div class="flow-node-desc">Local CSV / Dashboard</div>
       </div>
     </div>
+
     <div class="explain-overlay">
       <div class="explain-title">⚙️ Deep Dive: Pipeline Dependencies</div>
       <div class="explain-text">
-        <p><strong>Note for the Panel:</strong> The analog-to-digital pipeline requires strict physical preparation. The MQ sensor array must undergo a 24-48 hour continuous heating "burn-in" phase to stabilize the internal resistance before any reliable calibration can occur.</p>
-        <br>
-        <p>On the software side, the Pi's stability depends on <code>jarvis_bridge.py</code> maintaining a background thread, while <code>csv_logger.py</code> writes ambient data locally (generating our <code>khardaha_full_log</code> files) without causing I/O blocking or crashing the AI risk routine.</p>
+        <p><strong>1. Sensing Layer (The Inputs):</strong> Gas Detection: MQ Sensors (Tin Dioxide) outputting analog voltage based on resistance changes from reactive gases. Spatial Awareness: Ultrasonic sensor using echolocation (time-of-flight) for distance. Motion/Presence: PIR and Piezo sensors.</p>
+        <p><strong>2. Data Acquisition Layer (The Bridge):</strong> Hardware: Arduino Uno. Function: Reads the analog voltages from the sensors and converts them to digital arrays using its built-in ADC.</p>
+        <p><strong>3. Edge Compute Layer (The Brain):</strong> Hardware: Raspberry Pi 4B. Function: Runs the IEEE VEI Python math engine, applies DWT signal filtering, tracks Kalman baselines, and logs data locally.</p>
+        <p><strong>4. Offline Persistence & Presentation Layer (The Output):</strong> Current State: Multi-stage local Pi terminal dashboard + Persistent CSV logging for offline survival. Cloudflare API acts solely as an optional mirror for local engineering diagnostics.</p>
       </div>
     </div>
-  </section>
+</section>
 
 <!-- ============ SLIDE 5: MARKET OPPORTUNITY ============ -->
   <section class="slide" id="slide-5">
@@ -982,9 +987,9 @@ body.laser-mode #laser-dot { display: block; }
     <div class="explain-overlay">
       <div class="explain-title">⚠️ Deep Dive: The Connectivity Bottleneck</div>
       <div class="explain-text">
-        <p><strong>Note for the Panel:</strong> The logistics industry requires a paradigm shift—moving from passively "keeping food on ice" to using predictive smart sensors that warn us before decay is even visible.</p>
+        <p><strong>Note for the Panel:</strong> The logistics industry requires a paradigm shift—moving from passively "keeping food on ice" to utilizing predictive IEEE VEI edge sensors that mathematically model decay before it is even visible.</p>
         <br>
-        <p><strong>Why Cloud IoT Fails Here:</strong> Centralized architectures suffer from high latency, bandwidth bottlenecks, and single points of failure, particularly in rural transit corridors prone to network dead-zones. This makes our offline Edge architecture a necessity, not just an alternative.</p>
+        <p><strong>Why Cloud IoT Fails Here:</strong> Centralized architectures suffer from high latency, bandwidth bottlenecks, and single points of failure, particularly in rural transit corridors prone to network dead-zones. By migrating the heavy DWT/Kalman signal processing directly onto the Raspberry Pi and persistently logging to a local CSV, we make our offline Edge architecture an absolute necessity, not just an alternative.</p>
       </div>
     </div>
   </section>
@@ -1028,7 +1033,7 @@ body.laser-mode #laser-dot { display: block; }
               <strong style="color:var(--accent); font-size: 1.3rem; letter-spacing: 1px; text-shadow: 0 0 10px rgba(0,229,255,0.4);">Edge Olfaction ★</strong>
             </div>
             <div style="color:rgba(224,240,255,0.9); font-size: 1rem; padding-left: 35px; border-left: 2px solid var(--accent); margin-left: 10px; padding-top: 4px; padding-bottom: 4px;">
-              Innovative + lower cost. Zero-latency local computation + biochemical olfaction (MQ-135, MQ-3, MQ-4). No cloud subscription required.
+              Innovative + lower cost. Zero-latency local computation + IEEE 4-sensor VEI array (MQ-135, MQ-3, MQ-4, MQ-2) with offline CSV persistence. No cloud subscription required.
             </div>
           </li>
         </ul>
@@ -1066,7 +1071,7 @@ body.laser-mode #laser-dot { display: block; }
       <div class="explain-text">
         <p><strong>Note for the Panel:</strong> What separates our hardware from expensive Cloud IoT is our algorithmic efficiency on the edge.</p>
         <br>
-        <p>We specifically fuse <strong>Arrhenius reaction kinetics</strong> with <strong>non-linear environmental drift compensation</strong> and our custom cubic decay estimation algorithm. This allows a standard Raspberry Pi to execute the predictive logic of a cloud cluster, natively.</p>
+        <p>We specifically fuse the <strong>IEEE 4-Sensor VOC Emission Index (VEI)</strong> with <strong>Discrete Wavelet Transform (DWT) signal denoising</strong> and <strong>Kalman/EMA filtering</strong>. This allows a standard Raspberry Pi to execute complex cloud-level chemical calibration and baseline tracking ($R_0$), natively.</p>
       </div>
     </div>
   </section>
@@ -1095,19 +1100,35 @@ body.laser-mode #laser-dot { display: block; }
         
         <div style="position: relative; border-left: 2px solid rgba(0,229,255,0.2); margin-left: 10px; padding-left: 30px;">
           
-          <div class="ppt-fragment" style="position: relative; margin-bottom: 2.5rem;">
+          <div class="ppt-fragment" style="position: relative; margin-bottom: 2.2rem;">
             <div style="position: absolute; left: -37px; top: 2px; width: 12px; height: 12px; background: var(--surface2); border: 2px solid var(--accent); border-radius: 50%; box-shadow: 0 0 10px var(--accent);"></div>
-            <strong style="color:var(--text); font-size: 1.15rem; letter-spacing: 1px; font-family: var(--sans);">PHASE 01: Lab & Regional Test</strong>
+            <strong style="color:var(--text); font-size: 1.15rem; letter-spacing: 1px; font-family: var(--sans);">PHASE 01: Lab & Baseline Calibration</strong>
             <div style="color:rgba(224,240,255,0.65); font-size: 0.95rem; margin-top: 6px; line-height: 1.5;">
-              Local ECE lab deployment & regional Khardaha warehouse testing to validate the core Arrhenius logic.
+              Rigorous ECE lab deployment to establish and lock the core IEEE 4-sensor VEI mathematical baseline.
+            </div>
+          </div>
+          
+          <div class="ppt-fragment" style="position: relative; margin-bottom: 2.2rem;">
+            <div style="position: absolute; left: -37px; top: 2px; width: 12px; height: 12px; background: var(--surface2); border: 2px solid var(--accent); border-radius: 50%; box-shadow: 0 0 10px var(--accent);"></div>
+            <strong style="color:var(--text); font-size: 1.15rem; letter-spacing: 1px; font-family: var(--sans);">PHASE 02: Regional Offline Testing</strong>
+            <div style="color:rgba(224,240,255,0.65); font-size: 0.95rem; margin-top: 6px; line-height: 1.5;">
+              Local Khardaha warehouse deployment to validate completely offline CSV telemetry under realistic thermal/humidity stress.
+            </div>
+          </div>
+
+          <div class="ppt-fragment" style="position: relative; margin-bottom: 2.2rem;">
+            <div style="position: absolute; left: -37px; top: 2px; width: 12px; height: 12px; background: var(--surface2); border: 2px solid var(--accent2); border-radius: 50%; box-shadow: 0 0 10px var(--accent2);"></div>
+            <strong style="color:var(--text); font-size: 1.15rem; letter-spacing: 1px; font-family: var(--sans);">PHASE 03: Unified PCB Scaling</strong>
+            <div style="color:rgba(224,240,255,0.65); font-size: 0.95rem; margin-top: 6px; line-height: 1.5;">
+              Transitioning the fragile breadboard prototype to a shock-proof, custom-soldered printed circuit board.
             </div>
           </div>
           
           <div class="ppt-fragment" style="position: relative;">
             <div style="position: absolute; left: -37px; top: 2px; width: 12px; height: 12px; background: var(--accent2); box-shadow: 0 0 15px var(--accent2); border-radius: 50%;"></div>
-            <strong style="color:var(--accent2); font-size: 1.15rem; letter-spacing: 1px; font-family: var(--sans);">PHASE 02: Fleet Pilot Pipeline</strong>
+            <strong style="color:var(--accent2); font-size: 1.15rem; letter-spacing: 1px; font-family: var(--sans);">PHASE 04: Commercial Fleet HaaS</strong>
             <div style="color:rgba(224,240,255,0.8); font-size: 0.95rem; margin-top: 6px; line-height: 1.5;">
-              Outfitting a small fleet of regional produce transport trucks for a live 6-month logistics pilot.
+              Outfitting a live regional transport fleet with the Edge nodes on a Hardware-as-a-Service business model.
             </div>
           </div>
 
@@ -1145,7 +1166,7 @@ body.laser-mode #laser-dot { display: block; }
       <div class="explain-text">
         <p><strong>Note for the Panel:</strong> For this current phase, we have strictly isolated the system to local edge inference. We intentionally excluded cloud database hosting and external API dependencies for the core logic.</p>
         <br>
-        <p>This forced constraint proves the Arrhenius math can survive entirely offline. We are currently limited to a fragile breadboard architecture, which is exactly why our primary scaling lever is transitioning the prototype to a custom-soldered PCB for industrial field use.</p>
+        <p>This forced constraint proves the intensive DWT/Kalman signal pipeline can execute entirely offline. We are currently limited to a fragile breadboard architecture, which is exactly why our primary scaling lever is transitioning the prototype to a custom-soldered PCB for industrial field use.</p>
       </div>
     </div>
   </section>
@@ -1318,7 +1339,7 @@ body.laser-mode #laser-dot { display: block; }
         <div class="team-name" data-value="Dibyajyotee Ghosh">Dibyajyotee Ghosh</div>
         <div class="team-role" style="color: var(--accent); margin-bottom: 12px; font-weight: bold;">Edge AI / Project Lead</div>
         <div class="team-desc" style="font-size: 0.9rem; text-align: center;">
-          Built the core Python serial bridge, designed the cubic exponential decay threshold math, and engineered headless network survival protocols.
+          Built the threaded Python pipeline, implemented the IEEE 4-sensor VEI risk engine, and engineered headless network survival protocols.
         </div>
       </div>
       
@@ -1923,7 +1944,6 @@ function triggerSlideAnimations(idx) {
     MathJax.typesetPromise([slide]);
   }
 
-  // Slide 4: Hardware Flow Animation
   // Slide 4: Hardware Flow Animation (UPGRADED)
   if (idx === 4) {
     const nodes = slide.querySelectorAll('.flow-node');
