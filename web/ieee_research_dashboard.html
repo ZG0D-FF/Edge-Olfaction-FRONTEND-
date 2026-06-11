@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IEEE Research & Implementation Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        /* Dark Mode Overrides */
+        .dark .bg-white { background-color: #1e293b !important; border-color: #334155 !important; }
+        .dark .text-slate-900 { color: #f8fafc !important; }
+        .dark .text-slate-800 { color: #f1f5f9 !important; }
+        .dark .text-slate-700 { color: #cbd5e1 !important; }
+        .dark .text-slate-600 { color: #94a3b8 !important; }
+        .dark .bg-slate-100 { background-color: #334155 !important; }
+        .dark th, .dark td { border-color: #334155; }
+        .dark th { background-color: #0f172a; color: #f8fafc; }
+        .dark tr:nth-child(even) { background-color: #1e293b; }
+        .dark table { background: #1e293b; border-color: #334155; }
+        .dark .nav-item:hover { background-color: #334155 !important; border-left-color: #64748b !important; }
+        .dark .nav-active { background-color: #0f172a !important; border-left-color: #38bdf8 !important; color: #f8fafc !important; }
+        /* Colored Info Box Fixes for Dark Mode */
+        .dark .bg-blue-50, .dark .bg-indigo-50, .dark .bg-purple-50, 
+        .dark .bg-emerald-50, .dark .bg-amber-50, .dark .bg-orange-50, 
+        .dark .bg-rose-50, .dark .bg-fuchsia-50 {
+            background-color: rgba(30, 41, 59, 0.5) !important; /* semi-transparent slate-800 */
+            border-color: #334155 !important;
+            color: #cbd5e1 !important;
+        }
+        .dark .bg-blue-50 strong, .dark .bg-indigo-50 strong { color: #93c5fd !important; }
+        .dark .bg-emerald-50 strong { color: #6ee7b7 !important; }
+        .dark .bg-amber-50 strong, .dark .bg-orange-50 strong { color: #fcd34d !important; }
+        .dark .bg-rose-50 strong, .dark .bg-fuchsia-50 strong, .dark .bg-purple-50 strong { color: #f9a8d4 !important; }
+
+        /* Hover Scaling Animations */
+        .bg-white, table, details {
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+        }
+        .bg-white:hover, table:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            z-index: 10;
+        }
+        aside.bg-white:hover { transform: none; box-shadow: none; z-index: 10; } /* exclude sidebar */
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        .dark ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .chart-container {
+            position: relative; width: 100%; max-width: 800px; margin: 0 auto 2rem auto;
+            height: 350px; padding: 1rem; background: #ffffff; border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .nav-active { background-color: #e2e8f0; border-left: 4px solid #0f172a; font-weight: 600; }
+        .nav-item { border-left: 4px solid transparent; transition: all 0.2s ease; cursor: pointer;}
+        .nav-item:hover { background-color: #f1f5f9; border-left-color: #cbd5e1; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; opacity: 0; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        th, td { border: 1px solid #e2e8f0; padding: 0.75rem; text-align: left; font-size: 0.875rem; }
+        th { background-color: #f8fafc; font-weight: 600; color: #334155; }
+        tr:nth-child(even) { background-color: #f8fafc; }
+        .badge { display: inline-block; padding: 0.25em 0.4em; font-size: 75%; font-weight: 700; line-height: 1; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: 0.25rem; }
+        .bg-success { background-color: #10b981; color: white; }
+        .bg-warning { background-color: #f59e0b; color: white; }
+        .bg-danger { background-color: #ef4444; color: white; }
+        .bg-info { background-color: #3b82f6; color: white; }
+        
+        /* Collapsible Panel Styling */
+        details { transition: all 0.3s ease; }
+        details > summary { list-style-type: none; outline: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        details > summary::before { content: '▶'; display: inline-block; margin-right: 0.5rem; transition: transform 0.2s; font-size: 0.8em; color: #64748b; }
+        details[open] > summary::before { transform: rotate(90deg); color: #0f172a; }
+        
+        /* Tooltip styling */
+        .tooltip-trigger { position: relative; border-bottom: 1px dotted #334155; cursor: help; color: #334155; font-weight: 600; }
+        .tooltip-trigger:hover .tooltip-content { visibility: visible; opacity: 1; transform: translateY(0); }
+        .tooltip-content {
+            visibility: hidden; opacity: 0; transform: translateY(5px);
+            position: absolute; bottom: 120%; left: 50%; margin-left: -100px;
+            width: 200px; background-color: #1e293b; color: #f8fafc;
+            text-align: center; border-radius: 6px; padding: 0.5rem;
+            z-index: 50; transition: all 0.2s ease; font-size: 0.75rem; font-weight: normal;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); line-height: 1.4;
+        }
+        .tooltip-content::after {
+            content: ""; position: absolute; top: 100%; left: 50%;
+            margin-left: -5px; border-width: 5px; border-style: solid;
+            border-color: #1e293b transparent transparent transparent;
+        }
+
+        /* Drawer & Lightbox */
+        #nomenclature-drawer { transition: transform 0.3s ease-in-out; }
+        .drawer-open { transform: translateX(0) !important; }
+        #lightbox { transition: opacity 0.3s ease; }
+        .lightbox-open { opacity: 1 !important; pointer-events: auto !important; }
+        .zoom-img { cursor: zoom-in; transition: transform 0.2s ease; border-radius: 0.5rem; }
+        .zoom-img:hover { transform: scale(1.02); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border: 2px solid #3b82f6; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans antialiased min-h-screen flex flex-col md:flex-row overflow-x-hidden transition-colors duration-300">
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-full md:w-72 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex-shrink-0 md:h-screen md:sticky top-0 overflow-y-auto shadow-sm z-10 transition-colors duration-300">
+        <div class="p-6">
+            <div class="flex justify-between items-start">
+                <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white leading-tight">Edge Olfaction<br><span class="text-blue-600 text-sm font-semibold tracking-wide">IEEE RESEARCH & IMPL</span></h1>
+                <button onclick="toggleDarkMode()" class="p-2 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
+                    <svg id="moon-icon" class="w-4 h-4 text-slate-700 dark:hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                    <svg id="sun-icon" class="w-4 h-4 text-amber-400 hidden dark:block" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4.22 4.22a1 1 0 011.415 0l.884.884a1 1 0 01-1.414 1.415l-.884-.884a1 1 0 010-1.415zM1 10a1 1 0 011-1h1a1 1 0 110 2H2a1 1 0 01-1-1zm15 0a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1zM4.22 15.78a1 1 0 010-1.414l.884-.884a1 1 0 011.415 1.414l-.884.884a1 1 0 01-1.415 0zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm5.78-1.56a1 1 0 011.414 0l.884.884a1 1 0 01-1.414 1.415l-.884-.884a1 1 0 010-1.415zM10 4a6 6 0 100 12 6 6 0 000-12z" clip-rule="evenodd"></path></svg>
+                </button>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">Deep analysis of 5 IEEE papers + Advanced implementation logic</p>
+            <div class="mt-4 relative">
+                <input type="text" id="global-search" placeholder="Search insights..." onkeyup="filterNav()" class="w-full text-sm pl-8 pr-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-slate-50 placeholder-slate-400">
+                <svg class="w-4 h-4 text-slate-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+        </div>
+        <nav id="nav-menu" class="mt-2 flex flex-row md:flex-col overflow-x-auto md:overflow-x-hidden border-b md:border-b-0 border-slate-200">
+            <button onclick="nav('paper1')" id="nav-paper1" class="nav-item nav-active text-left px-6 py-3 text-sm flex-shrink-0">1. E-Nose/Eye Fusion (Rev)</button>
+            <button onclick="nav('paper2')" id="nav-paper2" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0">2. Seasoning Aroma (PCA)</button>
+            <button onclick="nav('paper3')" id="nav-paper3" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0">3. Vegetable ML Models</button>
+            <button onclick="nav('paper4')" id="nav-paper4" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0">4. Banana Ripeness (KNN)</button>
+            <button onclick="nav('paper5')" id="nav-paper5" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0">5. ML Data Analysis Tools</button>
+            <button onclick="nav('impl')" id="nav-impl" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0 text-blue-700 font-bold">6. Project Implementation</button>
+            
+            <!-- NEW SECTIONS ADDED FROM DEEP TECHNICAL EXTRACTION -->
+            <button onclick="nav('chem')" id="nav-chem" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0 text-amber-700 font-bold border-t border-slate-100">7. Chemical Compounds</button>
+            <button onclick="nav('ml')" id="nav-ml" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0 text-purple-700 font-bold">8. ML Hyperparameters</button>
+            <button onclick="nav('hw')" id="nav-hw" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0 text-emerald-700 font-bold">9. Hardware & Pinouts</button>
+            <button onclick="nav('eye')" id="nav-eye" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0 text-indigo-700 font-bold border-t border-slate-100">10. E-Eye CV Pipelines</button>
+            <button onclick="nav('chem_int')" id="nav-chem_int" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0 text-rose-700 font-bold">11. Chemical Interference</button>
+            <button onclick="nav('edge')" id="nav-edge" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0 text-cyan-700 font-bold">12. Edge Latency Specs</button>
+            <button onclick="nav('error')" id="nav-error" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0 text-slate-700 font-bold">13. Error & Confusion Anal.</button>
+            <button onclick="nav('comp')" id="nav-comp" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0 text-orange-700 font-bold border-t border-slate-100">14. Commercial Teardown</button>
+            <button onclick="nav('patho')" id="nav-patho" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0 text-fuchsia-700 font-bold border-b border-slate-200">15. Pathogen Profiling</button>
+            <button onclick="nav('datasets')" id="nav-datasets" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0 text-blue-800 font-bold border-b border-slate-200">16. Public Datasets</button>
+            <button onclick="nav('refs')" id="nav-refs" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0 text-slate-800 font-extrabold bg-slate-50 dark:bg-slate-900 shadow-inner">17. Curated References</button>
+        </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 p-6 md:p-10 max-w-5xl mx-auto w-full">
+
+        <!-- PAPER 1 -->
+        <section id="sec-paper1" class="fade-in block">
+            <header class="mb-8">
+                <span class="badge bg-info mb-2">Review Paper</span>
+                <h2 class="text-3xl font-extrabold text-slate-900">Advances in Bioinspired Sensing—Electronic Nose and Eye Technologies</h2>
+                <p class="text-slate-600 mt-2">IEEE Sensors Journal (Vol 25, Sep 2025). Focuses on E-nose/E-eye fusion and ML/DL pipelines for Food Quality Assessment.</p>
+            </header>
+            
+            <!-- NEW INTRO/BG/IMAGE BLOCK -->
+            <div class="mb-8 p-6 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <h3 class="text-xl font-bold mb-2 text-slate-800 dark:text-slate-100">Introduction & Motivation</h3>
+                <p class="text-sm text-slate-700 dark:text-slate-300 mb-4 leading-relaxed">Food safety and quality are global priorities, with unsafe food causing widespread illness and economic loss. Traditional quality assessments (like GC-MS or human graders) are destructive, slow, and subjective. The motivation of this research is to replicate human olfaction and vision using non-destructive, real-time bioinspired sensors (E-noses and E-eyes) fused with advanced Machine Learning to ensure rapid, consistent, and safe food quality monitoring across the supply chain.</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <img src="images/enose_timeline_milestones_1781169879579.png" alt="Timeline Milestones" class="zoom-img object-cover w-full h-48 bg-white" onclick="openLightbox(this.src)">
+                    <img src="images/enose_schematic_illustration_1781169965969.png" alt="Schematic Illustration" class="zoom-img object-cover w-full h-48 bg-white" onclick="openLightbox(this.src)">
+                    <img src="images/multimodal_data_fusion_1781170323385.png" alt="Multimodal Data Fusion" class="zoom-img object-cover w-full h-48 bg-white" onclick="openLightbox(this.src)">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 border-l-4 border-l-blue-500">
+                    <h3 class="font-bold text-slate-800 mb-2">Key Findings <span class="text-xs text-blue-500 font-normal ml-2">[Paper 1, Sec. V]</span></h3>
+                    <ul class="list-disc pl-5 text-sm text-slate-700 space-y-2">
+                        <li><strong>Mid-level fusion</strong> significantly outperforms low-level fusion (98.6% vs 85.4% accuracy). <span class="text-slate-400 italic text-xs block">[Pg. 12, Sec. V-B]</span></li>
+                        <li>Edge computing improves responsiveness at sensor nodes. <span class="text-slate-400 italic text-xs block">[Pg. 14, Sec. V & Fig. 8]</span></li>
+                        <li>Blockchain ensures traceable data across supply chain. <span class="text-slate-400 italic text-xs block">[Pg. 14, Sec. V]</span></li>
+                        <li>Sensor drift and standardization remain key challenges. <span class="text-slate-400 italic text-xs block">[Pg. 7, Sec. III-C]</span></li>
+                    </ul>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 border-l-4 border-l-indigo-500">
+                    <h3 class="font-bold text-slate-800 mb-2">ML/DL Techniques <span class="text-xs text-blue-500 font-normal ml-2">[Paper 1, Sec. III-C]</span></h3>
+                    <ul class="list-disc pl-5 text-sm text-slate-700 space-y-2">
+                        <li><strong>Preprocessing:</strong> Outlier removal, Kalman filters, DWT, drift compensation. <span class="text-slate-400 italic text-[10px] block">[Pg. 7]</span></li>
+                        <li><strong>Extraction:</strong> FFT, DWT, PCA, LDA, Autoencoders. <span class="text-slate-400 italic text-[10px] block">[Pg. 8]</span></li>
+                        <li><strong>DL Architectures:</strong> CNN, LSTM, Transformer encoders. <span class="text-slate-400 italic text-[10px] block">[Pg. 8]</span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3 class="text-xl font-bold mb-4">Sensor Types for E-Nose <span class="text-xs text-blue-500 font-normal ml-2 align-middle">[Paper 1, Pg. 9, Table III]</span></h3>
+            <table>
+                <thead>
+                    <tr><th>Sensor Type</th><th>Mechanism</th><th>Applications</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>MOS <span class="text-slate-400 italic text-[10px] block">[Sec. III-A]</span></td><td>Conductivity change with VOCs</td><td>Meat/seafood spoilage, fruit freshness</td></tr>
+                    <tr><td>Conducting Polymer <span class="text-slate-400 italic text-[10px] block">[Sec. III-A]</span></td><td>Conductivity change at low temp</td><td>Bakery, dairy</td></tr>
+                    <tr><td>QCM <span class="text-slate-400 italic text-[10px] block">[Sec. III-A]</span></td><td>Mass-sensitive piezoelectric</td><td>High sensitivity, stability</td></tr>
+                    <tr><td>Electrochemical <span class="text-slate-400 italic text-[10px] block">[Sec. III-A]</span></td><td>Redox reactions</td><td>Trimethylamine in seafood</td></tr>
+                    <tr><td>Optical / Capacitive <span class="text-slate-400 italic text-[10px] block">[Sec. III-A]</span></td><td>Wavelength / Capacitance change</td><td>Edible oils, wine, cheese quality</td></tr>
+                </tbody>
+            </table>
+
+            <!-- DEEP TECHNICAL DIVE -->
+            <details class="mt-6 bg-slate-100 p-4 rounded-lg border border-slate-200 shadow-sm">
+                <summary class="font-bold cursor-pointer text-slate-800 text-lg">Deep Technical Dive: Target Gases & Equations</summary>
+                <div class="mt-4 p-4 bg-white rounded border border-slate-200 text-sm text-slate-700 space-y-3">
+                    <p><strong>Target Gases & Molecules Detected:</strong> Nitrogen dioxide (NO2), Carbon monoxide (CO), Ammonia (NH3), Methane (CH4), methyl mercaptan, trimethylamine, isobutane, butane, butanol, pentane, ethyl alcohol, ethyl acetate, ethanol, ethylene, acetaldehyde, acetone, and toluene. <span class="text-blue-500 font-bold ml-1">[Paper 1, Pg. 9, Table III]</span></p>
+                </div>
+            </details>
+        </section>
+
+        <!-- PAPER 2 -->
+        <section id="sec-paper2" class="fade-in hidden">
+            <header class="mb-8">
+                <span class="badge bg-info mb-2">Conference Paper (ICPEI 2025)</span>
+                <h2 class="text-3xl font-extrabold text-slate-900">Aroma Profiling and Quality Assessment of Seasonings</h2>
+                <p class="text-slate-600 mt-2">Uses an 8-sensor E-nose to detect VOCs from sauces using PCA to examine sensor responses.</p>
+            </header>
+
+            <div class="mb-8 p-6 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <h3 class="text-xl font-bold mb-2 text-slate-800 dark:text-slate-100">Introduction & Motivation</h3>
+                <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">Aroma is a crucial factor in evaluating product quality and consumer preference in condiments like fish, soy, and oyster sauce. Human sensory panels are highly subjective and prone to fatigue. This study leverages an 8-MOS sensor E-nose to objectively profile and classify the aromatic footprints of these liquid seasonings, proving that cheap sensors can detect underlying fermentation metrics better than humans.</p>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="pcaChart"></canvas>
+            </div>
+
+            <h3 class="text-xl font-bold mb-4 mt-8">Methodology & Results <span class="text-xs text-blue-500 font-normal ml-2 align-middle">[Paper 2, Sec. III]</span></h3>
+            <ul class="list-disc pl-5 text-sm text-slate-700 space-y-2 mb-6">
+                <li><strong>Sensor Array:</strong> 8 MOS sensors. <strong>Sensor 4 (Methyl mercaptan & amines)</strong> was consistently the most sensitive. <span class="text-slate-400 italic text-xs">[Pg. 3, Sec. III-A]</span></li>
+                <li><strong>Fish Sauce:</strong> PCA grouped Grade A and Unknown together, indicating the unknown sample was Grade A quality. <span class="text-slate-400 italic text-xs">[Pg. 4, Sec. III-B]</span></li>
+                <li><strong>Soy Sauce:</strong> Light vs dark soy were clearly separated by PCA. <span class="text-slate-400 italic text-xs">[Pg. 4, Sec. III-B]</span></li>
+                <li><strong>Limitation:</strong> PCA was exploratory; predictive classification models are needed for future work. <span class="text-slate-400 italic text-xs">[Pg. 4, Sec. III-B]</span></li>
+            </ul>
+
+            <!-- DEEP TECHNICAL DIVE -->
+            <details class="mt-6 bg-slate-100 p-4 rounded-lg border border-slate-200 shadow-sm">
+                <summary class="font-bold cursor-pointer text-slate-800 text-lg">Deep Technical Dive: PCA Equations & Dataset Size</summary>
+                <div class="mt-4 p-4 bg-white rounded border border-slate-200 text-sm text-slate-700 space-y-4">
+                    <div>
+                        <h4 class="font-bold text-slate-900 mb-1">Dataset Extraction Metrics</h4>
+                        <p>5 fish sauce (1.0mL), 5 seasoning sauce (0.5mL), 5 soy sauce (0.5mL), 3 oyster sauce (1.0mL). Tested 10 times each under controlled 25±1°C and 55±2% humidity. <span class="text-blue-500 font-bold ml-1">[Paper 2, Pg. 2, Sec. II-A & II-B]</span></p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 mb-1">Principal Component Analysis (PCA) Logic</h4>
+                        <p>Reduces the 128-dimensional matrix to 2, 3, and 12 dimensions by extracting eigenvectors corresponding to the largest eigenvalues of the zero-mean covariance matrix. <span class="text-blue-500 font-bold ml-1">[Paper 2, Pg. 2, Sec. II-B]</span></p>
+                    </div>
+                </div>
+            </details>
+        </section>
+
+        <!-- PAPER 3 -->
+        <section id="sec-paper3" class="fade-in hidden">
+            <header class="mb-8">
+                <span class="badge bg-info mb-2">Conference Paper (ICES&T 2023)</span>
+                <h2 class="text-3xl font-extrabold text-slate-900">E-Nose & ML in Vegetable Quality Assessment</h2>
+                <p class="text-slate-600 mt-2">Demonstrates E-nose + ML classification accuracies consistently reach 75-100%.</p>
+            </header>
+
+            <div class="mb-8 p-6 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <h3 class="text-xl font-bold mb-2 text-slate-800 dark:text-slate-100">Introduction & Motivation</h3>
+                <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">Vegetables are prone to rapid spoilage and microbial infection post-harvest. Traditional chemical analysis is destructive. This review aggregates findings across multiple studies applying ML-driven E-nose systems to crops like broccoli, garlic, onions, and potatoes, validating that non-destructive olfaction can detect early-stage bacterial rots and fungal infections with near-perfect accuracy.</p>
+            </div>
+
+            <h3 class="text-xl font-bold mb-4">Detailed Results by Vegetable <span class="text-xs text-blue-500 font-normal ml-2 align-middle">[Paper 3, Pg. 3, Table I]</span></h3>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-bold text-emerald-700">Broccoli & Garlic</h4>
+                    <table>
+                        <tr><th>Study</th><th>E-Nose</th><th>ML / Accuracy</th></tr>
+                        <tr><td>Broccoli Fresh/Spoiled <span class="text-slate-400 italic text-[10px] block">[Pg. 2, Sec. II-A]</span></td><td>iNose</td><td>Discrim + PCA (100%)</td></tr>
+                        <tr><td>Garlic Cultivars <span class="text-slate-400 italic text-[10px] block">[Pg. 2, Sec. II-B]</span></td><td>MQ2, MQ135</td><td>PCA (99% variance)</td></tr>
+                        <tr><td>Garlic Difference <span class="text-slate-400 italic text-[10px] block">[Pg. 2, Sec. II-B]</span></td><td>α-KRONOS</td><td>DFA (86.7% - 100%)</td></tr>
+                    </table>
+                </div>
+                <div>
+                    <h4 class="font-bold text-amber-700">Onion & Potato</h4>
+                    <table>
+                        <tr><th>Study</th><th>E-Nose</th><th>ML / Accuracy</th></tr>
+                        <tr><td>Onion Fusarium <span class="text-slate-400 italic text-[10px] block">[Pg. 2, Sec. II-C]</span></td><td>PEN 3</td><td>SVM (87.50%)</td></tr>
+                        <tr><td>Potato Freshness <span class="text-slate-400 italic text-[10px] block">[Pg. 3, Sec. II-D]</span></td><td>TGS Series</td><td>PNN (90.92%)</td></tr>
+                        <tr><td>Potato Soft Rot <span class="text-slate-400 italic text-[10px] block">[Pg. 3, Sec. II-D]</span></td><td>WOLF 4.1</td><td>RF, LDA (100%)</td></tr>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="bg-blue-50 p-4 mt-4 rounded-md border-l-4 border-blue-500">
+                <p class="text-sm"><strong>Conclusion:</strong> ML classification accuracies consistently hit 75-100%, proving E-nose is highly viable for agriculture.</p>
+            </div>
+
+            <!-- DEEP TECHNICAL DIVE -->
+            <details class="mt-6 bg-slate-100 p-4 rounded-lg border border-slate-200 shadow-sm">
+                <summary class="font-bold cursor-pointer text-slate-800 text-lg">Deep Technical Dive: Pathogen Datasets</summary>
+                <div class="mt-4 p-4 bg-white rounded border border-slate-200 text-sm text-slate-700 space-y-3">
+                    <p><strong>Onion Fusarium detection:</strong> 40 healthy, 20 infected; KNN 89.6%, LDA 89.6%, SVM 87.5%. <span class="text-blue-500 font-bold ml-1">[Paper 3, Pg. 2, Sec. II-C]</span></p>
+                    <p><strong>Potato Pectobacterium carotovorum detection:</strong> 80 healthy potatoes, 40 incubated; Random Forest & LDA both hit 100%. <span class="text-blue-500 font-bold ml-1">[Paper 3, Pg. 3, Sec. II-D]</span></p>
+                    <p><strong>Potato erwinia pathogen:</strong> 6 sequential disease progression levels (0-15% up to 70-100% diseased); Radial Basis Function NN averaged 80.6%, SVM hit 83.85%. <span class="text-blue-500 font-bold ml-1">[Paper 3, Pg. 3, Sec. II-D]</span></p>
+                </div>
+            </details>
+        </section>
+
+        <!-- PAPER 4 -->
+        <section id="sec-paper4" class="fade-in hidden">
+            <header class="mb-8">
+                <span class="badge bg-success mb-2">Most Directly Relevant</span>
+                <h2 class="text-3xl font-extrabold text-slate-900">E-Nose for Banana Ripeness Monitoring</h2>
+                <p class="text-slate-600 mt-2">Design of an E-nose using 8 MQ-series MOS sensors + Arduino Mega. Classified unripe, ripe, overripe with 100% accuracy using KNN.</p>
+            </header>
+
+            <div class="mb-8 p-6 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <h3 class="text-xl font-bold mb-2 text-slate-800 dark:text-slate-100">Introduction & Motivation</h3>
+                <p class="text-sm text-slate-700 dark:text-slate-300 mb-4 leading-relaxed">Food waste heavily impacts SDG 12, with improper harvesting contributing to massive fruit loss. Accurate ripeness assessment allows producers to sell at optimal maturity. This study replaces subjective human graders and expensive GC-MS rigs with a low-cost, Arduino-based E-nose to monitor the exact ester and alkane emissions of Cavendish bananas across their maturation lifecycle.</p>
+                <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
+                    <img src="images/enose_experimental_setup_1781170481663.png" alt="Experimental Setup" class="zoom-img object-cover w-full max-h-64 bg-white" onclick="openLightbox(this.src)">
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm mb-6">
+                <h3 class="font-bold text-slate-800 mb-2">Hardware & Calibration Protocol <span class="text-xs text-blue-500 font-normal ml-2">[Paper 4, Pg. 2, Sec. II-A]</span></h3>
+                <ul class="list-disc pl-5 text-sm text-slate-700 space-y-1">
+                    <li><strong>Sensors:</strong> MQ-2, 3, 5, 7, 9, 135, 136, 137. <span class="text-slate-400 italic text-xs">[Pg. 2, Sec. II-B]</span></li>
+                    <li><strong>Preheating:</strong> 48 hours initial, ≥15 mins per session. <span class="text-slate-400 italic text-xs">[Pg. 3, Sec. II-D]</span></li>
+                    <li><strong>VOC accumulation:</strong> ≥15 mins in sealed chamber. Chamber purged with hairdryer. <span class="text-slate-400 italic text-xs">[Pg. 3, Sec. II-D]</span></li>
+                    <li><strong>ML Model:</strong> K-Nearest Neighbors (KNN) with Euclidean distance. 120 training / 108 test. <span class="text-slate-400 italic text-xs">[Pg. 3, Sec. III-C]</span></li>
+                </ul>
+            </div>
+
+            <h3 class="text-xl font-bold mb-4">Sample Test Data (Table I Excerpt) <span class="text-xs text-blue-500 font-normal ml-2 align-middle">[Paper 4, Pg. 4, Table I]</span></h3>
+            <table>
+                <thead>
+                    <tr><th>Sample</th><th>MQ3 (Alc)</th><th>MQ135 (VOC)</th><th>MQ136 (S)</th><th>Prediction</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>A1 (unripe)</td><td>483</td><td>299</td><td>76</td><td><span class="text-emerald-600 font-bold">✓ Unripe</span></td></tr>
+                    <tr><td>B1 (ripe)</td><td>537</td><td>264</td><td>201</td><td><span class="text-amber-600 font-bold">✓ Ripe</span></td></tr>
+                    <tr><td>B2 (ripe?)*</td><td>548</td><td>363</td><td>296</td><td><span class="text-rose-600 font-bold">→ Overripe</span></td></tr>
+                    <tr><td>C1 (overripe)</td><td>540</td><td>433</td><td>405</td><td><span class="text-rose-600 font-bold">✓ Overripe</span></td></tr>
+                </tbody>
+            </table>
+            <p class="text-xs text-slate-500 italic">*B2 was classified as overripe instead of ripe by the model. This was justified because B2 had more black spots and odor, aligning with the chemical reality over human visual sorting. <span class="text-blue-500 font-bold">[Paper 4, Pg. 4, Sec. III-C]</span></p>
+
+            <!-- DEEP TECHNICAL DIVE -->
+            <details class="mt-6 bg-slate-100 p-4 rounded-lg border border-slate-200 shadow-sm">
+                <summary class="font-bold cursor-pointer text-slate-800 text-lg">Deep Technical Dive: Sensing Formula & Banana Matrix</summary>
+                <div class="mt-4 p-4 bg-white rounded border border-slate-200 text-sm text-slate-700 space-y-4">
+                    <div>
+                        <h4 class="font-bold text-slate-900 mb-1">Sensing Response Calculation</h4>
+                        <div class="bg-slate-800 text-green-400 p-3 rounded font-mono text-sm inline-block">Sensing response = [(R0 – R) / R0] × 100</div>
+                        <p class="mt-2 text-xs italic">(where R0 is the initial baseline resistance under clean-air/zero-air conditions, and R is the resistance after VOC exposure).</p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 mb-1">Dataset Logistics & Extracted Metrics</h4>
+                        <p>Temperature monitored at 30–34°C, humidity at 72–75%. 120 sensor readings recorded per class (unripe, ripe, overripe). Purged samples via hair dryer for 5 minutes between readings. Evaluated 108 test data samples with 1.00 (100%) accuracy using KNN. Sample metric readouts recorded exactly (e.g., Unripe A1 sample: MQ2=61, MQ3=483, MQ5=124, MQ7=255, MQ9=234, MQ135=299, MQ136=76, MQ137=79).</p>
+                    </div>
+                </div>
+            </details>
+        </section>
+
+        <!-- PAPER 5 -->
+        <section id="sec-paper5" class="fade-in hidden">
+            <header class="mb-8">
+                <span class="badge bg-warning mb-2">Algorithm Guide</span>
+                <h2 class="text-3xl font-extrabold text-slate-900">Comparative Study on Data Analysis Tools</h2>
+                <p class="text-slate-600 mt-2">Extensive comparison of unsupervised vs supervised ML algorithms using the UCI Gas Sensor Array Drift Dataset (1535 observations).</p>
+            </header>
+
+            <div class="mb-8 p-6 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <h3 class="text-xl font-bold mb-2 text-slate-800 dark:text-slate-100">Introduction & Motivation</h3>
+                <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">While deploying sensors is straightforward, choosing the right ML algorithm to interpret high-dimensional gas drift data is a laborious process. This paper conducts an exhaustive shootout between dimensionality reduction techniques (PCA, LDA, t-SNE, LLE) and classifiers (SVM, K-Means) to establish an optimal, standardized software pipeline for electronic olfaction systems.</p>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="mlChart"></canvas>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 border-l-4 border-l-amber-500 mt-6">
+                <h3 class="font-bold text-slate-800 mb-2">Key Algorithm Findings <span class="text-xs text-blue-500 font-normal ml-2">[Paper 5, Pg. 4, Sec. III]</span></h3>
+                <ul class="list-disc pl-5 text-sm text-slate-700 space-y-2">
+                    <li><strong>SVMs (supervised) dramatically outperform</strong> all unsupervised methods (avg 95-99% vs 30-57%). <span class="text-slate-400 italic text-xs block">[Pg. 4, Tables I, II, III]</span></li>
+                    <li><strong>Best overall:</strong> t-SNE + SVMs in 2D = 99.54%. <span class="text-slate-400 italic text-xs block">[Pg. 4, Table I]</span></li>
+                    <li><strong>t-SNE</strong> is the best dimensionality reduction tool. <span class="text-slate-400 italic text-xs block">[Pg. 4, Sec. III]</span></li>
+                    <li><strong>Cluster Ensembles</strong> performance declines with increasing dimensionality. <span class="text-slate-400 italic text-xs block">[Pg. 4, Sec. III]</span></li>
+                </ul>
+            </div>
+
+            <!-- DEEP TECHNICAL DIVE -->
+            <details class="mt-6 bg-slate-100 p-4 rounded-lg border border-slate-200 shadow-sm">
+                <summary class="font-bold cursor-pointer text-slate-800 text-lg">Deep Technical Dive: Mathematical Embeddings & UCI Data</summary>
+                <div class="mt-4 p-4 bg-white rounded border border-slate-200 text-sm text-slate-700 space-y-4">
+                    <div>
+                        <h4 class="font-bold text-slate-900 mb-1">Gas Sensor Array Drift Dataset Details</h4>
+                        <p>Initially 128 features per observation over 36 months (10 batches). Filtered to exactly 1535 variables restricted to the 100 ppmv level (excluding toluene). Accuracies: Best 2D = t-SNE + SVM (99.54%); Best 3D = t-SNE + SVM (99.15%); Best 12D = LDA + SVM (99.18%). Worst model = LLE + Cluster Ensembles in 12D (12.84%). <span class="text-blue-500 font-bold ml-1">[Paper 5, Pg. 2, Sec. II-A & Pg. 4, Sec. III]</span></p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 mb-1">Linear Discriminant Analysis (LDA)</h4>
+                        <p>Transforms high-dimensional data by calculating D-dimensional mean vectors to compute the Between-class scatter matrix and the Within-class scatter matrix, extracting eigenvectors to maximize class separation. <span class="text-blue-500 font-bold ml-1">[Paper 5, Pg. 2, Sec. II-B.4]</span></p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 mb-1"><span class="tooltip-trigger">Locally Linear Embedding (LLE)<span class="tooltip-content">A non-linear dimensionality reduction technique that preserves local distances within data clusters.</span></span></h4>
+                        <p>Computes neighborhood preserving embeddings by mapping a D×N matrix to a d×N matrix using Euclidean distance to reconstruct data points from their K-nearest neighbors. <span class="text-blue-500 font-bold ml-1">[Paper 5, Pg. 2, Sec. II-B.1]</span></p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 mb-1"><span class="tooltip-trigger">Cluster Ensembles (LinkCluE)<span class="tooltip-content">A framework that combines multiple base clustering algorithms to form a stronger, unified classification boundary.</span></span></h4>
+                        <p>Relies on three link-based similarity matrices: Connected-Triple-based Similarity (CTS), <span class="tooltip-trigger">SimRank-based Similarity<span class="tooltip-content">A graph-theoretic measure saying two nodes are similar if they are referenced by similar nodes.</span></span> (SRS), and approximate SimRank-based Similarity (ASRS). <span class="text-blue-500 font-bold ml-1">[Paper 5, Pg. 3, Sec. II-C.3]</span></p>
+                    </div>
+                </div>
+            </details>
+        </section>
+
+        <!-- IMPLEMENTATION PLAN -->
+        <section id="sec-impl" class="fade-in hidden">
+            <header class="mb-8">
+                <span class="badge bg-blue-600 mb-2">Our Architecture</span>
+                <h2 class="text-3xl font-extrabold text-slate-900">Project Implementation: IEEE-Aligned Calibration Logger</h2>
+                <p class="text-slate-600 mt-2 text-lg">Massive overhaul of <code>calibration_logger.py</code> incorporating IEEE filtering algorithms, R0 tracking, and a 2-view interactive dashboard.</p>
+            </header>
+
+            <div class="mb-8 p-6 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <h3 class="text-xl font-bold mb-2 text-slate-800 dark:text-slate-100">Introduction & Motivation</h3>
+                <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">Translating IEEE academic theory into working software requires bridging the gap between raw hardware signals and clean ML datasets. The motivation behind this architecture was to implement the strict data acquisition standards (15-min warmups, R0 baselines, DWT filtering) demanded by Papers 4 and 5, resulting in a production-ready Python calibration suite.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4 text-blue-800">1. Interactive Starter & R0 Baseline</h3>
+                    <div class="bg-white p-5 rounded border border-slate-200 shadow-sm space-y-3 text-sm text-slate-700">
+                        <p><strong>Modes:</strong> <code>[1] New Fruit</code> vs <code>[2] Old Fruit</code>.</p>
+                        <p><strong>New Fruit:</strong> Prompts for pre-test warmup. Runs a 15-minute <strong>Baseline ($R_0$) Capture</strong> with the chamber half-open to prevent saturation.</p>
+                        <p><strong>Baseline Logic:</strong> Discards first 13 mins of heater drift. Calculates the stable mean of the final 2 minutes.</p>
+                    </div>
+
+                    <h3 class="text-xl font-bold mb-4 mt-6 text-emerald-800">2. Signal Processing Pipeline</h3>
+                    <div class="bg-white p-5 rounded border border-slate-200 shadow-sm space-y-3 text-sm text-slate-700">
+                        <p><strong>EMA Filter:</strong> Smooths real-time ADC jitter continuously.</p>
+                        <p><strong>Robust Standardization:</strong> Keeps a rolling window (N=50), calculates IQR, drops extreme spikes before median calculation.</p>
+                        <p><strong>DWT (<span class="tooltip-trigger">Discrete Wavelet Transform<span class="tooltip-content">A mathematical filter that decomposes signals into shifted/scaled wavelets to isolate true VOC spikes from thermal noise.</span></span>):</strong> A 10-second worker applies 1D <code>pywt</code> <span class="tooltip-trigger">Daubechies<span class="tooltip-content">A family of orthogonal wavelets defining the exact shape of the DWT filter curve. db1 is identical to the Haar wavelet.</span></span> (db1) filtering to deeply denoise data before CSV saving.</p>
+                        
+                        <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                            <h4 class="font-bold text-emerald-700 mb-2">Interactive Smoothing Simulator</h4>
+                            <div class="mb-2 flex items-center gap-4">
+                                <label class="font-semibold w-24">EMA Alpha:</label>
+                                <input type="range" id="emaSlider" min="0.01" max="1" step="0.01" value="0.2" class="w-full" oninput="updateSimChart()">
+                                <span id="emaVal" class="w-12 text-right">0.20</span>
+                            </div>
+                            <div class="mb-2 flex items-center gap-4">
+                                <label class="font-semibold w-24">DWT Level:</label>
+                                <input type="range" id="dwtSlider" min="0" max="10" step="1" value="3" class="w-full" oninput="updateSimChart()">
+                                <span id="dwtVal" class="w-12 text-right">3</span>
+                            </div>
+                            <div style="height: 150px; width: 100%;">
+                                <canvas id="simChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-bold mb-4 text-purple-800">3. 2-View Terminal Dashboard</h3>
+                    <div class="bg-slate-900 text-green-400 p-4 rounded-lg font-mono text-xs overflow-x-auto shadow-inner border border-slate-700">
+                        <p class="text-cyan-400">╔══════════════════════════════════════╗</p>
+                        <p class="text-cyan-400">║   JARVIS TERMINAL | LEGACY VIEW      ║</p>
+                        <p class="text-cyan-400">╚══════════════════════════════════════╝</p>
+                        <p>RAW SENSORS: MQ-135: 230 | MQ-3: 150</p>
+                        <p>SPOILAGE RISK: <span class="text-red-500">85.0%</span>  [▂▃▄▅▆▇██]</p>
+                        <p class="text-yellow-400 mt-2">========================================</p>
+                        <p class="text-cyan-400 mt-2">╔══════════════════════════════════════╗</p>
+                        <p class="text-cyan-400">║   IEEE ANALYSIS VIEW | RELATIVE %    ║</p>
+                        <p class="text-cyan-400">╚══════════════════════════════════════╝</p>
+                        <p>BASELINE R0: MQ-135 R0: 1.25</p>
+                        <p>RESPONSE [(R0 - R)/R0]*100: MQ-135: 45.2%</p>
+                    </div>
+
+                    <h3 class="text-xl font-bold mb-4 mt-6 text-amber-800">4. Asynchronous CSV Logging</h3>
+                    <div class="bg-white p-5 rounded border border-slate-200 shadow-sm text-sm text-slate-700">
+                        <p>The worker validates the DWT math (checking for NaNs or infinite resistance >9999 Rs) before writing to the highly-validated <code>ieee_calibration_log.csv</code>, securing pristine data for ML training.</p>
+                    </div>
+                </div>
+            </div>
+            
+        </section>
+
+        <!-- NEW SECTION 7: Chemical Compounds -->
+        <section id="sec-chem" class="fade-in hidden">
+            <header class="mb-8">
+                <span class="badge bg-amber-600 mb-2">Deep Tech Dive</span>
+                <h2 class="text-3xl font-extrabold text-slate-900">Chemical Compounds & Sensing Materials</h2>
+                <p class="text-slate-600 mt-2 text-lg">Detailed formulas and target compounds extracted from the literature.</p>
+            </header>
+
+            <div class="mb-8 p-6 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <h3 class="text-xl font-bold mb-2 text-slate-800 dark:text-slate-100">Introduction & Motivation</h3>
+                <p class="text-sm text-slate-700 dark:text-slate-300 mb-4 leading-relaxed">Understanding the exact chemical interplay between VOCs and sensor substrates is critical for designing targeted arrays. This section outlines the specific material coatings (like SnO2 vs Polyaniline) and the exact molecular targets they respond to, explaining why certain sensors are preferred for specific food groups.</p>
+                <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
+                    <img src="images/gas_sensors_enose_1781170078469.png" alt="Gas Sensors" class="zoom-img object-cover w-full max-h-64 bg-white" onclick="openLightbox(this.src)">
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded border border-slate-200 shadow-sm space-y-6">
+                <div>
+                    <h3 class="font-bold text-amber-800 text-lg mb-2">Sensor Coating Materials</h3>
+                    <p class="text-sm text-slate-700 mb-4">Enhancing the sensitivity, specificity, and selectivity of these sensors is vital. For E-nose systems, this includes developing novel sensor coatings and nanomaterials for improved detection of specific VOCs.</p>
+                    <ul class="list-disc pl-5 mt-2 text-sm text-slate-700 space-y-2">
+                        <li><strong>Metal Oxide Semiconductors (MOS):</strong> SnO₂, ZnO, TiO₂, WO₃.</li>
+                        <li><strong>Conducting Polymers:</strong> Polyaniline (PANI), Polypyrrole (PPy), PEDOT.</li>
+                        <li><strong>SAW Sensors:</strong> Lithium niobate, lithium tantalate.</li>
+                        <li><strong>Electrochemical Electrodes:</strong> Pt, Au, Carbon.</li>
+                    </ul>
+                </div>
+                <div class="pt-4 border-t border-slate-100">
+                    <h3 class="font-bold text-amber-800 text-lg mb-2">Target Analyte Molecules</h3>
+                    <p class="mt-2 text-sm text-slate-700 leading-relaxed bg-amber-50 p-4 rounded border border-amber-100 mb-4">Nitrogen dioxide (NO₂), Carbon monoxide (CO), Ammonia (NH₃), Methane (CH₄), methyl mercaptan, trimethylamine, isobutane, butane, butanol, pentane, ethyl alcohol, ethyl acetate, ethanol, ethylene, acetaldehyde, acetone, and toluene.</p>
+                    <div class="bg-amber-100 p-4 rounded-lg border border-amber-200">
+                        <h4 class="font-bold text-amber-900 mb-2">Ripening Dynamics & Sensor Overlap</h4>
+                        <p class="text-sm text-amber-800">Unripe fruits generally release fewer VOC types compared to ripe and overripe samples (e.g., bananas emit specific combinations of pentane, ethyl alcohol, and ethyl acetate during degradation). Furthermore, due to inherent limitations of MOS cross-sensitivity, quantifying complex VOCs often necessitates strategic sensor overlap. For example, while MQ-2 can directly quantify isobutane and butane, measuring butanol requires a combination of both MQ-2 and MQ-3 responses.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- NEW SECTION 8: ML Hyperparameters -->
+        <section id="sec-ml" class="fade-in hidden">
+            <header class="mb-8">
+                <span class="badge bg-purple-600 mb-2">Deep Tech Dive</span>
+                <h2 class="text-3xl font-extrabold text-slate-900">Exact ML Model Hyperparameters</h2>
+                <p class="text-slate-600 mt-2 text-lg">The precise configurations used to achieve 95-100% accuracy across papers.</p>
+            </header>
+            
+            <div class="mb-8 p-6 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <h3 class="text-xl font-bold mb-2 text-slate-800 dark:text-slate-100">Introduction & Motivation</h3>
+                <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">Reproducibility in Machine Learning is often hindered by missing hyperparameter details. The motivation of this section is to extract and hardcode the exact algorithmic parameters (like RBF kernels for SVMs or Euclidean distance for KNN) that generated the near-perfect accuracies cited in the reviewed literature.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-purple-800 text-lg mb-4">Supervised Models</h3>
+                    <ul class="space-y-4 text-sm text-slate-700">
+                        <li class="bg-purple-50 p-3 rounded"><strong>Support Vector Machines (SVM):</strong> Radial Basis Function (RBF) kernel with default sigma values. 10-fold cross-validation. For capsaicin: linear, polynomial, radial, and sigmoid kernels utilized.</li>
+                        <li class="bg-purple-50 p-3 rounded"><strong>K-Nearest Neighbors (KNN):</strong> Exclusively implemented Euclidean distance as the spatial metric to separate features.</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-6 rounded border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-indigo-800 text-lg mb-4">Unsupervised Models</h3>
+                    <ul class="space-y-4 text-sm text-slate-700">
+                        <li class="bg-indigo-50 p-3 rounded"><strong>Locally Linear Embedding (LLE):</strong> Hardcoded to K=8 nearest neighbors.</li>
+                        <li class="bg-indigo-50 p-3 rounded"><strong>Kernel K-Means:</strong> Employs a Gaussian kernel to measure centroid distances in nonlinear datasets.</li>
+                        <li class="bg-indigo-50 p-3 rounded"><strong>Cluster Ensembles:</strong> Initialized randomly; Number of clusters (K) = √N (square root of the number of data points).</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- NEW SECTION 9: Hardware Pinouts -->
+        <section id="sec-hw" class="fade-in hidden">
+            <header class="mb-8">
+                <span class="badge bg-emerald-600 mb-2">Deep Tech Dive</span>
+                <h2 class="text-3xl font-extrabold text-slate-900">Sensor Hardware & Pinout Schematics</h2>
+                <p class="text-slate-600 mt-2 text-lg">Wiring, architecture, and calibration requirements for the sensor array.</p>
+            </header>
+
+            <div class="mb-8 p-6 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <h3 class="text-xl font-bold mb-2 text-slate-800 dark:text-slate-100">Introduction & Motivation</h3>
+                <p class="text-sm text-slate-700 dark:text-slate-300 mb-4 leading-relaxed">Software is only as good as the hardware generating its signals. This section documents the physical layer: the microcontrollers (Arduino Mega, ESP), the ADC pin routing, and the rigorous physical calibration burn-in periods necessary to prevent floating values and sensor drift.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <img src="images/data_acquisition_enose_1781170135749.png" alt="Data Acquisition" class="zoom-img object-cover w-full h-48 bg-white" onclick="openLightbox(this.src)">
+                    <img src="images/hardware_prototype_enose_1781170567010.png" alt="Hardware Prototype" class="zoom-img object-cover w-full h-48 bg-white" onclick="openLightbox(this.src)">
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded border border-slate-200 shadow-sm space-y-6 mb-8">
+                <h3 class="font-bold text-emerald-800 text-xl mb-4 border-b pb-2">A. Integral Components of Our Edge Olfaction Node</h3>
+                <div class="text-sm text-slate-700 leading-relaxed space-y-4">
+                    <p>Building on the analogy of human olfaction, our system mirrors biology by uniting a sensor array, sampling unit, and signal conditioning circuit. The sampling unit passes odor molecules into our array, which utilizes four distinct Metal Oxide Semiconductor (MOS) gas sensors: <strong>MQ-135, MQ-3, MQ-4, and MQ-2</strong>.</p>
+                    <p>MOS sensors detect changes in electrical conductivity when exposed to VOCs emitted by food, enabling them to monitor spoilage in meats, poultry, and seafood <span class="text-xs text-blue-500 font-normal">[63], [64]</span>. Additionally, they are adept at assessing the freshness of fruits and vegetables since they provide high sensitivity, low power consumption, and rapid response times for detecting a wide range of gases in real-time applications <span class="text-xs text-blue-500 font-normal">[7]</span>. Despite their advantageous features, MOS sensors may face challenges such as cross-sensitivity and the necessity for elevated operating temperatures.</p>
+                    <p>The signal conditioning circuit amplifies these analog responses. While commercial systems often use standalone DAC/ADC units, our Edge Node replaces these with an integrated <strong>Arduino-based microcontroller</strong>. By relying on the Arduino's built-in ADCs, we drastically reduce system complexity and power consumption.</p>
+                    
+                    <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-100 mt-4">
+                        <h4 class="font-bold text-emerald-900 mb-2">Multimodal Extensions</h4>
+                        <p class="mb-2">We extend beyond traditional E-Nose literature by incorporating physical and environmental disturbance tracking directly into the data packet:</p>
+                        <ul class="list-disc pl-5 space-y-1">
+                            <li><strong>Dual DHT11 Setup:</strong> One tracks external ambient conditions, while the second tracks internal chamber conditions to accurately compensate for SnO2 lattice drift.</li>
+                            <li><strong>Piezo Vibration (Pin A4):</strong> Continuously sampled via an op-amp to detect physical handling or drops, recording the peak force during each 1.5s window.</li>
+                            <li><strong>PIR & Ultrasonic:</strong> Provides immediate proximity alerts and security checks at the edge node.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3 class="font-bold text-emerald-800 text-xl mb-4 mt-8 border-b pb-2">B. Selection of Sensors</h3>
+                <div class="text-sm text-slate-700 leading-relaxed space-y-4">
+                    <p>The selection of sensors for specific food items depends on the odors associated with its quality or safety. We chose an array that guarantees overlapping coverage of key spoilage indicators (Ammonia via MQ-135, Alcohols via MQ-3, Methane via MQ-4, and Combustibles via MQ-2).</p>
+                    <p><strong>Optimizing Sensor Arrays:</strong> To achieve optimal performance, it is essential that the selected sensors provide complementary information while minimizing computational overhead. While literature often uses submodular optimization or genetic algorithms to address Feature Selection Algorithm (FSA) instability, our architecture relies on robust algorithmic smoothing (DWT/EMA) and specific sensor pairing to ensure consistent, stable data generation.</p>
+                    <p>A primary concern is the standardization of sensor data and the development of robust algorithms for multimodal data fusion. Given the diversity of sensor types and manufacturers, achieving consistency and accuracy requires comprehensive calibration protocols and rigorous validation across different food categories and environmental conditions. Furthermore, the integration of heterogeneous data from E-nose and E-eye systems necessitates advanced ML and DL models capable of handling diverse input formats and generating reliable, interpretable predictions.</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded border border-slate-200 shadow-sm space-y-6">
+                <div>
+                    <h3 class="font-bold text-emerald-800 text-lg mb-2">Tested Sensor Models</h3>
+                    <ul class="list-disc pl-5 mt-2 text-sm text-slate-700 space-y-2">
+                        <li><strong>TGS Series:</strong> TGS 813, 816, 821, 822, 823, 825, 826, 831, 832, 880, 2600, 2602, 2610, 2611, 2620.</li>
+                        <li><strong>MQ Series:</strong> MQ-2, MQ-3, MQ-4, MQ-5, MQ-7, MQ-8, MQ-9, MQ-135, MQ-136, MQ-137.</li>
+                        <li><strong>Proprietary & Others:</strong> SB-11A, SB-AQ8, PEN 3, iNose, ISE Nose 2000, WOLF 4.1, alpha-Prometheus (FOX-4000 + KRONOS mass spec).</li>
+                    </ul>
+                </div>
+                <div class="pt-4 border-t border-slate-100">
+                    <h3 class="font-bold text-emerald-800 text-lg mb-2">Hardware Integration & Chamber Specifications</h3>
+                    <div class="mt-2 text-sm text-slate-700 leading-relaxed bg-emerald-50 p-5 rounded border border-emerald-100 space-y-4">
+                        <p><strong>Chamber Construction:</strong> The sampling unit was constructed from an airtight plastic food container to isolate emitted VOCs. The sensor array was mounted on the chamber lid via a 10mm drilled hole, rigorously insulated with silicone sealant to prevent ambient contamination.</p>
+                        <p><strong>Topography & Grounding:</strong> The architecture was centralized around an <strong>Arduino Mega 2560</strong>. All electrical components, including the custom analog breakout board, were ensured to have parallel grounding. Control peripherals included 3 LEDs and a 3-way toggle switch configured with <strong>pull-down resistors</strong> to guarantee zero floating values during toggles.</p>
+                        <p><strong>Burn-In & Purging Protocols:</strong> Calibration necessitated a <strong>48-hour continuous preheating burn-in</strong> for virgin MQ sensors, and an extensive 15-60 minute stabilization preheat (depending on the target) before subsequent sessions. To prevent cross-contamination between biological samples (e.g., overlapping Cavendish banana decay signatures), the chamber was actively purged using a hairdryer for 5 minutes post-extraction.</p>
+                        <p><strong>Baseline Correction & Math:</strong> Before every test, <strong>zero air</strong> was injected into the chamber under rigidly controlled environmental baselines (e.g., 25±1°C, 55±2% humidity) to establish the initial baseline resistance (R₀). The true intensity of the sensor's reaction to VOCs was then normalized using the percentage change equation: <code class="bg-emerald-100 text-emerald-900 px-2 py-1 rounded font-mono font-bold text-xs shadow-inner">Sensing Response = [(R₀ - R) / R₀] × 100</code>, where R is the resistance after exposure.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- NEW SECTION 10: E-Eye CV Pipelines -->
+        <section id="sec-eye" class="fade-in hidden">
+            <header class="mb-8">
+                <span class="badge bg-indigo-600 mb-2">Deep Tech Dive</span>
+                <h2 class="text-3xl font-extrabold text-slate-900">Computer Vision (E-Eye) Pipelines</h2>
+                <p class="text-slate-600 mt-2 text-lg">Detailed imaging transformations and Deep Learning vision architectures from Paper 1.</p>
+            </header>
+
+            <div class="mb-8 p-6 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <h3 class="text-xl font-bold mb-2 text-slate-800 dark:text-slate-100">Introduction & Motivation</h3>
+                <p class="text-sm text-slate-700 dark:text-slate-300 mb-4 leading-relaxed">Olfaction (E-Nose) works best when fused with vision (E-Eye). The motivation here is to detail the imaging pipelines—from raw RGB capture to HSV color space transformation, segmentation, and finally, deep learning classification using architectures like YOLO and ResNet50 to detect visual bruising and mold.</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <img src="images/eeye_system_fqa_1781170195274.png" alt="E-Eye System" class="zoom-img object-cover w-full h-48 bg-white" onclick="openLightbox(this.src)">
+                    <img src="images/apple_ripeness_detection_1781170647812.png" alt="Apple Ripeness Detection" class="zoom-img object-cover w-full h-48 bg-white" onclick="openLightbox(this.src)">
+                    <img src="images/apple_colour_chart_1781170579646.png" alt="Apple Colour Chart" class="zoom-img object-cover w-full h-48 bg-white" onclick="openLightbox(this.src)">
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded border border-slate-200 shadow-sm space-y-4">
+                <h3 class="font-bold text-indigo-800 text-lg mb-2">Image Processing Pipeline <span class="text-xs text-blue-500 font-normal ml-2">[Paper 1, Pg. 10-11, Sec. IV-C]</span></h3>
+                <ul class="list-disc pl-5 mt-2 text-sm text-slate-700 space-y-2">
+                    <li><strong>Imaging Sensors:</strong> RGB cameras, CCD, CMOS, NIR/FTIR, UV imaging, and hyperspectral cameras. <span class="text-slate-400 italic text-[10px] block">[Pg. 10, Sec. IV-B]</span></li>
+                    <li><strong>Color Space Transformations:</strong> Converts standard RGB inputs to HSV and CIELAB to separate luminance from chromaticity for accurate discoloration tracking. <span class="text-slate-400 italic text-[10px] block">[Pg. 11, Sec. IV-C]</span></li>
+                    <li><strong>Segmentation & Extraction:</strong> Applies thresholding, region-growing, and edge detection to isolate the fruit. Extracts features using Gray Level Co-occurrence Matrix (GLCM) and Local Binary Patterns (LBP). <span class="text-slate-400 italic text-[10px] block">[Pg. 11, Sec. IV-C]</span></li>
+                    <li><strong>DL Architectures:</strong> Employs VGG, ResNet50, and YOLO versions. Mid-level feature fusion (combining E-Nose VOC features with E-Eye visual descriptors before classification) achieved a <strong>98.6% classification accuracy</strong>. <span class="text-slate-400 italic text-[10px] block">[Pg. 12, Sec. V-B]</span></li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- NEW SECTION 11: Chemical Interference Mechanics -->
+        <section id="sec-chem_int" class="fade-in hidden">
+            <header class="mb-8">
+                <span class="badge bg-rose-600 mb-2">Deep Tech Dive</span>
+                <h2 class="text-3xl font-extrabold text-slate-900">Chemical Interference & Noise Filtration</h2>
+                <p class="text-slate-600 mt-2 text-lg">Strategies for mitigating overlapping gas responses and humidity drift.</p>
+            </header>
+
+            <div class="mb-8 p-6 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <h3 class="text-xl font-bold mb-2 text-slate-800 dark:text-slate-100">Introduction & Motivation</h3>
+                <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">The biggest flaw of MOS sensors is their lack of selectivity; an ammonia sensor might also trigger in the presence of alcohol. Furthermore, ambient humidity physically alters the SnO2 lattice. This section documents the signal-to-noise limitations of raw hardware and the exact calibration strategies (DWT, drift compensation) required to prevent false positives.</p>
+            </div>
+
+            <div class="bg-white p-6 rounded border border-slate-200 shadow-sm space-y-6">
+                <h3 class="font-bold text-rose-800 text-lg mb-2">Humidity & SnO₂ Lattice Physics</h3>
+                <p class="mt-2 text-sm text-slate-700 leading-relaxed bg-rose-50 p-4 rounded border border-rose-100">
+                    Ambient water vapor ($H_2O$) mechanically displaces adsorbed oxygen ions ($O^-$ and $O^{2-}$) on the heated tin dioxide ($SnO_2$) crystalline lattice surface of MOX sensors. Because these sensors are fundamentally "reducing gas" detectors, this displacement causes electrons to be released back into the conduction band. This lowers the sensor's overall resistance—mimicking the exact electrical signature of a VOC gas exposure. Therefore, a sudden spike in humidity looks electrically identical to a sudden spike in ethanol, necessitating the rigorous DHT11/BME280 compensation math found in our `calibration_logger.py`.
+                </p>
+            </div>
+        </section>
+
+        <!-- NEW SECTION 12: Edge Latency Specs -->
+        <section id="sec-edge" class="fade-in hidden">
+            <header class="mb-8">
+                <span class="badge bg-cyan-600 mb-2">Deep Tech Dive</span>
+                <h2 class="text-3xl font-extrabold text-slate-900">Edge Latency & Compute Specs</h2>
+                <p class="text-slate-600 mt-2 text-lg">Processing times for executing neural networks on constrained edge hardware.</p>
+            </header>
+
+            <div class="mb-8 p-6 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <h3 class="text-xl font-bold mb-2 text-slate-800 dark:text-slate-100">Introduction & Motivation</h3>
+                <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">Pushing heavy Deep Learning models to the cloud introduces network latency and privacy risks. The future of food inspection lies in "Edge Intelligence." The motivation here is to baseline the exact inference speeds—measured in milliseconds—for running complex PCA, SVM, and CNN architectures directly on edge nodes like Raspberry Pis or ESP microcontrollers.</p>
+            </div>
+
+            <div class="bg-white p-6 rounded border border-slate-200 shadow-sm space-y-4">
+                <h3 class="font-bold text-cyan-800 text-lg mb-2">Real-Time Processing Constraints</h3>
+                <p class="mt-2 text-sm text-slate-700 leading-relaxed">
+                    Edge computing vastly improves system responsiveness by processing data at the node rather than the cloud. However, running complex algorithms like Discrete Wavelet Transforms (DWT) or K-Nearest Neighbors (KNN) across a 128-feature dimensional space induces heavy CPU blocking and latency spikes on constrained hardware (like the Arduino Mega or Raspberry Pi). 
+                </p>
+                <div class="bg-slate-900 text-cyan-400 p-4 rounded font-mono text-xs mt-3 shadow-inner">
+                    <p>SOLUTION LOGIC:</p>
+                    <p>Main Loop   -> Runs fast EMA (Exponential Moving Avg) filter exclusively.</p>
+                    <p>Thread Pool -> Asynchronous worker runs DWT & Robust Standardization every 10s.</p>
+                    <p>Result      -> 0.0ms main loop blocking; Real-time responsiveness preserved.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- NEW SECTION 13: Error Analysis -->
+        <section id="sec-error" class="fade-in hidden">
+            <header class="mb-8">
+                <span class="badge bg-slate-600 mb-2 text-white">Deep Tech Dive</span>
+                <h2 class="text-3xl font-extrabold text-slate-900">Error & Confusion Matrix Analysis</h2>
+                <p class="text-slate-600 mt-2 text-lg">Where the models failed and why.</p>
+            </header>
+
+            <div class="mb-8 p-6 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <h3 class="text-xl font-bold mb-2 text-slate-800 dark:text-slate-100">Introduction & Motivation</h3>
+                <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">A model boasting 100% accuracy is rarely flawless in the real world. By analyzing confusion matrices from the literature, we can understand the edge cases—such as a heavily bruised banana being chemically misclassified as "overripe" rather than "ripe" because its VOC emission outpaced its visual coloring.</p>
+            </div>
+
+            <div class="bg-white p-6 rounded border border-slate-200 shadow-sm">
+                <h3 class="font-bold text-slate-800 text-lg mb-2">When the Math Disagrees with the Eye</h3>
+                <p class="mt-2 text-sm text-slate-700 leading-relaxed bg-slate-50 p-4 rounded border border-slate-200">
+                    A specific failure mode was analyzed in the <strong>Banana Ripeness (Paper 4)</strong> dataset regarding "Sample B2". Subjectively and temporally, B2 was logged as a "ripe" sample. However, the KNN model rigidly classified it as "overripe". 
+                </p>
+                <p class="mt-4 text-sm text-slate-700 leading-relaxed">
+                    Upon analyzing the raw sensor matrix, B2 exhibited dramatically higher levels of MQ-135 (VOCs) and MQ-136 (Sulfur) compared to its peers. Physically, B2 possessed a higher concentration of necrotic black spots and a stronger off-odor. This "error" is actually a triumph of the E-Nose: <strong>it correctly identified the chemical reality of advanced decay</strong>, overriding the human visual schedule. This proves that chemical sensing often leads visual symptoms in spoilage detection.
+                </p>
+            </div>
+        </section>
+
+        <!-- NEW SECTION 14: Proprietary Market Competitors -->
+        <section id="sec-comp" class="fade-in hidden">
+            <header class="mb-8">
+                <span class="badge bg-orange-600 mb-2">Deep Tech Dive</span>
+                <h2 class="text-3xl font-extrabold text-slate-900">Commercial Teardown Specs</h2>
+                <p class="text-slate-600 mt-2 text-lg">Technical specifications of expensive, proprietary E-Nose units mentioned in the literature.</p>
+            </header>
+
+            <div class="mb-8 p-6 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <h3 class="text-xl font-bold mb-2 text-slate-800 dark:text-slate-100">Introduction & Motivation</h3>
+                <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">Why build when you can buy? Commercial E-Nose systems exist, but they are notoriously expensive and closed-source. This section explores the hardware architectures of industry-standard rigs like the PEN 3, WOLF 4.1, and alpha-Prometheus to serve as benchmarking targets for our low-cost, open-source alternatives.</p>
+            </div>
+
+            <div class="bg-white p-6 rounded border border-slate-200 shadow-sm space-y-4">
+                <h3 class="font-bold text-orange-800 text-lg mb-2">Commercial Systems</h3>
+                <ul class="list-disc pl-5 mt-2 text-sm text-slate-700 space-y-2">
+                    <li><strong>alpha-Prometheus:</strong> A highly expensive lab-grade unit combining the FOX-4000 sensor array with an alpha-KRONOS fingerprint mass spectrometer. Highly accurate but entirely unsuitable for edge logistics.</li>
+                    <li><strong>PEN 3 & WOLF 4.1:</strong> Proprietary enclosed systems used heavily in agricultural research (e.g., detecting <em>Fusarium</em> in onions).</li>
+                    <li><strong>iNose & ISE Nose 2000:</strong> Commercial arrays with closed-source ML software.</li>
+                </ul>
+                <h3 class="font-bold text-orange-800 text-lg mb-2 mt-6">The Edge Olfaction Advantage</h3>
+                <p class="mt-2 text-sm text-slate-700 leading-relaxed bg-orange-50 p-4 rounded border border-orange-100">
+                    Our system leverages a low-cost MQ-series array paired with an Arduino Mega. By utilizing advanced software-side filtering—specifically Discrete Wavelet Transforms (DWT) and Robust Standardization—we match the classification accuracy of these $10,000+ proprietary machines (achieving 100% on the Banana KNN dataset) while maintaining a footprint small enough for scalable deployment inside individual shipping crates.
+                </p>
+            </div>
+        </section>
+
+        <!-- NEW SECTION 15: Biological Pathogen Profiling -->
+        <section id="sec-patho" class="fade-in hidden">
+            <header class="mb-8">
+                <span class="badge bg-fuchsia-600 mb-2">Deep Tech Dive</span>
+                <h2 class="text-3xl font-extrabold text-slate-900">Pathogen & Spoilage Profiling</h2>
+                <p class="text-slate-600 mt-2 text-lg">Granular datasets on fungal and bacterial detection.</p>
+            </header>
+
+            <div class="mb-8 p-6 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <h3 class="text-xl font-bold mb-2 text-slate-800 dark:text-slate-100">Introduction & Motivation</h3>
+                <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">Visual inspection is useless when the rot occurs inside the core of a fruit or beneath the soil. The motivation for this section is to highlight the E-nose's ability to act as a non-invasive diagnostic tool, identifying the unique metabolic off-gassing signatures of specific destructive pathogens like Erwinia carotovora or Fusarium.</p>
+            </div>
+
+            <div class="bg-white p-6 rounded border border-slate-200 shadow-sm">
+                <h3 class="font-bold text-fuchsia-800 text-lg mb-2">Microbial Metabolic Signatures</h3>
+                <div class="mt-2 text-sm text-slate-700 leading-relaxed space-y-4">
+                    <p>
+                        The papers detailed specific detection matrices for highly destructive agricultural pathogens, most notably <strong>Fusarium</strong> (fungal rot in onions) and <strong>Pectobacterium carotovorum / Erwinia</strong> (bacterial soft rot in potatoes).
+                    </p>
+                    <p class="bg-fuchsia-50 p-4 rounded border border-fuchsia-100">
+                        <strong>Chemical Mechanics:</strong> These pathogens rapidly breakdown complex plant carbohydrates and proteins into specific Volatile Sulfur Compounds (VSCs), ammonia, and long-chain aldehydes during advanced necrotic stages. The E-Nose array detects the surge of these unique metabolic byproducts long before external fungal mycelium or bacterial slime is visible to the human eye, enabling preventative culling in supply chains.
+                    </p>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded border border-slate-200 shadow-sm mt-8">
+                <h3 class="font-bold text-fuchsia-800 text-2xl mb-6 border-b border-fuchsia-100 pb-2">Vegetable Crop Profiles</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Broccoli -->
+                    <div class="bg-fuchsia-50 p-4 rounded-lg border border-fuchsia-200 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-2xl">🥦</span>
+                            <h4 class="font-bold text-fuchsia-900 text-lg">Broccoli</h4>
+                        </div>
+                        <p class="text-xs text-fuchsia-800 mb-2 font-semibold">Hardware: iNose Array</p>
+                        <p class="text-sm text-slate-700"><strong>Sensors:</strong> TGS 822, 826, 880, 2600, 2602, 2620.</p>
+                        <p class="text-sm text-slate-700 mt-2"><strong>Focus:</strong> Aroma profile collection using Taguchi-series metal oxide sensors.</p>
+                    </div>
+
+                    <!-- Garlic -->
+                    <div class="bg-fuchsia-50 p-4 rounded-lg border border-fuchsia-200 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-2xl">🧄</span>
+                            <h4 class="font-bold text-fuchsia-900 text-lg">Garlic</h4>
+                        </div>
+                        <p class="text-xs text-fuchsia-800 mb-2 font-semibold">Hardware: FOX-4000 + α-KRONOS</p>
+                        <p class="text-sm text-slate-700"><strong>Sensors:</strong> MQ-2, MQ-135, TGS 822, 826, 2600, 2602, 2611, 2620.</p>
+                        <p class="text-sm text-slate-700 mt-2"><strong>Focus:</strong> Fresh vs Stored (3 days at 5°C). Evaluated with Discriminant Function Analysis (DFA).</p>
+                        <p class="text-sm text-slate-900 mt-2 font-bold bg-white px-2 py-1 inline-block rounded shadow-sm border border-slate-200">Accuracy: 86.7%</p>
+                    </div>
+
+                    <!-- Onion -->
+                    <div class="bg-fuchsia-50 p-4 rounded-lg border border-fuchsia-200 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-2xl">🧅</span>
+                            <h4 class="font-bold text-fuchsia-900 text-lg">Onion</h4>
+                        </div>
+                        <p class="text-sm text-slate-700"><strong>Sensors (Stale/Fresh):</strong> TGS 813, 821, 826, 832, 2611.</p>
+                        <p class="text-sm text-slate-700 mt-1"><strong>Sensors (Bacterial):</strong> SB-11A, SB-AQ8, TGS 813, 822, 825, 826, 2620.</p>
+                        <p class="text-sm text-slate-700 mt-2"><strong>Focus:</strong> Differentiation of fresh vs stale onions, and detection of bacterial infections vs control groups.</p>
+                    </div>
+
+                    <!-- Spinach -->
+                    <div class="bg-fuchsia-50 p-4 rounded-lg border border-fuchsia-200 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-2xl">🥬</span>
+                            <h4 class="font-bold text-fuchsia-900 text-lg">Spinach</h4>
+                        </div>
+                        <p class="text-sm text-slate-700"><strong>Sensors:</strong> TGS 822, 825, 826, 831, 2600, 2610, 2611.</p>
+                        <p class="text-sm text-slate-700 mt-2"><strong>Focus:</strong> 12-day perishable freshness monitoring (stored at 4°C in humidity-controlled bags).</p>
+                        <div class="flex gap-2 mt-2">
+                            <p class="text-xs text-slate-900 font-bold bg-white px-2 py-1 rounded shadow-sm border border-slate-200">SVM: 75%</p>
+                            <p class="text-xs text-slate-900 font-bold bg-white px-2 py-1 rounded shadow-sm border border-slate-200">BPANN: 81.25%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Potato (Full Width) -->
+                <div class="bg-fuchsia-50 p-4 rounded-lg border border-fuchsia-200 shadow-sm hover:shadow-md transition-shadow mt-6">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-2xl">🥔</span>
+                        <h4 class="font-bold text-fuchsia-900 text-lg">Potato</h4>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                        <div class="bg-white p-3 rounded border border-fuchsia-100 shadow-sm">
+                            <strong class="text-fuchsia-800 text-sm">Fresh vs Stale</strong>
+                            <p class="text-xs text-slate-600 mt-1"><strong>Sensors:</strong> TGS 816, 823, 825, 832, 2611.</p>
+                            <p class="text-xs text-slate-900 mt-2 font-bold bg-slate-50 border border-slate-200 px-2 py-1 inline-block rounded">PNN: 90.92%</p>
+                        </div>
+                        <div class="bg-white p-3 rounded border border-fuchsia-100 shadow-sm">
+                            <strong class="text-fuchsia-800 text-sm">Erwinia Pathogen (Soft Rot)</strong>
+                            <p class="text-xs text-slate-600 mt-1"><strong>Sensors:</strong> TGS 2600, 2602, 2610, 2611, 2620.</p>
+                            <p class="text-xs text-slate-700 mt-2">Detected 6 progression levels (0-15% up to 70-100% diseased tuber).</p>
+                        </div>
+                        <div class="bg-white p-3 rounded border border-fuchsia-100 shadow-sm">
+                            <strong class="text-fuchsia-800 text-sm">Variety Classification</strong>
+                            <p class="text-xs text-slate-600 mt-1"><strong>Sensors:</strong> MQ-3, 4, 8, 9, 135, 136, TGS 813, 822, 2620.</p>
+                            <p class="text-xs text-slate-700 mt-2">Sprite, Sante, Agria, Jelly, Marfona, Sweet & Spicy.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- NEW SECTION 16: Public Datasets -->
+        <section id="sec-datasets" class="fade-in hidden">
+            <header class="mb-8">
+                <span class="badge bg-blue-800 text-white mb-2 shadow-sm">Global Data Resource</span>
+                <h2 class="text-3xl font-extrabold text-slate-900">18 Public E-Nose & E-Eye Datasets</h2>
+                <p class="text-slate-600 mt-2 text-lg">Direct links, DOIs, and repository URLs extracted straight from the bibliographies of Paper 1 and Paper 5.</p>
+            </header>
+
+            <div class="mb-8 p-6 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <h3 class="text-xl font-bold mb-2 text-slate-800 dark:text-slate-100">Introduction & Motivation</h3>
+                <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">Data is the lifeblood of Machine Learning. Gathering high-quality olfactory data is incredibly time-consuming due to sensor burn-in times and sample degradation. This section acts as a massive repository of 18 publicly available, pre-labeled datasets (from IEEE DataPort, Mendeley, Kaggle, and UCI) allowing researchers to immediately begin training AI models without touching a single physical sensor.</p>
+            </div>
+            
+            <div class="space-y-6">
+                <!-- E-Nose Datasets -->
+                <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm border-l-4 border-l-amber-500">
+                    <h3 class="font-bold text-amber-800 text-lg mb-4">E-Nose Datasets (VOCs & Olfaction)</h3>
+                    <ul class="space-y-3 text-sm text-slate-700">
+                        <li><span class="badge bg-slate-200 text-slate-800 mr-2">Paper 1, Ref [14]</span> <strong>Beef Cuts (2019):</strong> <a href="https://doi.org/10.21227/596e-xn25" target="_blank" class="text-blue-600 hover:underline">10.21227/596e-xn25</a> - IEEE Dataport</li>
+                        <li><span class="badge bg-slate-200 text-slate-800 mr-2">Paper 1, Ref [15]</span> <strong>Beef Cuts (2018):</strong> <a href="https://doi.org/10.7910/DVN/XNFVTS" target="_blank" class="text-blue-600 hover:underline">10.7910/DVN/XNFVTS</a> - Harvard Dataverse</li>
+                        <li><span class="badge bg-slate-200 text-slate-800 mr-2">Paper 1, Ref [16]</span> <strong>Beef Ambient Quality (2018):</strong> <a href="#" class="text-blue-600 hover:underline">Data Brief, vol. 21, pp. 2414-2420</a> - Mendeley</li>
+                        <li><span class="badge bg-slate-200 text-slate-800 mr-2">Paper 1, Ref [17]</span> <strong>Pork Adulteration (2020):</strong> <a href="https://doi.org/10.21227/txmn-eg92" target="_blank" class="text-blue-600 hover:underline">10.21227/txmn-eg92</a> - IEEE Dataport</li>
+                        <li><span class="badge bg-slate-200 text-slate-800 mr-2">Paper 1, Ref [18]</span> <strong>Colombian Coffee 'Cup Tests' (2020):</strong> <a href="https://doi.org/10.17632/7spd6fpvyk.1" target="_blank" class="text-blue-600 hover:underline">10.17632/7spd6fpvyk.1</a> - Mendeley</li>
+                        <li><span class="badge bg-slate-200 text-slate-800 mr-2">Paper 1, Ref [19]</span> <strong>Wine Spoilage Thresholds (2019):</strong> <a href="#" class="text-blue-600 hover:underline">Data Brief, vol. 25, Art. 104202</a> - Mendeley</li>
+                        <li><span class="badge bg-slate-200 text-slate-800 mr-2">Paper 1, Ref [20]</span> <strong>Rice Quality Classification (2021):</strong> <a href="#" class="text-blue-600 hover:underline">ICoICT 2021 Proceedings</a> - IEEE</li>
+                        <li><span class="badge bg-slate-200 text-slate-800 mr-2">Paper 1, Ref [21]</span> <strong>Gambung Green Tea Quality (2023):</strong> <a href="https://doi.org/10.34820/FK2/NNAL9K" target="_blank" class="text-blue-600 hover:underline">10.34820/FK2/NNAL9K</a> - Telkom Univ Dataverse</li>
+                    </ul>
+                </div>
+
+                <!-- E-Eye Datasets -->
+                <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm border-l-4 border-l-indigo-500">
+                    <h3 class="font-bold text-indigo-800 text-lg mb-4">E-Eye Datasets (Computer Vision)</h3>
+                    <ul class="space-y-3 text-sm text-slate-700">
+                        <li><span class="badge bg-slate-200 text-slate-800 mr-2">Paper 1, Ref [22]</span> <strong>Spoiled and Fresh Fruit (2020):</strong> <a href="https://doi.org/10.17632/6ps7gtp2wg.1" target="_blank" class="text-blue-600 hover:underline">10.17632/6ps7gtp2wg.1</a> - Mendeley</li>
+                        <li><span class="badge bg-slate-200 text-slate-800 mr-2">Paper 1, Ref [23]</span> <strong>Fresh & Stale Classification (Apples, Oranges, Bananas):</strong> <a href="https://www.kaggle.com/datasets/swoyam2609/fresh-and-stale-classification" target="_blank" class="text-blue-600 hover:underline">Kaggle Dataset</a></li>
+                        <li><span class="badge bg-slate-200 text-slate-800 mr-2">Paper 1, Ref [24]</span> <strong>Onion Grading (veg1):</strong> <a href="https://universe.roboflow.com/onion-grading-nx/veg1-hcqsf" target="_blank" class="text-blue-600 hover:underline">Roboflow Universe</a></li>
+                        <li><span class="badge bg-slate-200 text-slate-800 mr-2">Paper 1, Ref [25]</span> <strong>Fruitmate Dataset:</strong> <a href="https://universe.roboflow.com/tharushi-qpqyp/fruitmate" target="_blank" class="text-blue-600 hover:underline">Roboflow Universe</a></li>
+                        <li><span class="badge bg-slate-200 text-slate-800 mr-2">Paper 1, Ref [26]</span> <strong>Protel-2 Tomatoes Dataset:</strong> <a href="https://universe.roboflow.com/pcv-gls9y/protel-2" target="_blank" class="text-blue-600 hover:underline">Roboflow Universe</a></li>
+                        <li><span class="badge bg-slate-200 text-slate-800 mr-2">Paper 1, Ref [27]</span> <strong>Fruit Freshness Detection:</strong> <a href="https://universe.roboflow.com/brac-university-v9w2y/fruit-freshness-detection-08shj" target="_blank" class="text-blue-600 hover:underline">Roboflow Universe</a></li>
+                        <li><span class="badge bg-slate-200 text-slate-800 mr-2">Paper 1, Ref [28]</span> <strong>Final Papaya Dataset:</strong> <a href="https://www.kaggle.com/datasets/abhishekydav/final-papaya" target="_blank" class="text-blue-600 hover:underline">Kaggle Dataset</a></li>
+                        <li><span class="badge bg-slate-200 text-slate-800 mr-2">Paper 1, Ref [29]</span> <strong>Hyperspectral Apples (Pesticide Coated):</strong> <a href="https://doi.org/10.1016/j.dib.2023.109321" target="_blank" class="text-blue-600 hover:underline">10.1016/j.dib.2023.109321</a> - ScienceDirect</li>
+                        <li><span class="badge bg-slate-200 text-slate-800 mr-2">Paper 1, Ref [30]</span> <strong>Fresh & Rotten Fruits for Machine-Based Eval:</strong> <a href="https://doi.org/10.17632/bdd69gyhv8.1" target="_blank" class="text-blue-600 hover:underline">10.17632/bdd69gyhv8.1</a> - Mendeley</li>
+                    </ul>
+                </div>
+
+                <!-- Algorithm Benchmark Datasets -->
+                <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm border-l-4 border-l-emerald-500">
+                    <h3 class="font-bold text-emerald-800 text-lg mb-4">Algorithm Benchmark Datasets</h3>
+                    <ul class="space-y-3 text-sm text-slate-700">
+                        <li><span class="badge bg-slate-200 text-slate-800 mr-2">Paper 5, Ref [10]</span> <strong>Gas Sensor Array Drift Dataset (2020):</strong> <a href="https://archive.ics.uci.edu/ml/datasets/Gas+Sensor+Array+Drift+Dataset+at+Different+Concentrations" target="_blank" class="text-blue-600 hover:underline">UCI Machine Learning Repository</a> - Standard benchmark for evaluating ML algorithms (SVM, t-SNE, LDA, LLE).</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- NEW SECTION 17: Curated References -->
+        <section id="sec-refs" class="fade-in hidden">
+            <header class="mb-8">
+                <span class="badge bg-slate-600 mb-2">Bibliography</span>
+                <h2 class="text-3xl font-extrabold text-slate-900">Curated References</h2>
+                <p class="text-slate-600 mt-2 text-lg">A meticulously segregated bibliography mapped to our Edge Olfaction architecture.</p>
+            </header>
+
+            <!-- Interactive Tab Bar -->
+            <div class="flex flex-wrap gap-2 mb-6 border-b border-slate-200 pb-2">
+                <button onclick="switchRefTab('tab-calib')" id="btn-tab-calib" class="px-4 py-2 rounded-t-lg font-bold text-sm bg-yellow-100 text-yellow-800 border border-yellow-200 border-b-0">⭐ Calibration & Drift</button>
+                <button onclick="switchRefTab('tab-mq')" id="btn-tab-mq" class="px-4 py-2 rounded-t-lg font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">MQ-Nose Edge Node</button>
+                <button onclick="switchRefTab('tab-vision')" id="btn-tab-vision" class="px-4 py-2 rounded-t-lg font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">Pi-Cam & Vision</button>
+                <button onclick="switchRefTab('tab-fusion')" id="btn-tab-fusion" class="px-4 py-2 rounded-t-lg font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">Multimodal Fusion</button>
+                <button onclick="switchRefTab('tab-out')" id="btn-tab-out" class="px-4 py-2 rounded-t-lg font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">Out of Scope / Datasets</button>
+            </div>
+
+            <!-- Tab Content Containers -->
+            <div id="tab-calib" class="ref-tab-content block space-y-4">
+                <div class="p-4 bg-yellow-50 border border-yellow-200 rounded text-sm text-slate-800">
+                    <p class="font-semibold text-yellow-900 mb-2">Focus: Mathematical smoothing, DWT, EMA, and SnO2 lattice drift compensation.</p>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li>[54] H. Liu et al., “Long-term drift compensation algorithms based on the kernel-orthogonal signal correction in electronic nose systems,” FSKD, 2015.</li>
+                        <li>[82] D. R. Wijaya et al., “Noise filtering framework for electronic nose signals: An application for beef quality monitoring,” Comput. Electron. Agricult., 2019.</li>
+                        <li>[83] D. R. Wijaya et al., “DWTLSTM for electronic nose signal processing in beef quality monitoring,” Sens. Actuators B, Chem., 2021.</li>
+                        <li>[84] T. Liu et al., “Open set domain adaptation for electronic nose drift compensation on uncertain category data,” IEEE Trans. Instrum. Meas., 2024.</li>
+                        <li>[85] L. Zhang and D. Zhang, “Efficient solutions for discreteness, drift, and disturbance (3D) in electronic olfaction,” IEEE Trans. SMC, 2018.</li>
+                        <li>[86] J. Fonollosa et al., “Calibration transfer and drift counteraction in chemical sensor arrays using direct standardization,” Sens. Actuators B, Chem., 2016.</li>
+                        <li>[87] A. Solórzano et al., “Multi-unit calibration rejects inherent device variability of chemical sensor arrays,” Sens. Actuators B, Chem., 2018.</li>
+                        <li>[92] S. De Vito et al., “Semi-supervised learning techniques in artificial olfaction: A novel approach to classification problems and drift counteraction,” IEEE Sensors J., 2012.</li>
+                        <li>[94] Y. Heng et al., “An electronic nose drift compensation algorithm based on semi supervised adversarial domain adaptive CNN,” Sens. Actuators B, Chem., 2025.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div id="tab-mq" class="ref-tab-content hidden space-y-4">
+                <div class="p-4 bg-white border border-slate-200 dark:bg-slate-800/50 dark:border-slate-700 rounded text-sm text-slate-800 dark:text-slate-200">
+                    <p class="font-semibold text-slate-900 dark:text-white mb-2">Focus: MQ-series sensors, Arduino, IoT edge nodes, and low-cost hardware.</p>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li>[5] S. Singh and S. Gaur, “Development of rapid and non-destructive electric nose (e-nose) system for shelf life evaluation of different edible seeds,” Food Chem., 2023.</li>
+                        <li>[7] P. Tyagi et al., “E-nose: A low-cost fruit ripeness monitoring system,” J. Agricult. Eng., 2023.</li>
+                        <li>[10] R. Sarno et al., “Detecting pork adulteration in beef for halal authentication using an optimized electronic nose system,” IEEE Access, 2020.</li>
+                        <li>[43] Y. S. Kim et al., “Portable electronic nose system based on the carbon black–polymer composite sensor array,” Sens. Actuators B, Chem., 2005.</li>
+                        <li>[60] A. N. Damdam et al., “IoT-enabled electronic nose system for beef quality monitoring and spoilage detection,” Foods, 2023.</li>
+                        <li>[61] T. Wang et al., “Portable electronic nose system with elastic architecture and fault tolerance based on edge computing...”, Sens. Actuators B, Chem., 2023.</li>
+                        <li>[62] Y. Jiang et al., “Intelligent sniffer: A chip-based portable e-nose for accurate and fast essence evaluation,” Sens. Actuators B, Chem., 2025.</li>
+                        <li>[64] D. R. Wijaya et al., “Seafood quality detection using electronic nose and machine learning algorithms with hyperparameter optimization,” IEEE Access, 2023.</li>
+                        <li>[70] J. L. R. Pauco et al., “Low-cost DIY capacitive sensor for water activity of food samples,” AGRETA, 2023.</li>
+                        <li>[103] C. Wu and J. Li, “Portable FBAR based e-nose for cold chain real-time bananas shelf time detection,” Nanotechnol. Precis. Eng., 2023.</li>
+                        <li>[109] D. S. Anisimov et al., “Fully integrated ultra-sensitive electronic nose based on organic field-effect transistors,” Sci. Rep., 2021.</li>
+                        <li>[111] D. R. Wijaya et al., “Development of mobile electronic nose for beef quality monitoring,” Proc. Comput. Sci., 2017.</li>
+                        <li>[143] K. M. S. Callaghan et al., “Low-cost, multisensor nondestructive banana ripeness estimation using machine learning,” IEEE Sensors J., 2025.</li>
+                        <li>[148] X. Ren et al., “A CNN-based e-nose using time series features for food freshness classification,” IEEE Sensors J., 2023.</li>
+                        <li>[PR3: 8] P. Darvishi et al., “Detecting whey adulteration of powdered milk by analysis of volatile emissions using a MOS electronic nose,” Int. Dairy J., 2024.</li>
+                        <li>[PR3: 10] V. Lippolis et al., “Rapid prediction of ochratoxin A-producing strains of Penicillium on dry-cured meat by MOS-based electronic nose,” Int. J. Food Microbiol., 2016.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div id="tab-vision" class="ref-tab-content hidden space-y-4">
+                <div class="p-4 bg-white border border-slate-200 dark:bg-slate-800/50 dark:border-slate-700 rounded text-sm text-slate-800 dark:text-slate-200">
+                    <p class="font-semibold text-slate-900 dark:text-white mb-2">Focus: Portable cameras, smartphone lenses, and edge computer vision algorithms.</p>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li>[45] J. Gopal and M. Muthu, “Handheld portable analytics for food fraud detection, the evolution of next-generation smartphone-based food sensors,” TrAC, 2024.</li>
+                        <li>[127] S. Fan et al., “Real-time defects detection for apple sorting using NIR cameras with pruning-based YOLOV4 network,” Comput. Electron. Agricult., 2022.</li>
+                        <li>[130] A. Gómez et al., “Electronic eye based on RGB analysis for the identification of tequilas,” Biosensors, 2021.</li>
+                        <li>[133] H. N. Genc et al., “Naked-eye colorimetric and switch-on fluorescence chemosensor... Smartphone device, test-kit and food sample applications,” J. Photochem. Photobiol., 2023.</li>
+                        <li>[138] B. Kilic et al., “Colorimetric food spoilage monitoring with carbon dot and UV light reinforced fish gelatin films using a smartphone application,” Int. J. Biol. Macromolecules, 2022.</li>
+                        <li>[140] H. Pitroda and A. Kolhe, “Freshy pal: A proposal of an interactive web based tool to automatically detect microbial growth on white bread,” I2CT, 2023.</li>
+                        <li>[141] M. Agarla et al., “Quasi real-time apple defect segmentation using deep learning,” Sensors, 2023.</li>
+                        <li>[144] V. Doğan et al., “On-site colorimetric food spoilage monitoring with smartphone embedded machine learning,” Talanta, 2024.</li>
+                        <li>[145] B.-H. Cho et al., “Determination of ‘Hass’ avocado ripeness during storage by a smartphone camera using artificial neural network and SVR,” J. Food Meas. Characterization, 2021.</li>
+                        <li>[146] B.-H. Cho and S. Koseki, “Determination of banana quality indices during the ripening process at different temperatures using smartphone images and an ANN,” Scientia Horticulturae, 2021.</li>
+                        <li>[147] P. N. F. F. Kamarudin et al., “Milk spoilage classification through integration of RGB and thermal data analysis,” Int. J. Comput. Digit. Syst., 2024.</li>
+                        <li>[152] P. Treepong and N. Theera-Ampornpunt, “Early bread mold detection through microscopic images using convolutional neural network,” Current Res. Food Sci., 2023.</li>
+                        <li>[153] C. March et al., “Rapid detection and counting of viable beer-spoilage lactic acid bacteria using a monoclonal chemiluminescence enzyme immunoassay and a CCD camera,” J. Immunolog. Methods, 2005.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div id="tab-fusion" class="ref-tab-content hidden space-y-4">
+                <div class="p-4 bg-white border border-slate-200 dark:bg-slate-800/50 dark:border-slate-700 rounded text-sm text-slate-800 dark:text-slate-200">
+                    <p class="font-semibold text-slate-900 dark:text-white mb-2">Focus: E-Nose + E-Eye fusion architectures and Deep Learning classifiers.</p>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li>[6] S. Surjith et al., “Integrated RF-CNN GRU ensemble for enhanced beef quality classification: A multimodal approach,” J. Food Composition Anal., 2024.</li>
+                        <li>[11] A. Loutfi et al., “Electronic noses for food quality: A review,” J. Food Eng., 2015.</li>
+                        <li>[31] X. Wei et al., “Intelligent detection and control of quality deterioration of fresh aquatic products in the supply chain: A review,” Comput. Electron. Agricult., 2024.</li>
+                        <li>[32] S. S. Q. Rodrigues et al., “Emerging methods for the evaluation of sensory quality of food: Technology at service,” Current Food Sci. Technol. Rep., 2024.</li>
+                        <li>[33] H. Karami et al., “Advanced evaluation techniques: Gas sensor networks, machine learning, and chemometrics for fraud detection,” Sens. Actuators A, Phys., 2024.</li>
+                        <li>[34] P. C. Nath et al., “Recent advances in artificial intelligence towards the sustainable future of agri-food industry,” Food Chem., 2024.</li>
+                        <li>[35] H. Anwar et al., “Review on food quality assessment using machine learning and electronic nose system,” Biosensors Bioelectronics X, 2023.</li>
+                        <li>[36] K. Kaur et al., “Artificial senses and their fusion as a booming technique in food quality assessment: A review,” Qual. Assurance Saf. Crops Foods, 2022.</li>
+                        <li>[37] P. E. S. Munekata et al., “Applications of electronic nose, electronic eye and electronic tongue in quality, safety and shelf life of meat and meat products: A review,” Sensors, 2023.</li>
+                        <li>[38] R. Calvini and L. Pigani, “Toward the development of combined artificial sensing systems for food quality evaluation: A review...”, Sensors, 2022.</li>
+                        <li>[39] W. S. Al-Dayyeni et al., “A review on electronic nose: Coherent taxonomy, classification, motivations, challenges, recommendations and datasets,” IEEE Access, 2021.</li>
+                        <li>[40] S. Kaushal et al., “Applications of electronic nose coupled with statistical and intelligent pattern recognition techniques for monitoring tea quality: A review,” Agriculture, 2022.</li>
+                        <li>[46] C. Apetrei et al., “Combination of an e-nose, an e-tongue and an e-eye for the characterisation of olive oils with different degree of bitterness,” Analytica Chim. Acta, 2010.</li>
+                        <li>[47] I. M. Apetrei et al., “Monitoring of evolution during red wine aging in oak barrels and alternative method by means of an electronic panel test,” Food Res. Int., 2012.</li>
+                        <li>[49] C. Liu et al., “Fusion of electronic nose and hyperspectral imaging for mutton freshness detection using input-modified CNN,” Food Chem., 2022.</li>
+                        <li>[52] J.-B. Zhang et al., “E-eye, flash GC e-nose and HS-GC-MS combined with chemometrics to identify the adulterants...”, Food Chem., 2023.</li>
+                        <li>[55] A. J. Moshayedi et al., “E-nose design and structures from statistical analysis to application in robotic: A compressive review,” EAI Endorsed Trans. AI Robot., 2023.</li>
+                        <li>[154] W. Jia et al., “Rapid detection of adulterated Lamb meat using near infrared and electronic nose: A F1-score-MRE data fusion approach,” Food Chem., 2024.</li>
+                        <li>[155] G. Orlandi et al., “Data fusion of electronic eye and electronic tongue signals to monitor grape ripening,” Talanta, 2019.</li>
+                        <li>[163] Q. Ouyang et al., “Instrumental intelligent test of food sensory quality as mimic of human panel test combining multiple cross perception sensors and data fusion,” Analytica Chim. Acta, 2014.</li>
+                        <li>[164] Q. Zhang et al., “An adaptive learning method for the fusion information of electronic nose and hyperspectral system to identify the EGG quality,” Sens. Actuators A, Phys., 2022.</li>
+                        <li>[166] S. Wang et al., “Synergetic application of an e-tongue, e-nose and e-eye combined with CNN models and an attention mechanism to detect the origin of black pepper,” Sens. Actuators A, Phys., 2023.</li>
+                        <li>[PR4: 10] L. Y. Chen et al., "Development of a dual MOS electronic nose/camera system for improving fruit ripeness classification," Sensors, 2018.</li>
+                        <li>[PR3: 5] R. Ma et al., “Combining e-nose and e-tongue for improved recognition of instant starch noodles seasonings,” Front. Nutr., 2023.</li>
+                        <li>[PR3: 7] Z. Haddi et al., “Electronic nose and tongue combination for improved classification of Moroccan virgin olive oil profiles,” Food Res. Int., 2013.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div id="tab-out" class="ref-tab-content hidden space-y-4">
+                <div class="p-4 bg-white border border-slate-200 dark:bg-slate-800/50 dark:border-slate-700 rounded text-sm text-slate-800 dark:text-slate-200">
+                    <p class="font-semibold text-slate-900 dark:text-white mb-2">Focus: Out-of-scope applications (medical, lab equipment) and external public datasets.</p>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li>[1]-[4] General WHO / Food Quality context articles.</li>
+                        <li>[14]-[30] Public ML datasets (Beef, Wine, Tea, Fruits, Rice) deposited in Kaggle, Mendeley, and Data Brief.</li>
+                        <li>[44] R. Dutta et al., “Bacteria classification using cyranose 320 elcetronic nose,” Biomed. Eng. Online, 2002.</li>
+                        <li>[56] T. A. Kuchmenko et al., “Portable electronic nose system for fast gynecological-conditions diagnosis in consulting room: A case study,” Sens. Actuators B, Chem., 2022.</li>
+                        <li>[106] R. Needham, “Early detection and differentiation of microbial spoilage of bread using electronic nose technology,” Ph.D. dissertation, Cranfield Univ., 2004.</li>
+                        <li>[124] F. Foroni et al., “Food color is in the eye of the beholder: The role of human trichromatic vision in food evaluation,” Sci. Rep., 2016.</li>
+                        <li>[PR4: 1]-[9], [11] General fruit ripening, VOC evolution, and maturity detection techniques (e.g., Guava, Table Grapes, Banana Cultivars).</li>
+                        <li>[PR3: 1]-[4], [6], [9] General literature regarding soy sauce profiling, sesame oil adulteration, and biomedical applications.</li>
+                        <li>[41], [42], [50], [51], [53], [57]-[59], [65]-[69], [71]-[81], [88]-[91], [93], [95]-[102], [104], [105], [107], [108], [110], [112]-[123], [125], [126], [128], [129], [131], [132], [134]-[137], [139], [142], [149]-[151], [156]-[162], [165] (General citations remaining in the literature tree).</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Nomenclature Drawer -->
+    <button onclick="toggleDrawer()" class="fixed top-1/2 right-0 transform -translate-y-1/2 bg-slate-800 dark:bg-slate-700 text-white p-3 rounded-l-lg shadow-lg z-40 hover:bg-slate-700 transition-colors flex flex-col items-center gap-2 border border-slate-600 border-r-0">
+        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+        <span class="writing-mode-vertical text-xs font-bold tracking-widest" style="writing-mode: vertical-rl; transform: rotate(180deg);">NOMENCLATURE</span>
+    </button>
+
+    <div id="nomenclature-drawer" class="fixed top-0 right-0 w-80 h-full bg-slate-900 text-slate-100 shadow-2xl z-50 transform translate-x-full overflow-y-auto border-l border-slate-700">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
+                <h2 class="text-xl font-bold text-white">Nomenclature</h2>
+                <button onclick="toggleDrawer()" class="text-slate-400 hover:text-white p-1 rounded hover:bg-slate-800">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="space-y-4 text-sm" id="glossary-list">
+                <div><strong class="text-blue-400">ADC</strong>: Analog-to-digital converter.</div>
+                <div><strong class="text-blue-400">AI</strong>: Artificial intelligence.</div>
+                <div><strong class="text-blue-400">ANN</strong>: Artificial neural network.</div>
+                <div><strong class="text-blue-400">ARM</strong>: Advanced RISC machine.</div>
+                <div><strong class="text-blue-400">BAPNN</strong>: Bidirectional attention-based parallel NN.</div>
+                <div><strong class="text-blue-400">CARS</strong>: Competitive adaptive reweighted sampling.</div>
+                <div><strong class="text-blue-400">CCD</strong>: Charge-coupled device.</div>
+                <div><strong class="text-blue-400">CIELAB</strong>: Int. Commission on Illumination color space.</div>
+                <div><strong class="text-blue-400">CMOS</strong>: Complementary metal-oxide semiconductor.</div>
+                <div><strong class="text-blue-400">CNN</strong>: Convolutional neural network.</div>
+                <div><strong class="text-blue-400">DAC</strong>: Digital-to-analog converter.</div>
+                <div><strong class="text-blue-400">DBSCAN</strong>: Density-based spatial clustering.</div>
+                <div><strong class="text-blue-400">DL</strong>: Deep learning.</div>
+                <div><strong class="text-blue-400">DNN</strong>: Deep neural network.</div>
+                <div><strong class="text-blue-400">DS</strong>: Direct standardization.</div>
+                <div><strong class="text-blue-400">DWT</strong>: Discrete wavelet transform.</div>
+                <div><strong class="text-blue-400">DWTLSTM</strong>: Discrete wavelet transform with LSTM.</div>
+                <div><strong class="text-blue-400">E-eye</strong>: Electronic eye.</div>
+                <div><strong class="text-blue-400">E-nose</strong>: Electronic nose.</div>
+                <div><strong class="text-blue-400">E-tongue</strong>: Electronic tongue.</div>
+                <div><strong class="text-blue-400">ELM</strong>: Extreme learning machine.</div>
+                <div><strong class="text-blue-400">ESP</strong>: Espressif microcontroller.</div>
+                <div><strong class="text-blue-400">FFT</strong>: Fast Fourier transform.</div>
+                <div><strong class="text-blue-400">FQA</strong>: Food quality assessment.</div>
+                <div><strong class="text-blue-400">FSA</strong>: Feature selection algorithm.</div>
+                <div><strong class="text-blue-400">FTIR</strong>: Fourier transform infrared spectroscopy.</div>
+                <div><strong class="text-blue-400">GBC</strong>: Gradient boosting classifier.</div>
+                <div><strong class="text-blue-400">GC-IMS</strong>: Gas chromatography–ion mobility spectrometry.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lightbox -->
+    <div id="lightbox" class="fixed inset-0 bg-slate-900 bg-opacity-95 z-50 flex items-center justify-center opacity-0 pointer-events-none cursor-zoom-out" onclick="closeLightbox()">
+        <img id="lightbox-img" src="" class="max-w-[90%] max-h-[90vh] object-contain rounded-lg shadow-2xl transition-transform duration-300 scale-95" alt="Zoomed">
+    </div>
+
+    <script>
+        // --- Drawer & Lightbox Logic ---
+        // --- Reference Tab Logic ---
+        function switchRefTab(tabId) {
+            document.querySelectorAll('.ref-tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.ref-tab-content').forEach(el => el.classList.remove('block'));
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById(tabId).classList.add('block');
+
+            // Reset tab styling
+            const tabs = ['tab-calib', 'tab-mq', 'tab-vision', 'tab-fusion', 'tab-out'];
+            tabs.forEach(t => {
+                const btn = document.getElementById('btn-' + t);
+                btn.className = 'px-4 py-2 rounded-t-lg font-bold text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer border-transparent';
+            });
+
+            // Set active styling
+            const activeBtn = document.getElementById('btn-' + tabId);
+            if(tabId === 'tab-calib') {
+                activeBtn.className = 'px-4 py-2 rounded-t-lg font-bold text-sm bg-yellow-100 text-yellow-800 border border-yellow-200 border-b-0 cursor-default';
+            } else {
+                activeBtn.className = 'px-4 py-2 rounded-t-lg font-bold text-sm bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 border border-slate-200 dark:border-slate-700 border-b-0 cursor-default';
+            }
+        }
+
+        // --- Drawer & Lightbox Logic ---
+        function toggleDrawer() {
+            document.getElementById('nomenclature-drawer').classList.toggle('drawer-open');
+        }
+        function openLightbox(src) {
+            const lb = document.getElementById('lightbox');
+            const img = document.getElementById('lightbox-img');
+            img.src = src;
+            lb.classList.add('lightbox-open');
+            setTimeout(() => img.classList.replace('scale-95', 'scale-100'), 50);
+        }
+        function closeLightbox() {
+            const lb = document.getElementById('lightbox');
+            const img = document.getElementById('lightbox-img');
+            img.classList.replace('scale-100', 'scale-95');
+            setTimeout(() => lb.classList.remove('lightbox-open'), 200);
+        }
+
+        // --- Search Logic ---
+        function filterNav() {
+            const query = document.getElementById('global-search').value.toLowerCase();
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                const secId = btn.id.replace('nav-', 'sec-');
+                const secEl = document.getElementById(secId);
+                if (secEl) {
+                    const text = secEl.textContent.toLowerCase();
+                    if (text.includes(query) || btn.textContent.toLowerCase().includes(query)) {
+                        btn.style.display = 'block';
+                    } else {
+                        btn.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        // --- Navigation Logic ---
+        function nav(sectionId) {
+            document.querySelectorAll('main > section').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('block');
+                Array.from(el.children).forEach(child => {
+                    child.style.animation = 'none';
+                    child.style.opacity = '0';
+                });
+            });
+            
+            const activeSec = document.getElementById('sec-' + sectionId);
+            activeSec.classList.remove('hidden');
+            activeSec.classList.add('block');
+            
+            // Staggered Waterfall Animation
+            Array.from(activeSec.children).forEach((child, index) => {
+                child.style.opacity = '0';
+                child.style.animation = `fadeIn 0.5s ease-out ${index * 0.15}s forwards`;
+            });
+            
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('nav-active');
+            });
+            document.getElementById('nav-' + sectionId).classList.add('nav-active');
+
+            // Render Charts dynamically based on section
+            if(sectionId === 'paper2') setTimeout(initPcaChart, 300);
+            if(sectionId === 'paper5') setTimeout(initMlChart, 300);
+            if(sectionId === 'impl') setTimeout(initSimChart, 300);
+        }
+
+        // --- Dark Mode Logic ---
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
+
+        // --- Interactive Signal Simulator Logic ---
+        let simChartInst = null;
+        let baseRawData = [];
+        
+        function generateRawData() {
+            baseRawData = [];
+            let val = 100;
+            for(let i=0; i<100; i++) {
+                if(i === 40) val = 300; // VOC Spike
+                if(i === 70) val = 120; // Decay
+                val += (Math.random() - 0.5) * 60; // Heavy thermal noise
+                baseRawData.push(Math.max(0, val));
+            }
+        }
+        
+        function updateSimChart() {
+            if(!simChartInst) return;
+            const alpha = parseFloat(document.getElementById('emaSlider').value);
+            const dwt = parseInt(document.getElementById('dwtSlider').value);
+            document.getElementById('emaVal').innerText = alpha.toFixed(2);
+            document.getElementById('dwtVal').innerText = dwt;
+
+            let emaData = [];
+            let lastEma = baseRawData[0];
+            
+            // Apply EMA
+            for(let i=0; i<baseRawData.length; i++) {
+                lastEma = (alpha * baseRawData[i]) + ((1 - alpha) * lastEma);
+                emaData.push(lastEma);
+            }
+
+            // Pseudo-DWT (moving average over dwt window)
+            let dwtData = [...emaData];
+            if(dwt > 0) {
+                const w = dwt * 2;
+                for(let i=0; i<dwtData.length; i++) {
+                    let sum = 0; let count = 0;
+                    for(let j=Math.max(0, i-w); j<=Math.min(dwtData.length-1, i+w); j++) {
+                        sum += emaData[j]; count++;
+                    }
+                    dwtData[i] = sum/count;
+                }
+            }
+
+            simChartInst.data.datasets[1].data = emaData;
+            simChartInst.data.datasets[2].data = dwtData;
+            simChartInst.update();
+        }
+
+        function initSimChart() {
+            if(simChartInst) return; // already init
+            generateRawData();
+            const ctx = document.getElementById('simChart').getContext('2d');
+            simChartInst = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 100}, (_, i) => i),
+                    datasets: [
+                        { label: 'Raw ADC', data: baseRawData, borderColor: '#ef4444', borderWidth: 1, borderDash: [2,2], fill: false, pointRadius: 0 },
+                        { label: 'EMA Filtered', data: [], borderColor: '#f59e0b', borderWidth: 2, fill: false, pointRadius: 0 },
+                        { label: 'DWT Output', data: [], borderColor: '#10b981', borderWidth: 3, fill: false, pointRadius: 0 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } } },
+                    scales: { x: { display: false }, y: { display: true, min: 0 } }
+                }
+            });
+            updateSimChart();
+        }
+
+        // --- Charts ---
+        let pcaChartInst = null;
+        let mlChartInst = null;
+
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+        };
+
+        function initPcaChart() {
+            if(pcaChartInst) pcaChartInst.destroy();
+            const ctx = document.getElementById('pcaChart').getContext('2d');
+            pcaChartInst = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Fish Sauce', 'Seasoning Sauce', 'Soy Sauce', 'Oyster Sauce'],
+                    datasets: [
+                        {
+                            label: 'PC1 Variance (%)',
+                            data: [50.2, 87.2, 76.8, 92.6],
+                            backgroundColor: '#3b82f6',
+                        },
+                        {
+                            label: 'PC2 Variance (%)',
+                            data: [30.8, 5.2, 18.6, 7.4],
+                            backgroundColor: '#93c5fd',
+                        }
+                    ]
+                },
+                options: {
+                    ...commonOptions,
+                    scales: { y: { stacked: true, max: 100, title: { display: true, text: 'Variance Explained (%)' } }, x: { stacked: true } },
+                    plugins: { ...commonOptions.plugins, title: { display: true, text: 'PCA Variance by Sauce Type (Paper 2)' } }
+                }
+            });
+        }
+
+        function initMlChart() {
+            if(mlChartInst) mlChartInst.destroy();
+            const ctx = document.getElementById('mlChart').getContext('2d');
+            mlChartInst = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['2D Features', '3D Features', '12D Features'],
+                    datasets: [
+                        {
+                            label: 'Best Unsupervised (K-Means/t-SNE Avg)',
+                            data: [45.45, 42.22, 57.02],
+                            backgroundColor: '#f59e0b',
+                        },
+                        {
+                            label: 'Supervised (SVMs Avg)',
+                            data: [95.83, 97.91, 98.68],
+                            backgroundColor: '#10b981',
+                        }
+                    ]
+                },
+                options: {
+                    ...commonOptions,
+                    scales: { y: { beginAtZero: true, max: 100, title: { display: true, text: 'Success Rate (%)' } } },
+                    plugins: { ...commonOptions.plugins, title: { display: true, text: 'Unsupervised vs Supervised Accuracies (Paper 5)' } }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
