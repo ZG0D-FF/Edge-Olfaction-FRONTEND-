@@ -140,6 +140,7 @@
             <button onclick="nav('impl')" id="nav-impl" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0 text-blue-700 font-bold">6. Project Implementation</button>
             
             <!-- NEW SECTIONS ADDED FROM DEEP TECHNICAL EXTRACTION -->
+<button onclick="nav('3d')" id="nav-3d" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0 text-red-700 font-bold border-t border-slate-100">6.a 3D Solutions (GAT, UFA, T3SRC)</button>
             <button onclick="nav('chem')" id="nav-chem" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0 text-amber-700 font-bold border-t border-slate-100">7. Chemical Compounds</button>
             <button onclick="nav('ml')" id="nav-ml" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0 text-purple-700 font-bold">8. ML Hyperparameters</button>
             <button onclick="nav('hw')" id="nav-hw" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0 text-emerald-700 font-bold">9. Hardware & Pinouts</button>
@@ -416,6 +417,54 @@
                     </div>
                 </div>
             </details>
+			            <!-- Extended Theoretical Deep Dive (Added from P10) -->
+            <div class="mt-8 mb-4 p-6 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <h3 class="text-xl font-bold mb-4 text-slate-800 dark:text-slate-100">Feature Extraction & Active E-Noses</h3>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Active E-Noses -->
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-lg border border-slate-200 dark:border-slate-600 shadow-sm border-l-4 border-l-indigo-500">
+                        <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-2">Active E-Noses & Temp Modulation</h4>
+                        <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed mb-3">
+                            The rationale behind temperature modulation is that one sensor operating at multiple heating voltages produces multiple distinct patterns, significantly lowering the required sensor array cost.
+                        </p>
+                        <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                            <strong>"Active" E-noses</strong> are an evolution of these systems, employing an <em>adaptive optimization</em> of operating temperatures, recognizing that not all heating voltages contribute positively to classification.
+                        </p>
+                    </div>
+
+                    <!-- Feature Extraction Pipeline -->
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-lg border border-slate-200 dark:border-slate-600 shadow-sm border-l-4 border-l-emerald-500">
+                        <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-2">Feature Extraction Pipeline</h4>
+                        <p class="text-sm text-slate-700 dark:text-slate-300 mb-4">
+                            Feature extraction is the first and most critical step of recognition, comprising three main stages:
+                        </p>
+                        <ul class="space-y-4">
+                            <li class="bg-slate-50 dark:bg-slate-900 p-3 rounded border border-slate-100 dark:border-slate-700">
+                                <strong class="text-sm text-emerald-700 dark:text-emerald-400">1. Normalization</strong>
+                                <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Removes scaling effects caused by odorant concentration. Formula:</p>
+                                <div class="text-center my-2 text-sm overflow-x-auto overflow-y-hidden">
+                                    $$ x_{ij} = \frac{x_{ij}}{\max(x_i)}, \quad i = 1,...,d; \quad j = 1,...,n $$
+                                </div>
+                            </li>
+                            <li class="bg-slate-50 dark:bg-slate-900 p-3 rounded border border-slate-100 dark:border-slate-700">
+                                <strong class="text-sm text-emerald-700 dark:text-emerald-400">2. Feature Selection (PCA / LDA)</strong>
+                                <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Identifies the most informative and discriminative subsets. Extracted features $\hat{X}$ based on linear transformation matrix $W \in \mathbb{R}^{d \times k}$:</p>
+                                <div class="text-center my-2 text-sm">
+                                    $$ \hat{X} = W^T X $$
+                                </div>
+                            </li>
+                            <li class="bg-slate-50 dark:bg-slate-900 p-3 rounded border border-slate-100 dark:border-slate-700">
+                                <strong class="text-sm text-emerald-700 dark:text-emerald-400">3. Feature Enhancement & Representation</strong>
+                                <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                                    Targets best features in other domains (e.g., Fourier transform, dynamic social impact theory). 
+                                    Also involves <em>dictionary algorithms</em> to minimize reconstruction error.
+                                </p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- IMPLEMENTATION PLAN -->
@@ -439,6 +488,7 @@
                         <p><strong>New Fruit:</strong> Prompts for pre-test warmup. Runs a 15-minute <strong>Baseline ($R_0$) Capture</strong> with the chamber half-open to prevent saturation.</p>
                         <p><strong>Baseline Logic:</strong> Discards first 13 mins of heater drift. Calculates the stable mean of the final 2 minutes.</p>
                     </div>
+
 
                     <h3 class="text-xl font-bold mb-4 mt-6 text-emerald-800">2. Signal Processing Pipeline</h3>
                     <div class="bg-white p-5 rounded border border-slate-200 shadow-sm space-y-3 text-sm text-slate-700">
@@ -487,10 +537,252 @@
                     </div>
                 </div>
             </div>
-            
-        </section>
+			
+			            <!-- Theoretical Foundation (Added from P10) -->
+            <div class="mb-8 mt-8 p-6 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <h3 class="text-xl font-bold mb-4 text-slate-800 dark:text-slate-100">Theoretical Foundation: Architecture & 3D Challenges</h3>
+                
+                <div class="mb-6">
+                    <p class="text-sm text-slate-700 dark:text-slate-300 italic border-l-4 border-blue-500 pl-4 py-2 mb-4 bg-white dark:bg-slate-800 rounded shadow-sm">
+                        “An electronic nose (E-nose) is an instrument, which comprises an array of chemical sensors with partial specificity and an appropriate pattern recognition system, capable of recognizing simple or complex odours.”
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                        <div class="space-y-3 text-sm text-slate-700 dark:text-slate-300">
+                            <h4 class="font-bold text-slate-900 dark:text-slate-100">E-Nose System Topologies:</h4>
+                            <ul class="list-disc pl-5 space-y-2">
+                                <li><strong>Conventional E-noses:</strong> Constructed with a sensor array worked at constant temperature voltage.</li>
+                                <li><strong>Differential E-nose:</strong> Features two sensor arrays (one for gas sensing, one for baseline measurement).</li>
+                                <li><strong>Temperature Modulated E-noses:</strong> Heating voltage of each sensor is dynamic (ramp, sine wave, rectangular wave, etc.) rather than constant.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <img src="images/general_enose_system.png" alt="General E-nose system with multiple units" class="zoom-img object-contain w-full h-48 bg-white border border-slate-200 rounded-lg p-2 shadow-sm" onclick="openLightbox(this.src)">
+                            <p class="text-xs text-center text-slate-500 mt-2">Fig. 1. General E-nose system with multiple units.</p>
+                        </div>
+                    </div>
+                </div>
 
-        <!-- NEW SECTION 7: Chemical Compounds -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded border border-slate-200 dark:border-slate-600 shadow-sm border-t-4 border-t-rose-500">
+                        <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-2">1. Discreteness</h4>
+                        <p class="text-xs text-slate-600 dark:text-slate-400"><strong>Issue:</strong> Sensor reproducibility and batch variability.</p>
+                        <p class="text-xs text-slate-700 dark:text-slate-300 mt-2"><strong>Solution:</strong> A global affine transformation method is introduced for E-nose instruments batch calibration.</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded border border-slate-200 dark:border-slate-600 shadow-sm border-t-4 border-t-amber-500">
+                        <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-2">2. Drift</h4>
+                        <p class="text-xs text-slate-600 dark:text-slate-400"><strong>Issue:</strong> Systematical changes in sensor baseline over time.</p>
+                        <p class="text-xs text-slate-700 dark:text-slate-300 mt-2"><strong>Solution:</strong> An unsupervised feature adaptation model is proposed to achieve effective drift adaptation.</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded border border-slate-200 dark:border-slate-600 shadow-sm border-t-4 border-t-emerald-500">
+                        <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-2">3. Disturbance</h4>
+                        <p class="text-xs text-slate-600 dark:text-slate-400"><strong>Issue:</strong> Unpredictable nontarget disturbances in real-world scenarios.</p>
+                        <p class="text-xs text-slate-700 dark:text-slate-300 mt-2"><strong>Solution:</strong> A targets-to-targets self-representation classifier method for fast nontargets detection, requiring no prior knowledge of thousands of nontarget disturbances.</p>
+                    </div>
+                </div>
+            </div>
+            					            <!-- Denoising Algorithms (Added from P10) -->
+            <div class="mb-8 p-6 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <h3 class="text-xl font-bold mb-4 text-slate-800 dark:text-slate-100">Denoising Algorithms</h3>
+                <p class="text-sm text-slate-700 dark:text-slate-300 mb-6">
+                    Denoising algorithms pursue noise removal on data mixed with unknown noise. These techniques operate across preprocessing and feature extraction stages.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Smooth Filter -->
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-lg border border-slate-200 dark:border-slate-600 shadow-sm border-t-4 border-t-blue-500">
+                        <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-2">1. Smooth Filter</h4>
+                        <p class="text-xs text-slate-600 dark:text-slate-400 mb-3">
+                            A window moving average filter applied in real-time sensing. It mitigates extreme spikes by dropping the max and min values within window $q$.
+                        </p>
+                        <div class="text-center my-2 text-xs overflow-x-auto overflow-y-hidden">
+                            $$ \hat{S}(j) = \frac{\sum_{i=j}^{j+q-1} S(i) - \max\{S(j),...,S(j+q-1)\} - \min\{S(j),...,S(j+q-1)\}}{q-2} $$
+                        </div>
+                    </div>
+
+                    <!-- SVD -->
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-lg border border-slate-200 dark:border-slate-600 shadow-sm border-t-4 border-t-purple-500">
+                        <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-2">2. Singular Value Decomposition (SVD)</h4>
+                        <p class="text-xs text-slate-600 dark:text-slate-400 mb-3">
+                            Noise removal achieved by truncating components to the $k$ largest singular values and reconstructing the noiseless data.
+                        </p>
+                        <div class="text-center my-2 text-sm overflow-x-auto overflow-y-hidden">
+                            $$ \hat{\mathbf{X}} = \sum_{i=1}^k \hat{\sigma}_i \mathbf{u}_i \mathbf{v}_i^T $$
+                        </div>
+                    </div>
+
+                    <!-- ICA -->
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-lg border border-slate-200 dark:border-slate-600 shadow-sm border-t-4 border-t-rose-500">
+                        <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-2">3. Independent Component Analysis (ICA)</h4>
+                        <p class="text-xs text-slate-600 dark:text-slate-400 mb-3">
+                            Higher-order statistical method for non-Gaussian data. Solves a linear un-mixing system $W \in \mathbb{R}^{m \times n}$ to estimate source signals $S$.
+                        </p>
+                        <div class="text-center my-2 text-sm overflow-x-auto overflow-y-hidden">
+                            $$ X = AS \implies \hat{X} = WX = WAS \approx S $$
+                        </div>
+                    </div>
+                </div>
+            </div>
+			            <!-- Drift Compensation Algorithms (Added from P10) -->
+            <div class="mb-8 p-6 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <h3 class="text-xl font-bold mb-4 text-slate-800 dark:text-slate-100">Drift Compensation Algorithms</h3>
+                <p class="text-sm text-slate-700 dark:text-slate-300 mb-6 leading-relaxed">
+                    Sensor drift caused by unknown dynamic processes (aging, poisoning, etc.) seriously deteriorates classification. Since drifted data cannot fit the original training data probability distribution, online adaptation and compensation are strictly required.
+                </p>
+
+                <div class="space-y-6">
+                    <!-- Component Correction (CCPCA & OSC) -->
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-lg border border-slate-200 dark:border-slate-600 shadow-sm border-l-4 border-l-amber-500 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-2">Component Correction based PCA (CCPCA)</h4>
+                            <p class="text-xs text-slate-600 dark:text-slate-400 mb-3">Finds the drift direction $\mathbf{p}$ and explicitly corrects the data.</p>
+                            <div class="text-center my-2 text-sm overflow-x-auto overflow-y-hidden">
+                                $$ \widehat{\mathbf{X}} = \mathbf{X} - (\mathbf{X}p)\mathbf{p}^T $$
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-2">Orthogonal Signal Correction (OSC)</h4>
+                            <p class="text-xs text-slate-600 dark:text-slate-400 mb-3">Removes drift components orthogonal to the data.</p>
+                            <div class="text-center my-2 text-sm overflow-x-auto overflow-y-hidden">
+                                $$ \widehat{\mathbf{X}} = \mathbf{X} - \sum_{i=1}^n \mathbf{t}_i \mathbf{p}_i^T $$
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transfer Learning (DAELM) -->
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-lg border border-slate-200 dark:border-slate-600 shadow-sm border-l-4 border-l-purple-500">
+                        <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-2">Domain Adaptation Extreme Learning Machines (DAELM)</h4>
+                        <p class="text-xs text-slate-600 dark:text-slate-400 mb-3">
+                            A powerful transfer learning model for drift adaptation. It balances the learned classifier $\boldsymbol{\beta}_S$ across source (clean) and target (drifted) domains.
+                        </p>
+                        <div class="text-center my-4 text-sm overflow-x-auto overflow-y-hidden">
+                            $$ \min_{\boldsymbol{\beta}_S, \boldsymbol{\xi}_S^i, \boldsymbol{\xi}_T^j} \frac{1}{2}\|\boldsymbol{\beta}_S\|^2 + C_S \frac{1}{2} \sum_{i=1}^{N_S} \|\boldsymbol{\xi}_S^i\|^2 + C_T \frac{1}{2} \sum_{j=1}^{N_T} \|\boldsymbol{\xi}_T^j\|^2 $$
+                            <br>
+                            $$ \text{s.t.} \begin{cases} \mathbf{H}_S^i \boldsymbol{\beta}_S = \mathbf{t}_S^i - \boldsymbol{\xi}_S^i, & i=1,...,N_S \\ \mathbf{H}_T^j \boldsymbol{\beta}_S = \mathbf{t}_T^j - \boldsymbol{\xi}_T^j, & j=1,...,N_T \end{cases} $$
+                        </div>
+                        <p class="text-xs text-slate-500 mt-2 italic">
+                            Where $\mathbf{H}_S$ and $\mathbf{H}_T$ denote hand-crafted data matrices for clean and drifted data, $\mathbf{t}_S$ and $\mathbf{t}_T$ are labels, and $\boldsymbol{\xi}$ represents prediction errors.
+                        </p>
+                    </div>
+
+                    <!-- Evolutionary Algorithm -->
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-lg border border-slate-200 dark:border-slate-600 shadow-sm border-l-4 border-l-emerald-500">
+                        <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-2">Additive Factor Correction (EA)</h4>
+                        <p class="text-xs text-slate-600 dark:text-slate-400 mb-3">
+                            Optimizes the correction matrix using an Evolutionary Algorithm.
+                        </p>
+                        <div class="text-center my-2 text-sm overflow-x-auto overflow-y-hidden">
+                            $$ X_{corrected} = X + XM $$
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 bg-red-50 dark:bg-red-900/20 p-4 rounded border-l-4 border-red-500">
+                    <p class="text-sm font-semibold text-red-800 dark:text-red-400">Industrialization Challenge</p>
+                    <p class="text-xs text-red-700 dark:text-red-300 mt-1">
+                        Commercialized E-noses still face immense challenges with discreteness (reproducibility), drift recovery, and nontarget disturbance counteraction. Solving these is critical for large-scale industrial deployment.
+                    </p>
+                </div>
+            </div>
+                                    <!-- UFA Transfer Learning -->
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-lg border border-slate-200 dark:border-slate-600 shadow-sm border-l-4 border-l-blue-500">
+                        <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-2">Unsupervised Feature Adaptation (UFA)</h4>
+                        <p class="text-xs text-slate-600 dark:text-slate-400 mb-3">
+                            Minimizes distribution discrepancy in principal component (PC) subspace between clean ($X_S$) and drifted ($X_T$) data without requiring labels.
+                        </p>
+                        <div class="text-center my-4 text-sm overflow-x-auto overflow-y-hidden">
+                            $$ \min_W \|P_S - P_T W\|_F^2 + \lambda\|W\|_F^2 $$
+                            <br>
+                            $$ W^* = \frac{1}{\lambda + 1} P_T^T P_S $$
+                        </div>
+                        <p class="text-xs text-slate-500 mt-2 italic">
+                            Where $P_S$ and $P_T$ are the subspace projections of the source and target domains obtained via PCA, and $W$ is the subspace alignment matrix.
+                        </p>
+                    </div>
+				<!-- Deep Dive: GAT for Discreteness -->
+                <details class="mt-6 bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-600 shadow-sm">
+                    <summary class="font-bold cursor-pointer text-slate-800 dark:text-slate-100 text-lg">Deep Dive: Global Affine Transformation (GAT) for Discreteness</summary>
+                    <div class="mt-4 text-sm text-slate-700 dark:text-slate-300 space-y-4">
+                        <p><strong>Baseline Difference:</strong> The sensitive resistance $R_o$ of identical sensors in clear air differs, resulting in different output voltages.</p>
+                        <p><strong>Sensitivity Difference:</strong> Identical sensors have different sensitivity $R_s/R_o$ to the same odorant.</p>
+                        <p>To address this sensor-specific affine variance, the GAT model enhances reproducibility:</p>
+                        <div class="text-center my-2 text-sm overflow-x-auto overflow-y-hidden">
+                            $$ y_k = a_k x_k + b_k, \quad k = 1,...,m $$
+                        </div>
+                        <p class="text-xs text-slate-500 italic">Where $x_i$ is the slave instrument response, $y_i$ is the master instrument response, and $a_i, b_i$ are calibration parameters solved via Euclidean distance sample selection.</p>
+                    </div>
+                </details>
+		</section>
+        
+        <!-- SECTION: 3D SOLUTIONS (GAT, UFA, T3SRC) -->
+        <section id="sec-3d" class="fade-in hidden">
+            <header class="mb-8">
+                <span class="badge bg-red-600 mb-2">Algorithm Deep Dive</span>
+                <h2 class="text-3xl font-extrabold text-slate-900">3D Solutions: GAT, UFA, & T3SRC Algorithms</h2>
+                <p class="text-slate-600 mt-2 text-lg">Meticulous breakdown of the sample selection, subspace adaptation, and disturbance rejection algorithms.</p>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <!-- GAT Euclidean Sample Selection -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <h3 class="text-xl font-bold mb-4 text-slate-800 dark:text-slate-100">GAT Euclidean Sample Selection</h3>
+                    <p class="text-sm text-slate-700 dark:text-slate-300 mb-4">To solve the GAT coefficients with minimal labor cost, optimal samples are selected:</p>
+                    <ol class="list-decimal pl-5 text-sm text-slate-700 dark:text-slate-300 space-y-2">
+                        <li>Calculate pairwise Euclidean distance in master training set; select the farthest two patterns $s_1, s_2$. Set $S = \{s_1, s_2\}$.</li>
+                        <li>For each sample $x_i$, compute distance to set $S$ and log nearest distance $d_i$.</li>
+                        <li>Select sample with farthest distance in $d$ as $s_3$. Update $S$.</li>
+                        <li>Repeat until 5 samples are selected for calibration transfer.</li>
+                    </ol>
+                </div>
+
+                <!-- UFA Algorithm 1 & MDD -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <h3 class="text-xl font-bold mb-4 text-slate-800 dark:text-slate-100">Algorithm 1: UFA & MDD</h3>
+                    <ul class="list-none text-sm text-slate-700 dark:text-slate-300 space-y-2 font-mono text-xs bg-slate-50 dark:bg-slate-900 p-3 rounded mb-4">
+                        <li>Step 1: Solve $P_S$ by using PCA on $X_S$;</li>
+                        <li>Step 2: Solve $P_T$ by using PCA on $X_T$;</li>
+                        <li>Step 3: Obtain $W^*$ by solving alignment model;</li>
+                        <li>Step 4: Calculate $X_{T}^{new} = P_T W^* X_T$;</li>
+                        <li>Step 5: Compute $X_{S}^{new} = P_S^T X_S$;</li>
+                    </ul>
+                    <p class="text-sm text-slate-700 dark:text-slate-300">To quantify the distribution difference between domains, we use <strong>Mean Distribution Discrepancy (MDD)</strong>:</p>
+                    <div class="text-center my-2 text-sm overflow-x-auto overflow-y-hidden">
+                        $$ \text{MDD}(\Theta_1, \Theta_2) = \left\| \frac{1}{N_1} \sum_{i=1}^{N_1} \theta_{1(i)} - \frac{1}{N_2} \sum_{j=1}^{N_2} \theta_{2(j)} \right\|_2 $$
+                    </div>
+                </div>
+            </div>
+
+            <!-- UFA Schematic -->
+            <div class="mb-8 p-6 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                <h3 class="text-xl font-bold mb-4 text-slate-800 dark:text-slate-100">Schematic of UFA Subspace Adaptation</h3>
+                <img src="images/ufa_schematic.png" alt="Schematic of UFA for drift adaptation" class="zoom-img mx-auto max-w-full h-auto bg-white border border-slate-200 rounded-lg p-2 shadow-sm" onclick="openLightbox(this.src)">
+            </div>
+
+            <!-- T3SRC Disturbance Rejection -->
+            <div class="mb-8 p-6 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <h3 class="text-xl font-bold mb-4 text-slate-800 dark:text-slate-100">Targets-to-Targets Self-Representation Classifier (T3SRC)</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
+                            Nontarget disturbances in the real world are vast. T3SRC uses dictionary learning to memorize target gases via a representation matrix $\alpha$. The model rejects unknown disturbances by identifying large representation errors.
+                        </p>
+                        <div class="bg-white dark:bg-slate-800 p-4 rounded border border-slate-200 dark:border-slate-600 shadow-sm text-sm overflow-x-auto overflow-y-hidden">
+                            <p class="text-xs text-slate-500 mb-1">Total Representation Error (TRE) Model:</p>
+                            $$ X = X\alpha + E $$
+                            <p class="text-xs text-slate-500 mt-3 mb-1">Regularized Objective Function:</p>
+                            $$ \min_{\alpha} \|X - X\alpha\|_F^2 + \eta\|\alpha\|_2^2 $$
+                            <p class="text-xs text-slate-500 mt-3 mb-1">Closed-form Solution:</p>
+                            $$ \alpha = (X^T X + \eta I)^{-1} X^T X $$
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <img src="images/tgs_sensor_responses.png" alt="Normalized sensor response graph" class="zoom-img mx-auto max-w-full h-auto bg-white border border-slate-200 rounded-lg p-2 shadow-sm" onclick="openLightbox(this.src)">
+                        <p class="text-xs text-slate-500 mt-2">Discreteness and Disturbance observed across multiple TGS sensors.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+		<!-- NEW SECTION 7: Chemical Compounds -->
         <section id="sec-chem" class="fade-in hidden">
             <header class="mb-8">
                 <span class="badge bg-amber-600 mb-2">Deep Tech Dive</span>
@@ -924,6 +1216,7 @@
                 <button onclick="switchRefTab('tab-mq')" id="btn-tab-mq" class="px-4 py-2 rounded-t-lg font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">MQ-Nose Edge Node</button>
                 <button onclick="switchRefTab('tab-vision')" id="btn-tab-vision" class="px-4 py-2 rounded-t-lg font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">Pi-Cam & Vision</button>
                 <button onclick="switchRefTab('tab-fusion')" id="btn-tab-fusion" class="px-4 py-2 rounded-t-lg font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">Multimodal Fusion</button>
+                <button onclick="switchRefTab('tab-veg')" id="btn-tab-veg" class="px-4 py-2 rounded-t-lg font-bold text-sm bg-fuchsia-100 text-fuchsia-800 border border-fuchsia-200 border-b-0 hover:bg-fuchsia-200 transition-colors">🥬 Vegetable Profiles</button>
                 <button onclick="switchRefTab('tab-out')" id="btn-tab-out" class="px-4 py-2 rounded-t-lg font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">Out of Scope / Datasets</button>
             </div>
 
@@ -1019,6 +1312,8 @@
                         <li>[PR4: 10] L. Y. Chen et al., "Development of a dual MOS electronic nose/camera system for improving fruit ripeness classification," Sensors, 2018.</li>
                         <li>[PR3: 5] R. Ma et al., “Combining e-nose and e-tongue for improved recognition of instant starch noodles seasonings,” Front. Nutr., 2023.</li>
                         <li>[PR3: 7] Z. Haddi et al., “Electronic nose and tongue combination for improved classification of Moroccan virgin olive oil profiles,” Food Res. Int., 2013.</li>
+                        <li>[PR5: 2] A. Alimelli et al., “Fish freshness detection by a computer screen photoassisted based gas sensor array,” Analytica Chimica Acta, 2007.</li>
+                        <li>[PR5: 30] X. Huang et al., “Rapid and nondestructive detection of freshness quality of postharvest spinaches based on machine vision and electronic nose,” J. Food Safety, 2019.</li>
                     </ul>
                 </div>
             </div>
@@ -1035,7 +1330,34 @@
                         <li>[124] F. Foroni et al., “Food color is in the eye of the beholder: The role of human trichromatic vision in food evaluation,” Sci. Rep., 2016.</li>
                         <li>[PR4: 1]-[9], [11] General fruit ripening, VOC evolution, and maturity detection techniques (e.g., Guava, Table Grapes, Banana Cultivars).</li>
                         <li>[PR3: 1]-[4], [6], [9] General literature regarding soy sauce profiling, sesame oil adulteration, and biomedical applications.</li>
+                        <li>[PR5: 3-7, 11-12, 14, 20-21, 25-26, 29, 31-32] General surveys, reviews, and nutritional profiling (Broccoli, Garlic, Tomato, Pepper).</li>
                         <li>[41], [42], [50], [51], [53], [57]-[59], [65]-[69], [71]-[81], [88]-[91], [93], [95]-[102], [104], [105], [107], [108], [110], [112]-[123], [125], [126], [128], [129], [131], [132], [134]-[137], [139], [142], [149]-[151], [156]-[162], [165] (General citations remaining in the literature tree).</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- New Tab Added via Javascript but DOM placed outside tab-out -->
+            <div id="tab-veg" class="ref-tab-content hidden space-y-4">
+                <div class="p-4 bg-fuchsia-50 border border-fuchsia-200 dark:bg-slate-800/50 dark:border-slate-700 rounded text-sm text-slate-800 dark:text-slate-200">
+                    <p class="font-semibold text-fuchsia-900 dark:text-white mb-2">Focus: E-Nose applications tailored for specific vegetable crops (Garlic, Onion, Potato, Pepper, Tomato, Broccoli).</p>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li>[PR5: 1] V. Messina et al., “Optimization of metal oxide gas sensor in electronic nose to monitor odor profiles of garlic scape,” IEEE Sensors J., 2014.</li>
+                        <li>[PR5: 8] M. Ezhilan et al., “Freshness assessment of broccoli using electronic nose,” Measurement, 2019.</li>
+                        <li>[PR5: 9] H.-z. Chen et al., “Discrimination of fresh-cut broccoli freshness by volatiles using electronic nose...”, Postharvest Biol. Technol., 2019.</li>
+                        <li>[PR5: 10] J. Lv et al., “Effect of se treatment on the volatile compounds in broccoli,” Food Chem., 2017.</li>
+                        <li>[PR5: 13] S. Trirongjitmoah et al., “Classification of garlic cultivars using an electronic nose,” Comput. Electron. Agricult., 2015.</li>
+                        <li>[PR5: 15] M. Labanska et al., “Preliminary studies on detection of fusarium basal rot infection in onions and shallots using electronic nose,” Sensors, 2022.</li>
+                        <li>[PR5: 16] A. Ghosh et al., “Development of electronic nose for early spoilage detection of potato and onion during post-harvest storage,” J. Mater. NanoSci., 2022.</li>
+                        <li>[PR5: 17] T. Konduru et al., “A customized MOS-based gas sensor array for onion quality evaluation...”, Sensors, 2015.</li>
+                        <li>[PR5: 18] T. Konduru et al., “Detecting sour skin infected onions using a customized gas sensor array,” J. Food Eng., 2015.</li>
+                        <li>[PR5: 19] M. Russo et al., “Non-destructive flavour evaluation of red onion ecotypes: An electronic-nose-based approach,” Food Chem., 2013.</li>
+                        <li>[PR5: 22] A. Khorramifar et al., “A machine learning method for classification and identification of potato cultivars based on the reaction of mos type sensor-array,” Sensors, 2021.</li>
+                        <li>[PR5: 23] M. F. Rutolo et al., “The use of an electronic nose to detect early signs of soft-rot infection in potatoes,” Biosyst. Eng., 2018.</li>
+                        <li>[PR5: 24] Z. Chang et al., “Bacterial infection potato tuber soft rot disease detection based on electronic nose,” Open Life Sci., 2017.</li>
+                        <li>[PR5: 27] M. Rasekh et al., “Preliminary study non-destructive sorting techniques for pepper using odor parameter,” LWT, 2022.</li>
+                        <li>[PR5: 28] H.-Z. Chen et al., “Evaluation of the freshness of fresh-cut green bell pepper using electronic nose,” LWT, 2018.</li>
+                        <li>[PR5: 33] S. Xu et al., “Detecting and monitoring the flavor of tomato under the impact of postharvest handlings by physicochemical parameters and electronic nose,” Sensors, 2018.</li>
                     </ul>
                 </div>
             </div>
@@ -1105,7 +1427,7 @@
             document.getElementById(tabId).classList.add('block');
 
             // Reset tab styling
-            const tabs = ['tab-calib', 'tab-mq', 'tab-vision', 'tab-fusion', 'tab-out'];
+            const tabs = ['tab-calib', 'tab-mq', 'tab-vision', 'tab-fusion', 'tab-out', 'tab-veg'];
             tabs.forEach(t => {
                 const btn = document.getElementById('btn-' + t);
                 btn.className = 'px-4 py-2 rounded-t-lg font-bold text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer border-transparent';
@@ -1115,6 +1437,8 @@
             const activeBtn = document.getElementById('btn-' + tabId);
             if(tabId === 'tab-calib') {
                 activeBtn.className = 'px-4 py-2 rounded-t-lg font-bold text-sm bg-yellow-100 text-yellow-800 border border-yellow-200 border-b-0 cursor-default';
+            } else if (tabId === 'tab-veg') {
+                activeBtn.className = 'px-4 py-2 rounded-t-lg font-bold text-sm bg-fuchsia-100 text-fuchsia-800 border border-fuchsia-200 border-b-0 cursor-default';
             } else {
                 activeBtn.className = 'px-4 py-2 rounded-t-lg font-bold text-sm bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 border border-slate-200 dark:border-slate-700 border-b-0 cursor-default';
             }
