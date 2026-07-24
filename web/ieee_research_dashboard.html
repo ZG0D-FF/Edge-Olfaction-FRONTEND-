@@ -138,6 +138,7 @@
 			<button onclick="nav('dronegdm')" id="nav-dronegdm" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0 font-bold text-fuchsia-700 bg-fuchsia-50">✨ Drone Multi-Gas Detection</button>
             <button onclick="nav('gismapping')" id="nav-gismapping" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0 font-bold text-sky-700 bg-sky-50">✨ GIS Methane Mapping</button>
             <button onclick="nav('featurefusion')" id="nav-featurefusion" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0 font-bold text-rose-700 bg-rose-50">✨ Multi-Gas Feature Fusion</button>
+            <button onclick="nav('enosefood')" id="nav-enosefood" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0 font-bold text-violet-700 bg-violet-50">✨ E-Nose Food Olfaction</button>
             <button onclick="nav('ammonia')" id="nav-ammonia" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0 font-bold text-lime-700 bg-lime-50">✨ Multi-Range Ammonia Sensing</button>
             <button onclick="nav('methane')" id="nav-methane" class="nav-item text-left px-6 py-3 text-sm flex-shrink-0 font-bold text-orange-700 bg-orange-50">✨ Methane Reduction Analysis</button>
             <button onclick="nav('paper1')" id="nav-paper1" class="nav-item nav-active text-left px-6 py-3 text-sm flex-shrink-0">1. E-Nose/Eye Fusion (Rev)</button>
@@ -169,6 +170,243 @@
     <!-- Main Content Area -->
     <main class="flex-1 p-6 md:p-10 max-w-5xl mx-auto w-full">
 
+        <!-- NEW PAPER: E-NOSE FOOD OLFACTION -->
+        <section id="sec-enosefood" class="fade-in hidden">
+            <header class="mb-8">
+                <span class="badge bg-violet-500 text-white mb-2">Food Industry & Sensory AI</span>
+                <h2 class="text-3xl font-extrabold text-slate-900">E-Nose Architecture for Food Quality Olfaction</h2>
+                <p class="text-slate-600 mt-2">Designing a 32-sensor electronic nose system to replace expensive GC-MS and human sensory panels in the food industry.</p>
+            </header>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 items-center">
+                <div>
+                    <h3 class="text-xl font-bold mb-3 text-slate-800 dark:text-slate-100">The Principle of Electronic Olfaction</h3>
+                    <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
+                        Analysis of volatile components in the food industry traditionally employs Gas Chromatography-Mass Spectrometry (GC-MS) or human sensory panels, both of which are extremely expensive and labor-intensive. 
+                    </p>
+                    <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
+                        The E-nose solves this by analyzing volatile chemicals down to the parts-per-billion (ppb) level in real-time. The technology relies on the adsorption and desorption of volatile chemicals traversing a semiconductor sensor array, which translates into specific changes in electrical resistance.
+                    </p>
+                    
+                    <div class="bg-violet-50 dark:bg-violet-900/20 p-4 rounded-lg border-l-4 border-l-violet-500 shadow-sm mt-4">
+                        <p class="text-xs font-bold text-violet-800 dark:text-violet-400 uppercase tracking-wider mb-2">Semiconductor Circuit</p>
+                        <p class="text-xs text-slate-700 dark:text-slate-300">
+                            These sensors require two voltage inputs: <strong>$V_{Heater}$</strong> to maintain the sensing element at a specific thermodynamic temperature for adsorption, and <strong>$V_{sensor}$</strong> to measure the resulting voltage drop ($V_{out}$) across a series load resistor ($R_L$).
+                        </p>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <img src="images/enose_fig1.png" alt="Basic measuring circuit" class="zoom-img w-full max-w-sm mx-auto rounded shadow-sm border border-slate-300 dark:border-slate-600 bg-white" onclick="openLightbox(this.src)">
+                    <p class="text-xs text-slate-500 mt-2 italic">Fig. 1. Basic measuring circuit showing the heater element and sensing element.</p>
+                </div>
+            </div>
+
+            <!-- LUCID DRAWER 1 -->
+            <details class="mb-8 bg-blue-50 dark:bg-slate-800/80 p-4 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm cursor-pointer">
+                <summary class="font-bold text-blue-900 dark:text-blue-400 text-sm focus:outline-none">💡 Lucid Understanding: Why do we need 32 different sensors for one "smell"?</summary>
+                <div class="mt-3 text-sm text-slate-700 dark:text-slate-300 leading-relaxed border-t border-blue-200 dark:border-blue-800 pt-3">
+                    <strong>The Principle (Digital Fingerprinting):</strong> Unlike a thermometer which measures a single objective variable (heat), a "smell" (like rotting fruit or fresh coffee) is actually a complex mixture of hundreds of different volatile organic compounds.
+                    <br><br>
+                    By building an array of 32 slightly different sensors (a mix of MQ and Figaro models), each individual sensor reacts slightly differently to that same complex smell—just like the millions of unique olfactory receptors in a human nose! The combination of all 32 electrical resistances creates a unique "digital fingerprint" or pattern for that specific food condition. Machine learning models then analyze this 32-dimensional pattern to instantly recognize the food's exact quality and freshness!
+                </div>
+            </details>
+
+            <hr class="border-slate-300 dark:border-slate-600 my-8">
+
+            <h3 class="text-xl font-bold mb-4 text-slate-800 dark:text-slate-100">Complete System Architecture & Prechamber</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 items-center">
+                <div class="text-center">
+                    <img src="images/enose_fig3.png" alt="Complete system architecture" class="zoom-img w-full mx-auto rounded shadow-sm border border-slate-300 dark:border-slate-600 bg-white" onclick="openLightbox(this.src)">
+                    <p class="text-xs text-slate-500 mt-2 italic">Fig. 3. Complete system, including the electrical DAQ design and fluidic prechamber.</p>
+                </div>
+                <div class="space-y-4">
+                    <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
+                        The olfactory system assumes that normal manufacturing variations across 32 Figaro/MQ sensors combined with selected operating temperatures result in a wide spectrum of responses to VOCs.
+                    </p>
+                    
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-xl">⚡</span>
+                            <h4 class="font-bold text-slate-800 dark:text-slate-100 text-sm">Electrical Design (DAQ)</h4>
+                        </div>
+                        <p class="text-xs text-slate-600 dark:text-slate-400">
+                            Comprised of eight identical electronic boards with four sensors each (8 × 4 = 32). Data is acquired via a National Instruments ADC (NI USB-6218, 16 Bits, 250 kS/s) with 32 analog inputs for simultaneous collection.
+                        </p>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-xl">💨</span>
+                            <h4 class="font-bold text-slate-800 dark:text-slate-100 text-sm">Fluidic Prechamber</h4>
+                        </div>
+                        <p class="text-xs text-slate-600 dark:text-slate-400">
+                            A clean air pump provides airflow split into two streams: one bypasses directly to the electrovalve, while the other traverses the sample chamber. Air first flushes the system to clean it for a baseline reading, then flows through the sample chamber for the measurement interval.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm mb-8">
+                <h3 class="text-xl font-bold mb-4 text-slate-800 dark:text-slate-100">Data Feature Extraction Techniques</h3>
+                <p class="text-sm text-slate-700 dark:text-slate-300 mb-6 leading-relaxed">
+                    More information can be derived about the organic substance by analyzing the physical dynamics of the response curve (increasing/decreasing times) rather than just looking at the absolute amplitude level. Two methods are used for feature extraction:
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div class="space-y-4">
+                        <div class="bg-white dark:bg-slate-700 p-4 rounded-lg shadow-sm border-l-4 border-l-sky-500">
+                            <h4 class="font-bold text-sky-800 dark:text-sky-400 text-sm mb-1">Method 1: Transient Physical Features</h4>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Extracts geometric parameters from the adsorption/desorption curve over time: <strong>Transient slope, early saturation, saturation slope, late saturation, and time to threshold</strong>.
+                            </p>
+                        </div>
+                        <div class="bg-white dark:bg-slate-700 p-4 rounded-lg shadow-sm border-l-4 border-l-fuchsia-500">
+                            <h4 class="font-bold text-fuchsia-800 dark:text-fuchsia-400 text-sm mb-1">Method 2: Complex Spectral Features</h4>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Extracts advanced mathematical features: Spectral entropy, Hurst exponent, detrended fluctuation analysis, Hjorth mobility & complexity, and Petrosian fractal dimension.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <img src="images/enose_fig4.png" alt="Classification features" class="zoom-img w-full max-w-sm mx-auto rounded shadow-sm border border-slate-300 dark:border-slate-600 bg-white" onclick="openLightbox(this.src)">
+                        <p class="text-xs text-slate-500 mt-2 italic">Fig. 4. Classification features extracted using the first proposed physical method.</p>
+                    </div>
+                </div>
+            </div>
+            <h3 class="text-xl font-bold mt-10 mb-4 text-slate-800 dark:text-slate-100">Machine Learning Integration (WEKA)</h3>
+            <p class="text-sm text-slate-700 dark:text-slate-300 mb-6 leading-relaxed">
+                The extracted features are processed using the Waikato Environment for Knowledge Analysis (WEKA), an advanced data mining and artificial neural network toolbox. Principal Component Analysis (PCA) is first used to visualize mathematical differences, followed by rigorous algorithm testing.
+            </p>
+
+            <div class="space-y-12">
+                <!-- CASE STUDY 1 -->
+                <div>
+                    <h4 class="text-lg font-bold text-violet-800 dark:text-violet-400 border-b border-violet-200 dark:border-violet-900 pb-2 mb-4">Case Study 1: Apple vs Pear Classification</h4>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                        <div class="text-center">
+                            <img src="images/enose_fig5.png" alt="PCA case scores" class="zoom-img w-full rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 bg-white" onclick="openLightbox(this.src)">
+                            <p class="text-xs text-slate-500 mt-2 italic">Fig. 5. PCA using the transient slope feature shows clear geometric separation between Apple and Pear.</p>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-x-auto">
+                            <h5 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 text-center">Table 1: WEKA Classification Results</h5>
+                            <table class="w-full text-xs text-left">
+                                <thead class="bg-violet-50 dark:bg-violet-900/20 text-violet-900 dark:text-violet-300">
+                                    <tr>
+                                        <th class="p-2 rounded-tl">Algorithm</th>
+                                        <th class="p-2 text-right">Correct (%)</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-300">
+                                    <tr><td class="p-2 font-mono">Bayes Network</td><td class="p-2 text-right">94%</td></tr>
+                                    <tr><td class="p-2 font-mono">RBF Network</td><td class="p-2 text-right">93%</td></tr>
+                                    <tr><td class="p-2 font-mono">SimpleLogistic</td><td class="p-2 text-right">97%</td></tr>
+                                    <tr><td class="p-2 font-mono">SMO</td><td class="p-2 text-right">99%</td></tr>
+                                    <tr class="bg-violet-100 dark:bg-violet-900/50 font-bold"><td class="p-2 font-mono text-violet-900 dark:text-violet-200">IB1</td><td class="p-2 text-right text-violet-900 dark:text-violet-200">100%</td></tr>
+                                    <tr><td class="p-2 font-mono">ADTree</td><td class="p-2 text-right">95%</td></tr>
+                                </tbody>
+                            </table>
+                            <p class="text-xs text-slate-500 mt-3 text-center">The IB1 algorithm achieved perfect 100% classification.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CASE STUDY 2 -->
+                <div>
+                    <h4 class="text-lg font-bold text-sky-800 dark:text-sky-400 border-b border-sky-200 dark:border-sky-900 pb-2 mb-4">Case Study 2: Off-flavor of Drinking Water</h4>
+                    <p class="text-sm text-slate-700 dark:text-slate-300 mb-4 leading-relaxed">
+                        Pseudomonas bacteria in water supply networks emit sulfur compounds resulting in odors resembling wet cloth, butane, or rotten eggs. The e-nose was tested to detect these molecular contaminations at the <strong>parts-per-billion (ppb)</strong> and <strong>parts-per-trillion (ppt)</strong> levels.
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                        <div class="text-center">
+                            <img src="images/enose_fig6.png" alt="Sensor Response to water" class="zoom-img w-full rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 bg-white" onclick="openLightbox(this.src)">
+                            <p class="text-xs text-slate-500 mt-2 italic">Fig. 6. TGS-2600 sensor response distinguishing Geosmin, Dimethyl disulfide, and control water.</p>
+                        </div>
+                        <div class="text-center">
+                            <img src="images/enose_fig7.png" alt="Statistical treatments" class="zoom-img w-full rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 bg-white" onclick="openLightbox(this.src)">
+                            <p class="text-xs text-slate-500 mt-2 italic">Fig. 7. Comparison of BayesNet, RBF, and Multilayer Perceptron correctly classifying ppb and ppt concentrations.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CASE STUDY 3 -->
+                <div>
+                    <h4 class="text-lg font-bold text-orange-800 dark:text-orange-400 border-b border-orange-200 dark:border-orange-900 pb-2 mb-4">Case Study 3: Orange Aroma & Postharvest Storage</h4>
+                    <p class="text-sm text-slate-700 dark:text-slate-300 mb-4 leading-relaxed">
+                        Oranges submitted to different postharvest treatments (chemicals, ethylene, waxing) were monitored over time (T0 to T3). The e-nose successfully revealed off-odors even when stored under refrigerated conditions.
+                    </p>
+                    <div class="text-center max-w-2xl mx-auto bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                        <img src="images/enose_table2.png" alt="WEKA Orange Classification" class="zoom-img w-full rounded shadow-sm border border-slate-200 dark:border-slate-700 bg-white" onclick="openLightbox(this.src)">
+                        <p class="text-xs text-slate-500 mt-3 italic">Table 2. Percentage of correctly classified instances obtained with WEKA algorithms across storage periods.</p>
+                    </div>
+                </div>
+
+                <!-- CASE STUDY 4 -->
+                <div>
+                    <h4 class="text-lg font-bold text-amber-800 dark:text-amber-400 border-b border-amber-200 dark:border-amber-900 pb-2 mb-4">Case Study 4: Truffle Ripeness Classification</h4>
+                    <p class="text-sm text-slate-700 dark:text-slate-300 mb-4 leading-relaxed">
+                        Truffles are a highly expensive delicacy traditionally harvested using trained dogs or pigs ("smell operators"). Determining exact ripeness systematically is a major industry challenge. An 8-sensor MQ prototype was built to digitize this biological capability.
+                    </p>
+                    
+                    <div class="bg-amber-50 dark:bg-amber-900/10 p-6 rounded-xl border border-amber-200 dark:border-amber-900/50 shadow-sm mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                            <div class="text-center">
+                                <img src="images/enose_fig8.png" alt="Truffle Ripeness" class="zoom-img w-full max-w-xs mx-auto rounded-xl shadow-sm border border-slate-300 dark:border-slate-600 bg-white" onclick="openLightbox(this.src)">
+                                <p class="text-xs text-slate-500 mt-3 italic">Fig. 8. (a) Unripe, (b) Ripe, (c) Overly ripe truffle.</p>
+                            </div>
+                            
+                            <!-- LUCID DRAWER 2 -->
+                            <details class="bg-white dark:bg-slate-800 p-4 rounded-lg border border-amber-200 dark:border-amber-700 shadow-sm cursor-pointer" open>
+                                <summary class="font-bold text-amber-900 dark:text-amber-400 text-sm focus:outline-none">💡 Lucid Understanding: Why is an E-Nose superior to Computer Vision for Truffles?</summary>
+                                <div class="mt-3 text-sm text-slate-700 dark:text-slate-300 leading-relaxed border-t border-amber-200 dark:border-amber-800 pt-3">
+                                    <strong>The Flaw in Visual AI:</strong> As seen in Fig 8, using image processing to classify a truffle requires cutting it open, orienting the slices perfectly to the camera, and dealing with subjective visual textures. Lighting and camera angles completely destroy the accuracy.
+                                    <br><br>
+                                    <strong>The Olfactory Advantage:</strong> The E-nose doesn't care about lighting, orientation, or cutting the truffle open. It literally "smells" the invisible chemical compounds emitted by the biological maturity process! It replicates the biological advantage of a Truffle Pig, but digitizes it into an exact mathematical maturity score in seconds, removing the need for a specialized smell operator.
+                                </div>
+                            </details>
+                            <!-- ADDING FIG 9 TO TRUFFLE CASE STUDY -->
+                            <div class="col-span-1 md:col-span-2 mt-4 text-center">
+                                <img src="images/enose_fig9.png" alt="Truffle Sensor Response" class="zoom-img w-full rounded-xl shadow-sm border border-slate-300 dark:border-slate-600 bg-white" onclick="openLightbox(this.src)">
+                                <p class="text-xs text-slate-500 mt-3 italic">Fig. 9. Time-series response from the 8 MQ sensors. Top: unripe truffle; Center: ripe truffle; Bottom: overly ripe truffle. Notice the distinct electrical signatures for each state of ripeness!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- REFERENCES ACCORDION -->
+            <details class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm mt-8 mb-4">
+                <summary class="font-bold text-slate-800 dark:text-slate-200 p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors focus:outline-none">
+                    📚 View Paper References (1-25)
+                </summary>
+                <div class="p-4 border-t border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-400 space-y-3 overflow-y-auto max-h-80">
+                    <p>[1] J. Beltran Ortega, J. Gamez Garcia and J. Gomez Ortega, “Precision of volatile compound analysis in extra virgin olive oil: the influence of MOS electronic nose acquisition factors,” in Proc. IEEE Int. Conf. Industrial Technology, 2015.</p>
+                    <p>[2] K.N.A.K. Adnan, et al., “Water quality classification and monitoring using e-nose and e-tongue in aquaculture farming,” in Proc. 2nd Int. Conf. Electronic Design (ICED), 2014.</p>
+                    <p>[3] E. Nunez Carmona, et al., “Detection of microorganisms in water and different food matrix by Electronic Nose,” in Proc. 7th Int. Conf. Sensing Technology (ICST), 2013.</p>
+                    <p>[4] P. Chongthanaphisut, et al., “Monitoring of microbial canned food spoilage and contamination based on e-nose for smart home,” in Proc. 12th Int. Conf. ECTI-CON, 2015.</p>
+                    <p>[5] G. Sberveglieri, et al., “MOX-NW Electronic Nose for detection of food microbial contamination,” in Proc. IEEE SENSORS Conf., 2014.</p>
+                    <p>[6] K. Timsorn, et al., “Discrimination of chicken freshness using electronic nose combined with PCA and ANN,” in Proc. 11th Int. Conf. ECTI-CON, 2014.</p>
+                    <p>[7] S. Guney and A. Atasoy, “Fish freshness assessment by using electronic nose,” in Proc. 36th Int. Conf. TSP, 2013.</p>
+                    <p>[8] M. Siadat, et al., “Application of electronic nose to beer recognition using supervised artificial neural networks,” in Proc. 2014 Int. Conf. CoDIT, 2014.</p>
+                    <p>[9] S. Siyang, et al., “E-nose based on metallo-tetraphenylporphyrin/ SWNT-COOH for alcohol detection,” in Proc. 2013 IEEE EDSSC, 2013.</p>
+                    <p>[10] M. Lihui, et al., “Rapid detection of sesame oil flavoring based on the gas sensor array,” in Proc. 5th Int. Conf. ICMTMA, 2013.</p>
+                    <p>[11] N. Bhattacharyya, et al., “Electronic nose for black tea classification and correlation of measurements with ‘tea taster’ marks,” IEEE Trans. Instrum. Meas., 2008.</p>
+                    <p>[12] B. Tudu, et al., “Towards versatile electronic nose pattern classifier for black tea quality evaluation: an incremental fuzzy approach,” IEEE Trans. Instrum. Meas., 2009.</p>
+                    <p>[13] K. Brudzewski, et al., “Recognition of coffee using differential electronic nose,” IEEE Trans. Instrum. Meas., 2012.</p>
+                    <p>[14] V. Sberveglieri, et al., “New methods for the early detection of fungal contamination on green coffee beans by an electronic nose,” in Proc. 6th ICST, 2012.</p>
+                    <p>[15] T. Thepudom, et al., “Classification of instant coffee odors by electronic nose toward quality control of production,” in Proc. 10th ECTI-CON, 2013.</p>
+                    <p>[16] Y. Huichun, et al., “The research on the application of electronic nose in discriminate the rice varieties,” in Proc. ICAMechS, 2013.</p>
+                    <p>[17] A. Del Cueto Belchi, et al., “Multi-sensor olfactory system: using temperature modulation,” in Proc. IEEE I2MTC, 2012.</p>
+                    <p>[18] A. Del Cueto, et al., “Sensor characterization for multisensor odor-discrimination system,” Sensors and Actuator A: Physical, 2013.</p>
+                    <p>[19] J. Waldemark, et al., “Neural network and PCA for determining region of interest in sensory data pre-processing,” in Proc. Virtual Intelligence/Dynamic Neural Network Workshop, 1998.</p>
+                    <p>[20] M. Kermit, et al., “Intelligent machine olfaction,” in Proc. IASTED, 2002.</p>
+                    <p>[21] F. S. Bao, et al., “Performance of dynamic features in classifying scalp epileptic interictal and normal EEG,” in Proc. 32nd IEEE EMBC, 2010.</p>
+                    <p>[22] L. Zhang and F. Tian, “Performance study of multilayer perceptrons in a low-cost electronic nose,” IEEE Trans. Instrum. Meas., 2014.</p>
+                    <p>[23] I.H. Witten and E. Frank, Data Mining: Practical Machine Learning Tools and Techniques, San Mateo, CA: Morgan Kaufmann Publishers, 2005.</p>
+                    <p>[24] M. Madigan, et al., Brock Biology of Microorganisms, San Francisco, CA: Pearson, 2012.</p>
+                    <p>[25] M. Cupane, et al., “Electronic nose to detect off-flavor of drinking water,” in Proc. 12th SIBPA, 2014.</p>
+                </div>
+            </details>
+        </section>
         <!-- NEW PAPER: MULTI-RANGE AMMONIA -->
         <section id="sec-ammonia" class="fade-in hidden">
             <header class="mb-8">
