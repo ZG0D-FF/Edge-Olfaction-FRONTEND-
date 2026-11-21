@@ -14,33 +14,67 @@ export class ModalController {
     const ring = document.getElementById("custom-cursor-ring");
     if (!dot || !ring) return;
 
+    if (window.matchMedia("(pointer: coarse)").matches) return;
+
     document.body.classList.add("has-custom-cursor");
 
-    let mouseX = window.innerWidth / 2;
-    let mouseY = window.innerHeight / 2;
-    let ringX = mouseX;
-    let ringY = mouseY;
+    let mouseX = -100;
+    let mouseY = -100;
+    let ringX = -100;
+    let ringY = -100;
+    let isVisible = false;
 
     window.addEventListener("mousemove", (e) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
-      dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+      if (!isVisible) {
+        isVisible = true;
+        document.body.classList.remove("cursor-hidden");
+        ringX = mouseX;
+        ringY = mouseY;
+      }
+      dot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) translate(-50%, -50%)`;
+    }, { passive: true });
+
+    document.addEventListener("mouseleave", () => {
+      isVisible = false;
+      document.body.classList.add("cursor-hidden");
     });
 
+    document.addEventListener("mouseenter", () => {
+      isVisible = true;
+      document.body.classList.remove("cursor-hidden");
+    });
+
+    // Tactile click states
+    window.addEventListener("mousedown", () => document.body.classList.add("cursor-active"), { passive: true });
+    window.addEventListener("mouseup", () => document.body.classList.remove("cursor-active"), { passive: true });
+
+    // Robust delegated hover detection that works reliably on all cards, links, buttons, and children
+    document.addEventListener("mouseover", (e) => {
+      const interactive = e.target.closest("a, button, input, .clickable, .glass-card, [role='button'], canvas, .tracker-dot");
+      if (interactive) {
+        document.body.classList.add("cursor-hover");
+      }
+    }, { passive: true });
+
+    document.addEventListener("mouseout", (e) => {
+      const nextTarget = e.relatedTarget;
+      if (!nextTarget || !nextTarget.closest("a, button, input, .clickable, .glass-card, [role='button'], canvas, .tracker-dot")) {
+        document.body.classList.remove("cursor-hover");
+      }
+    }, { passive: true });
+
+    // Smooth physics loop for outer follower ring
     const loop = () => {
-      ringX += (mouseX - ringX) * 0.18;
-      ringY += (mouseY - ringY) * 0.18;
-      ring.style.transform = `translate(${ringX}px, ${ringY}px) translate(-50%, -50%)`;
+      if (isVisible) {
+        ringX += (mouseX - ringX) * 0.22;
+        ringY += (mouseY - ringY) * 0.22;
+        ring.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) translate(-50%, -50%)`;
+      }
       requestAnimationFrame(loop);
     };
     requestAnimationFrame(loop);
-
-    // Hover triggers
-    const hoverTargets = document.querySelectorAll("a, button, input, .clickable, .glass-card");
-    hoverTargets.forEach((el) => {
-      el.addEventListener("mouseenter", () => document.body.classList.add("cursor-hover"));
-      el.addEventListener("mouseleave", () => document.body.classList.remove("cursor-hover"));
-    });
   }
 
   _initModals() {

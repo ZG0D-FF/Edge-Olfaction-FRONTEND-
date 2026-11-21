@@ -3,53 +3,92 @@
    Frosted Blur · Difference Cursor · Ambient Video · PDF Previews
    ════════════════════════════════════════════════════════════════ */
 
-/* ── DIFFERENCE-BLEND CUSTOM CURSOR ── */
-body.has-custom-cursor {
+/* ── PROFESSIONAL GRADE DYNAMIC CURSOR ── */
+body.has-custom-cursor,
+body.has-custom-cursor * {
   cursor: none !important;
 }
-body.has-custom-cursor a,
-body.has-custom-cursor button,
-body.has-custom-cursor input {
-  cursor: none !important;
+
+/* Fallback: restore native pointer inside iframes and PDF viewer embeds */
+body.has-custom-cursor iframe,
+body.has-custom-cursor embed,
+body.has-custom-cursor object {
+  cursor: auto !important;
 }
 
 #custom-cursor-dot {
   position: fixed;
   top: 0; left: 0;
   width: 6px; height: 6px;
-  background: #ffffff;
+  background: #00f0ff;
   border-radius: 50%;
-  pointer-events: none;
-  z-index: 9999;
+  pointer-events: none !important;
+  z-index: 1000000;
   transform: translate(-50%, -50%);
-  transition: opacity 0.3s ease;
+  transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1), 
+              height 0.2s cubic-bezier(0.16, 1, 0.3, 1), 
+              background-color 0.2s ease, 
+              opacity 0.25s ease,
+              box-shadow 0.2s ease;
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.8);
+  will-change: transform;
 }
 
 #custom-cursor-ring {
   position: fixed;
   top: 0; left: 0;
   width: 36px; height: 36px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 50%;
-  pointer-events: none;
-  z-index: 9998;
+  pointer-events: none !important;
+  z-index: 999999;
   transform: translate(-50%, -50%);
-  transition: width 0.3s var(--transition-smooth), height 0.3s var(--transition-smooth), background-color 0.3s ease, border-color 0.3s ease;
+  transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1), 
+              height 0.28s cubic-bezier(0.16, 1, 0.3, 1), 
+              background-color 0.25s ease, 
+              border-color 0.25s ease, 
+              box-shadow 0.25s ease,
+              opacity 0.25s ease;
+  will-change: transform;
 }
 
+/* Hovering over clickable cards, buttons, links, canvases */
 body.cursor-hover #custom-cursor-ring {
-  width: 68px;
-  height: 68px;
-  background-color: #ffffff;
-  border-color: #ffffff;
-  mix-blend-mode: difference;
+  width: 58px;
+  height: 58px;
+  border-color: #00f0ff;
+  background: rgba(0, 240, 255, 0.1);
+  box-shadow: 0 0 24px rgba(0, 240, 255, 0.35), inset 0 0 12px rgba(0, 240, 255, 0.15);
+}
+
+body.cursor-hover #custom-cursor-dot {
+  width: 8px;
+  height: 8px;
+  background: #ffffff;
+  box-shadow: 0 0 12px #00f0ff;
+}
+
+/* Tactile Click / Active State */
+body.cursor-active #custom-cursor-ring {
+  width: 30px;
+  height: 30px;
+  border-color: #38bdf8;
+  background: rgba(0, 240, 255, 0.25);
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.6);
+}
+
+body.cursor-hidden #custom-cursor-dot,
+body.cursor-hidden #custom-cursor-ring {
+  opacity: 0 !important;
 }
 
 @media (pointer: coarse), (prefers-reduced-motion: reduce) {
   #custom-cursor-dot, #custom-cursor-ring {
     display: none !important;
   }
-  body.has-custom-cursor {
+  body.has-custom-cursor,
+  body.has-custom-cursor * {
     cursor: auto !important;
   }
 }
