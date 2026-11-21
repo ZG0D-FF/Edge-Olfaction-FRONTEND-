@@ -15,15 +15,23 @@ export class ModalController {
     const label = document.getElementById("custom-cursor-label");
     if (!dot || !ring) return;
 
-    if (window.matchMedia("(pointer: coarse)").matches) return;
+    // Detect actual touch interaction rather than coarse media queries that false-positive on Windows laptops
+    window.addEventListener("touchstart", () => {
+      document.body.classList.remove("has-custom-cursor");
+      document.body.classList.add("is-touch-device");
+    }, { once: true, passive: true });
 
     document.body.classList.add("has-custom-cursor");
 
-    let mouseX = -100;
-    let mouseY = -100;
-    let ringX = -100;
-    let ringY = -100;
-    let isVisible = false;
+    let mouseX = window.innerWidth / 2;
+    let mouseY = window.innerHeight / 2;
+    let ringX = mouseX;
+    let ringY = mouseY;
+    let isVisible = true;
+
+    // Initial position centered on screen so it is immediately visible
+    dot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) translate(-50%, -50%)`;
+    ring.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) translate(-50%, -50%)`;
 
     window.addEventListener("mousemove", (e) => {
       mouseX = e.clientX;
@@ -31,15 +39,15 @@ export class ModalController {
       if (!isVisible) {
         isVisible = true;
         document.body.classList.remove("cursor-hidden");
-        ringX = mouseX;
-        ringY = mouseY;
       }
       dot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) translate(-50%, -50%)`;
     }, { passive: true });
 
-    document.addEventListener("mouseleave", () => {
-      isVisible = false;
-      document.body.classList.add("cursor-hidden");
+    document.addEventListener("mouseleave", (e) => {
+      if (e.clientY <= 0 || e.clientX <= 0 || e.clientX >= window.innerWidth || e.clientY >= window.innerHeight) {
+        isVisible = false;
+        document.body.classList.add("cursor-hidden");
+      }
     });
 
     document.addEventListener("mouseenter", () => {
