@@ -1,0 +1,38 @@
+{
+  "dataset_meta": {
+    "title": "Edge-Olfaction Calibrated Multi-Sensor Spoilage Telemetry",
+    "experiment_date": "2026-05-15",
+    "crop_profile": "APPLE (Climacteric / Ethanol Sensitive)",
+    "sampling_interval_sec": 60,
+    "hardware_node": "Raspberry Pi 4B + Arduino Uno R3",
+    "r0_baseline": {
+      "mq135": 100.0,
+      "mq3": 150.0,
+      "mq4": 200.0,
+      "mq2": 180.0
+    }
+  },
+  "samples": [
+    { "ts": 1778836263, "time": "14:41", "mq3_raw": 290, "mq135_raw": 92, "mq4_raw": 314, "mq2_raw": 224, "mq3_ema": 299.0, "mq135_ema": 100.0, "risk": 78.3, "temp": 32.8, "hum": 63.7, "hours_left": 7, "state": "SPOILING", "vib": 241.0 },
+    { "ts": 1778836324, "time": "14:42", "mq3_raw": 289, "mq135_raw": 91, "mq4_raw": 314, "mq2_raw": 224, "mq3_ema": 298.4, "mq135_ema": 99.1, "risk": 77.3, "temp": 32.8, "hum": 63.7, "hours_left": 8, "state": "SPOILING", "vib": 245.0 },
+    { "ts": 1778836384, "time": "14:43", "mq3_raw": 290, "mq135_raw": 92, "mq4_raw": 315, "mq2_raw": 224, "mq3_ema": 298.9, "mq135_ema": 99.3, "risk": 77.8, "temp": 32.8, "hum": 63.6, "hours_left": 8, "state": "SPOILING", "vib": 245.0 },
+    { "ts": 1778836445, "time": "14:44", "mq3_raw": 290, "mq135_raw": 91, "mq4_raw": 315, "mq2_raw": 224, "mq3_ema": 299.0, "mq135_ema": 99.8, "risk": 78.2, "temp": 32.8, "hum": 63.6, "hours_left": 8, "state": "SPOILING", "vib": 271.0 },
+    { "ts": 1778836505, "time": "14:45", "mq3_raw": 290, "mq135_raw": 91, "mq4_raw": 315, "mq2_raw": 224, "mq3_ema": 299.0, "mq135_ema": 99.2, "risk": 77.9, "temp": 32.8, "hum": 63.6, "hours_left": 8, "state": "SPOILING", "vib": 275.0 },
+    { "ts": 1778836566, "time": "14:46", "mq3_raw": 290, "mq135_raw": 91, "mq4_raw": 316, "mq2_raw": 224, "mq3_ema": 299.0, "mq135_ema": 99.8, "risk": 78.2, "temp": 32.8, "hum": 63.7, "hours_left": 7, "state": "SPOILING", "vib": 256.0 },
+    { "ts": 1778836626, "time": "14:47", "mq3_raw": 290, "mq135_raw": 92, "mq4_raw": 315, "mq2_raw": 224, "mq3_ema": 299.7, "mq135_ema": 100.0, "risk": 78.9, "temp": 32.8, "hum": 63.7, "hours_left": 7, "state": "SPOILING", "vib": 250.0 },
+    { "ts": 1778836686, "time": "14:48", "mq3_raw": 291, "mq135_raw": 92, "mq4_raw": 314, "mq2_raw": 224, "mq3_ema": 300.3, "mq135_ema": 99.8, "risk": 79.3, "temp": 32.8, "hum": 63.6, "hours_left": 7, "state": "CRITICAL", "vib": 245.0 },
+    { "ts": 1778836747, "time": "14:49", "mq3_raw": 291, "mq135_raw": 92, "mq4_raw": 315, "mq2_raw": 224, "mq3_ema": 299.9, "mq135_ema": 100.0, "risk": 79.1, "temp": 32.9, "hum": 63.6, "hours_left": 7, "state": "SPOILING", "vib": 271.0 },
+    { "ts": 1778836807, "time": "14:50", "mq3_raw": 291, "mq135_raw": 91, "mq4_raw": 313, "mq2_raw": 223, "mq3_ema": 300.0, "mq135_ema": 99.6, "risk": 79.0, "temp": 32.8, "hum": 63.6, "hours_left": 7, "state": "SPOILING", "vib": 252.0 },
+    { "ts": 1778836867, "time": "14:51", "mq3_raw": 291, "mq135_raw": 92, "mq4_raw": 314, "mq2_raw": 223, "mq3_ema": 300.0, "mq135_ema": 100.0, "risk": 79.2, "temp": 32.8, "hum": 63.5, "hours_left": 7, "state": "CRITICAL", "vib": 274.0 },
+    { "ts": 1778836928, "time": "14:52", "mq3_raw": 291, "mq135_raw": 92, "mq4_raw": 315, "mq2_raw": 223, "mq3_ema": 300.0, "mq135_ema": 100.0, "risk": 79.2, "temp": 32.8, "hum": 63.5, "hours_left": 7, "state": "SPOILING", "vib": 247.0 },
+    { "ts": 1778836988, "time": "14:53", "mq3_raw": 291, "mq135_raw": 92, "mq4_raw": 314, "mq2_raw": 227, "mq3_ema": 300.0, "mq135_ema": 100.0, "risk": 79.2, "temp": 32.8, "hum": 63.6, "hours_left": 7, "state": "SPOILING", "vib": 245.0 },
+    { "ts": 1778837049, "time": "14:54", "mq3_raw": 289, "mq135_raw": 92, "mq4_raw": 312, "mq2_raw": 226, "mq3_ema": 298.0, "mq135_ema": 100.0, "risk": 77.4, "temp": 32.9, "hum": 63.6, "hours_left": 8, "state": "SPOILING", "vib": 245.0 },
+    { "ts": 1778837109, "time": "14:55", "mq3_raw": 290, "mq135_raw": 92, "mq4_raw": 314, "mq2_raw": 225, "mq3_ema": 299.1, "mq135_ema": 100.0, "risk": 78.4, "temp": 32.8, "hum": 63.6, "hours_left": 7, "state": "SPOILING", "vib": 241.0 },
+    { "ts": 1778837169, "time": "14:56", "mq3_raw": 291, "mq135_raw": 92, "mq4_raw": 315, "mq2_raw": 225, "mq3_ema": 299.8, "mq135_ema": 100.0, "risk": 79.0, "temp": 32.8, "hum": 63.6, "hours_left": 7, "state": "SPOILING", "vib": 248.0 },
+    { "ts": 1778837230, "time": "14:57", "mq3_raw": 291, "mq135_raw": 92, "mq4_raw": 315, "mq2_raw": 226, "mq3_ema": 300.0, "mq135_ema": 100.0, "risk": 79.2, "temp": 32.8, "hum": 63.6, "hours_left": 7, "state": "SPOILING", "vib": 245.0 },
+    { "ts": 1778837290, "time": "14:58", "mq3_raw": 292, "mq135_raw": 93, "mq4_raw": 316, "mq2_raw": 226, "mq3_ema": 301.2, "mq135_ema": 101.0, "risk": 80.2, "temp": 32.9, "hum": 63.7, "hours_left": 6, "state": "CRITICAL", "vib": 250.0 },
+    { "ts": 1778837350, "time": "14:59", "mq3_raw": 292, "mq135_raw": 93, "mq4_raw": 316, "mq2_raw": 226, "mq3_ema": 301.5, "mq135_ema": 101.0, "risk": 80.5, "temp": 32.9, "hum": 63.7, "hours_left": 6, "state": "CRITICAL", "vib": 255.0 },
+    { "ts": 1778837411, "time": "15:00", "mq3_raw": 293, "mq135_raw": 94, "mq4_raw": 317, "mq2_raw": 227, "mq3_ema": 302.4, "mq135_ema": 102.1, "risk": 81.6, "temp": 32.9, "hum": 63.8, "hours_left": 6, "state": "CRITICAL", "vib": 260.0 },
+    { "ts": 1778837471, "time": "15:01", "mq3_raw": 294, "mq135_raw": 94, "mq4_raw": 318, "mq2_raw": 228, "mq3_ema": 303.5, "mq135_ema": 102.5, "risk": 82.3, "temp": 32.9, "hum": 63.8, "hours_left": 5, "state": "CRITICAL", "vib": 268.0 }
+  ]
+}

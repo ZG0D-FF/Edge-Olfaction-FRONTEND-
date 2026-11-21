@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edge-Olfaction — Apple-Grade Hardware & Research Showcase</title>
+  
+  <!-- Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>">
+
+  <!-- Core Styles -->
+  <link rel="stylesheet" href="./css/apple-base.css">
+  <link rel="stylesheet" href="./css/glass-components.css">
+
+  <!-- Three.js + GLTFLoader + DRACOLoader + Lenis -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+</head>
+<body>
+
+  <!-- ── 1. CUSTOM DIFFERENCE-BLEND CURSOR ── -->
+  <div id="custom-cursor-dot"></div>
+  <div id="custom-cursor-ring"></div>
+
+  <!-- ── 2. AMBIENT 60FPS LOCAL MP4 BACKDROP ── -->
+  <div class="ambient-video-wrapper">
+    <video autoplay loop muted playsinline>
+      <source src="./Media_Videos/EDGE_OLFACTION (1).mp4" type="video/mp4">
+      <source src="../Media_Videos/EDGE_OLFACTION (1).mp4" type="video/mp4">
+    </video>
+  </div>
+
+  <!-- ── 3. SCROLL PROGRESS TRACKER ── -->
+  <nav class="scroll-tracker" aria-label="Page Progress">
+    <a href="#cad-stage-section" class="tracker-dot active" title="CAD Stage">01</a>
+    <a href="#zone-hardware" class="tracker-dot" title="Hardware Stack">02</a>
+    <a href="#zone-telemetry" class="tracker-dot" title="Research & Math">03</a>
+    <a href="#zone-dossier" class="tracker-dot" title="SFIC Dossier">04</a>
+  </nav>
+
+  <!-- ── 4. MINIMALIST APPLE HEADER ── -->
+  <header style="position: fixed; top: 0; left: 0; width: 100%; z-index: 50; padding: 1.4rem 2.2rem; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(16px); background: rgba(10,10,12,0.45); border-bottom: 1px solid var(--border-subtle);">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <span style="font-weight: 600; font-size: 1.05rem; letter-spacing: -0.02em;">Edge-Olfaction</span>
+      <span class="mono-tag">IEEE-Aligned v8.0</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 1.2rem;">
+      <a href="https://github.com/ZG0D-FF/Edge-Olfaction" target="_blank" rel="noopener" class="glass-pill" style="font-family: var(--font-mono);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        GitHub
+      </a>
+      <a href="#zone-dossier" class="glass-pill" style="background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.25);">
+        SFIC Dossier ↗
+      </a>
+    </div>
+  </header>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       ZONE 1 — CAD EXPLOSION STAGE (PINNED SCROLL RUNWAY)
+       ════════════════════════════════════════════════════════════════ -->
+  <section id="cad-stage-section" style="height: 175vh; position: relative;">
+    <div id="cad-stage-container">
+      <canvas id="three-cad-canvas"></canvas>
+
+      <!-- Overlay Telemetry Loading Pill -->
+      <div id="cad-loader-wrapper" style="position: absolute; bottom: 2.5rem; left: 50%; transform: translateX(-50%); transition: opacity 0.6s ease; z-index: 30;">
+        <span id="cad-loader-text" class="mono-tag" style="background: rgba(18,18,22,0.85); backdrop-filter: blur(16px); padding: 0.5rem 1rem;">
+          Initializing Silicon CAD Geometry...
+        </span>
+      </div>
+
+      <!-- Hero Fixed Label Overlay -->
+      <div style="position: absolute; top: 18vh; left: 8vw; pointer-events: none; max-width: 640px; z-index: 10;">
+        <div class="eyebrow">Real-Time Agricultural Olfaction</div>
+        <h1 class="hero-title">Adaptive Hybrid<br>Edge-Olfaction.</h1>
+        <p class="editorial-lead">
+          Biochemical spoilage detection via multi-channel MOS sensor fusion, Haar discrete wavelet transform, and Arrhenius reaction kinetics on decoupled edge compute.
+        </p>
+        <div style="display: flex; gap: 0.8rem; margin-top: 1.8rem; pointer-events: auto;">
+          <span class="mono-tag">₹6,800 BOM</span>
+          <span class="mono-tag">0.0 ms Main-Loop Blocking</span>
+          <span class="mono-tag">Khardaha Pilot</span>
+        </div>
+      </div>
+
+      <!-- Ambient Hardware Video Badge & Quick Scroll Anchor -->
+      <div style="position: absolute; bottom: 3rem; left: 8vw; display: flex; flex-direction: column; gap: 0.5rem; z-index: 25;">
+        <div class="mono-tag" style="background: rgba(14,14,18,0.85); backdrop-filter: blur(14px); padding: 0.4rem 0.85rem; font-size: 0.68rem; color: var(--text-tertiary); display: inline-flex; align-items: center; gap: 0.5rem; width: fit-content;">
+          <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #34d399;"></span>
+          <span>Live Khardaha Hardware Rig Background Video</span>
+        </div>
+        <a href="#zone-hardware" class="mono-tag clickable" style="background: rgba(18,18,24,0.9); backdrop-filter: blur(14px); padding: 0.45rem 0.9rem; font-size: 0.72rem; color: #ffffff; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; border: 1px solid var(--border-medium); width: fit-content;">
+          <span>↓ Scroll to Dual-Tier Hardware Architecture</span>
+        </a>
+      </div>
+
+      <!-- 3D Viewport Interactive Controls (Orbit, Zoom, Explode, Reset) -->
+      <div id="cad-controls-panel" style="position: absolute; bottom: 3rem; right: 6vw; display: flex; flex-direction: column; align-items: flex-end; gap: 0.75rem; z-index: 25;">
+        
+        <!-- Live Exploded Status Badge -->
+        <div id="cad-status-badge" class="mono-tag" style="background: rgba(14,14,18,0.85); backdrop-filter: blur(16px); padding: 0.45rem 0.9rem; border: 1px solid var(--border-medium); font-size: 0.72rem; color: var(--text-secondary); transition: all 0.3s ease;">
+          SCROLL TO EXPLODE SILICON ASSEMBLY ↓ (0%)
+        </div>
+
+        <!-- Manual Explosion Slider -->
+        <div style="display: flex; align-items: center; gap: 0.6rem; background: rgba(14,14,18,0.75); backdrop-filter: blur(14px); padding: 0.35rem 0.85rem; border-radius: 999px; border: 1px solid var(--border-subtle);">
+          <span style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-tertiary);">0%</span>
+          <input type="range" id="cad-explosion-slider" min="0" max="100" value="0" style="width: 120px; accent-color: var(--text-primary); cursor: pointer;">
+          <span style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-tertiary);">100%</span>
+        </div>
+
+        <!-- Interactive Action Buttons -->
+        <div style="display: flex; align-items: center; gap: 0.4rem;">
+          <button id="btn-cad-rotate-left" class="glass-pill" title="Rotate Left" style="padding: 0.4rem 0.65rem; font-size: 0.85rem; cursor: pointer;">⟲</button>
+          <button id="btn-cad-rotate-right" class="glass-pill" title="Rotate Right" style="padding: 0.4rem 0.65rem; font-size: 0.85rem; cursor: pointer;">⟳</button>
+          <button id="btn-cad-zoom-in" class="glass-pill" title="Zoom In" style="padding: 0.4rem 0.65rem; font-size: 0.85rem; cursor: pointer;">＋</button>
+          <button id="btn-cad-zoom-out" class="glass-pill" title="Zoom Out" style="padding: 0.4rem 0.65rem; font-size: 0.85rem; cursor: pointer;">－</button>
+          <button id="btn-cad-toggle-explode" class="glass-pill" style="font-size: 0.72rem; font-family: var(--font-mono); cursor: pointer;">💥 Explode</button>
+          <button id="btn-cad-reset-view" class="glass-pill" style="font-size: 0.72rem; font-family: var(--font-mono); cursor: pointer;">↺ Reset</button>
+        </div>
+
+        <div style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-tertiary); text-align: right;">
+          Click &amp; drag canvas to orbit • Mouse wheel to zoom
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       ZONE 2 — DUAL-TIER HARDWARE ARCHITECTURE (DECOUPLED BRIDGE)
+       ════════════════════════════════════════════════════════════════ -->
+  <section id="zone-hardware" style="padding: 3.5rem 0 5rem 0; position: relative; z-index: 10;">
+    <div class="container">
+      <div class="eyebrow">Dual-Tier Decoupled Architecture</div>
+      <h2 class="section-title">Engineered for Thermal &amp; Signal Isolation.</h2>
+      <p class="body-text" style="max-width: 720px; margin-bottom: 3.5rem;">
+        Analog sensor cross-sensitivity and Raspberry Pi thermal throttling are solved by physically decoupling deterministic 10-bit analog acquisition from non-blocking edge wavelet analytics.
+      </p>
+
+      <div class="grid-split">
+        <!-- Tier 1 Card -->
+        <div class="glass-card">
+          <div class="eyebrow" style="color: #60a5fa;">Tier 1 · Deterministic MCU</div>
+          <h3 style="font-size: 1.5rem; margin-bottom: 0.8rem;">Arduino Uno R3 (ATmega328P)</h3>
+          <p class="body-text" style="margin-bottom: 1.5rem;">
+            Dedicated 10-bit Successive Approximation (SAR) ADC continuously polling the 4-channel MOS gas sensor array at 1 Hz (4.88 mV resolution). Frames multi-channel telemetry over 9600-baud UART via a 1 kΩ / 2 kΩ resistor-divider level shifter into 3.3V GPIO.
+          </p>
+          <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+            <span class="mono-tag">10-Bit SAR ADC</span>
+            <span class="mono-tag">5V ↔ 3.3V Shifted</span>
+            <span class="mono-tag">0.67–1.0 Hz Polling</span>
+          </div>
+        </div>
+
+        <!-- Tier 2 Card -->
+        <div class="glass-card">
+          <div class="eyebrow" style="color: var(--acc-ok);">Tier 2 · Edge Compute Node</div>
+          <h3 style="font-size: 1.5rem; margin-bottom: 0.8rem;">Raspberry Pi 4 Model B</h3>
+          <p class="body-text" style="margin-bottom: 1.5rem;">
+            Quad-Core Cortex-A72 edge node executing lock-based asynchronous threading. Offloads 10-second Haar Wavelet (DWT db1) matrix math to a background daemon thread, eliminating main-loop blocking (0.0 ms delay) while logging to local thread-safe CSV storage.
+          </p>
+          <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+            <span class="mono-tag">Haar DWT Denoising</span>
+            <span class="mono-tag">Arrhenius Kinetics</span>
+            <span class="mono-tag">Headless WPA-PSK</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sensor Breakdown Grid -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+        <div class="glass-card" style="padding: 1.5rem;">
+          <div style="font-weight: 600; font-size: 1.1rem; margin-bottom: 0.4rem;">MQ-135 (VOC &amp; NH3)</div>
+          <p class="body-text" style="font-size: 0.85rem;">Broad VOCs, ammonia, and CO2. Early marker for microbial respiration and initial fungal onset. Weight: 0.30.</p>
+        </div>
+        <div class="glass-card" style="padding: 1.5rem;">
+          <div style="font-weight: 600; font-size: 1.1rem; margin-bottom: 0.4rem;">MQ-3 (Ethanol Vapor)</div>
+          <p class="body-text" style="font-size: 0.85rem;">High sensitivity to alcohol vapors emitted during climacteric fermentation and soft rot. Weight: 0.55.</p>
+        </div>
+        <div class="glass-card" style="padding: 1.5rem;">
+          <div style="font-weight: 600; font-size: 1.1rem; margin-bottom: 0.4rem;">MQ-4 &amp; MQ-2 (CH4 / Smk)</div>
+          <p class="body-text" style="font-size: 0.85rem;">Methane tracking for anaerobic decay alongside combustible smoke baseline for thermal drift control. Weights: 0.10 / 0.05.</p>
+        </div>
+        <div class="glass-card" style="padding: 1.5rem;">
+          <div style="font-weight: 600; font-size: 1.1rem; margin-bottom: 0.4rem;">Piezoelectric Acoustic Disc</div>
+          <p class="body-text" style="font-size: 0.85rem;">Zero-crossing rate (ZCR) acoustic analysis discriminating low-frequency transit rumbling from pest chewing.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       ZONE 3 — VERIFIED SCIENTIFIC TELEMETRY & RESEARCH DOSSIER
+       ════════════════════════════════════════════════════════════════ -->
+  <section id="zone-telemetry" style="padding: 7rem 0; position: relative; z-index: 10; border-top: 1px solid var(--border-subtle);">
+    <div class="container">
+      <div class="eyebrow">Empirical Grounding · 16,981 Field Telemetry Records</div>
+      <h2 class="section-title">Zero Synthetic Metrics. Proven Kinetics.</h2>
+      <p class="body-text" style="max-width: 720px; margin-bottom: 3.5rem;">
+        Tested across 16 calendar days in the Khardaha transit corridor (78.5%–97.1% RH monsoon climate). All interactive waveforms and models compute directly from live CSV telemetry logs.
+      </p>
+
+      <!-- 1. Real Haar DWT Wavelet Denoising Waveform Canvas -->
+      <div class="glass-card" style="margin-bottom: 3rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h3 style="font-size: 1.3rem;">Haar Discrete Wavelet Transform (DWT db1) Denoising</h3>
+            <p class="body-text" style="font-size: 0.85rem;">Universal soft-thresholding removing high-frequency SAR ADC quantization noise without dampening volatile peak spikes.</p>
+          </div>
+          <div style="display: flex; gap: 1rem; align-items: center; font-family: var(--font-mono); font-size: 0.75rem;">
+            <span style="display: flex; align-items: center; gap: 0.4rem;"><span style="width: 10px; height: 2px; background: rgba(255,255,255,0.4);"></span> Raw MQ-3 ADC</span>
+            <span style="display: flex; align-items: center; gap: 0.4rem;"><span style="width: 10px; height: 3px; background: #34d399;"></span> Wavelet Filtered</span>
+          </div>
+        </div>
+        <canvas id="dwt-chart-canvas" style="width: 100%; height: 280px; display: block; border-radius: var(--radius-sm); background: rgba(0,0,0,0.35);"></canvas>
+      </div>
+
+      <!-- 2. Dual-Engine Scientific Telemetry: 3D WebGL Manifold + 2D IEEE Telemetry Curves -->
+      <div class="grid-split" style="margin-bottom: 2rem;">
+        
+        <!-- Left: 3D WebGL Empirical Manifold Card -->
+        <div class="glass-card" style="display: flex; flex-direction: column;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; flex-wrap: wrap; gap: 0.6rem;">
+            <div>
+              <div class="eyebrow" style="color: var(--acc-info);">Interactive 3D WebGL Engine</div>
+              <h3 style="font-size: 1.25rem; margin-top: 0.2rem;">3D Empirical Manifold &amp; Kinetics</h3>
+            </div>
+            <!-- Mode Switcher Pills -->
+            <div style="display: flex; background: rgba(0,0,0,0.5); padding: 0.25rem; border-radius: 999px; border: 1px solid var(--border-subtle); gap: 0.25rem;">
+              <button type="button" id="btn-mode-surface" class="mono-tag" style="background: var(--text-primary); color: #000; border: none; cursor: pointer; padding: 0.35rem 0.75rem; font-size: 0.72rem; font-weight: 600; border-radius: 999px;">
+                Arrhenius k(T,RH)
+              </button>
+              <button type="button" id="btn-mode-trajectory" class="mono-tag" style="background: transparent; color: var(--text-secondary); border: none; cursor: pointer; padding: 0.35rem 0.75rem; font-size: 0.72rem; border-radius: 999px;">
+                Sensor State Space
+              </button>
+            </div>
+          </div>
+          
+          <p id="mode-desc-text" class="body-text" style="font-size: 0.82rem; margin-bottom: 0.8rem; color: var(--text-secondary);">
+            Interactive 3D degradation velocity manifold \(k = A \exp(-E_a/RT) \cdot f(\text{RH})\). Glowing nodes represent actual operating telemetry logged along the Khardaha transit route.
+          </p>
+
+          <canvas id="webgl-3d-graph-canvas" style="width: 100%; height: 320px; display: block; border-radius: var(--radius-sm); background: rgba(0,0,0,0.45); cursor: grab;"></canvas>
+
+          <!-- 3D HUD & Status Readout -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.8rem; padding-top: 0.6rem; border-top: 1px solid var(--border-subtle); font-family: var(--font-mono); font-size: 0.75rem;">
+            <div id="hud-point-readout" style="color: #facc15;">
+              Hover nodes to inspect raw telemetry coordinates
+            </div>
+            <button type="button" id="btn-reset-3d-graph" class="mono-tag" style="background: rgba(255,255,255,0.06); border-color: var(--border-subtle); color: var(--text-secondary); cursor: pointer; padding: 0.3rem 0.6rem;">
+              ↺ Reset
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: 2D IEEE Telemetry Curves Card -->
+        <div class="glass-card" style="display: flex; flex-direction: column;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; flex-wrap: wrap; gap: 0.6rem;">
+            <div>
+              <div class="eyebrow" style="color: var(--acc-ok);">IEEE-Aligned Telemetry (2D)</div>
+              <h3 style="font-size: 1.25rem; margin-top: 0.2rem;">Multi-Channel Transit Curves</h3>
+            </div>
+            <!-- Legend Badges -->
+            <div style="display: flex; gap: 0.5rem; align-items: center; font-family: var(--font-mono); font-size: 0.70rem; flex-wrap: wrap;">
+              <span style="display: flex; align-items: center; gap: 0.3rem;"><span style="width: 8px; height: 3px; background: #f87171;"></span> MQ-3</span>
+              <span style="display: flex; align-items: center; gap: 0.3rem;"><span style="width: 8px; height: 3px; background: #60a5fa;"></span> MQ-135</span>
+              <span style="display: flex; align-items: center; gap: 0.3rem;"><span style="width: 8px; height: 3px; background: #34d399;"></span> MQ-4</span>
+              <span style="display: flex; align-items: center; gap: 0.3rem;"><span style="width: 8px; height: 3px; background: #fbbf24;"></span> Temp</span>
+              <span style="display: flex; align-items: center; gap: 0.3rem;"><span style="width: 8px; height: 3px; background: #38bdf8;"></span> RH</span>
+            </div>
+          </div>
+
+          <p class="body-text" style="font-size: 0.82rem; margin-bottom: 0.8rem; color: var(--text-secondary);">
+            Stacked 4-channel resistance (\(R_s\) in \(\text{k}\Omega\)) and microclimate dual-axis time series matching IEEE manuscript Figure A. Scrub crosshair to inspect exact hardware records.
+          </p>
+
+          <canvas id="ieee-2d-chart-canvas" style="width: 100%; height: 320px; display: block; border-radius: var(--radius-sm); background: rgba(0,0,0,0.45); cursor: crosshair;"></canvas>
+
+          <!-- 2D Telemetry Status Bar -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.8rem; padding-top: 0.6rem; border-top: 1px solid var(--border-subtle); font-family: var(--font-mono); font-size: 0.75rem;">
+            <div id="ieee-hover-readout" style="color: var(--text-secondary);">
+              Scrub canvas for real-time sample crosshair
+            </div>
+            <span class="mono-tag" style="font-size: 0.68rem; padding: 0.25rem 0.5rem; background: rgba(56, 189, 248, 0.1); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">
+              Session 08 · 2,342 Rows
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Bottom Full-Width Card: CSV Telemetry Provenance Vault -->
+      <div class="glass-card" style="margin-bottom: 3rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <div class="eyebrow" style="color: var(--acc-ok);">Empirical Provenance &amp; Verification Vault</div>
+            <h3 style="font-size: 1.35rem; margin-top: 0.2rem;">Authentic Multi-Session CSV Field Telemetry</h3>
+            <p class="body-text" style="font-size: 0.85rem; margin-top: 0.4rem; max-width: 780px;">
+              Zero simulated or fabricated numbers. Every datapoint in this showcase originates directly from unedited, hardware-timestamped UART CSV files collected during field operations along the Khardaha Regional Transit Corridor. Verify cryptographic SHA-256 integrity checksums or inspect raw tabular samples below.
+            </p>
+          </div>
+          <div id="provenance-download-container">
+            <a id="btn-download-active-csv" href="./data/csv/ss_log8.csv" download class="glass-card clickable" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.65rem 1.1rem; text-decoration: none; border-color: var(--border-medium); font-family: var(--font-mono); font-size: 0.8rem; color: #ffffff;">
+              <span>⬇</span> <span>Download Raw CSV (270 KB)</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Session Tabs -->
+        <div id="provenance-tabs-bar" style="display: flex; gap: 0.6rem; overflow-x: auto; padding-bottom: 0.6rem; border-bottom: 1px solid var(--border-subtle); margin-bottom: 1.2rem;">
+          <!-- Dynamically populated via TelemetryEngine -->
+        </div>
+
+        <!-- Active Dataset Metadata Banner -->
+        <div id="provenance-meta-card" style="background: rgba(0,0,0,0.35); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); padding: 1rem; margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.6rem;">
+            <div>
+              <span id="meta-session-title" style="font-weight: 600; font-size: 1.05rem; color: #ffffff;">Session 08: Peak Fermentation Run</span>
+              <span id="meta-session-counts" class="mono-tag" style="margin-left: 0.6rem; font-size: 0.72rem;">2,342 Records · 270 KB</span>
+            </div>
+            <div style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-tertiary); display: flex; align-items: center; gap: 0.4rem;">
+              <span>SHA-256:</span>
+              <span id="meta-session-sha256" style="color: #34d399; user-select: all;">14B1B536171E7611C7D36E006A34C2682A16939B07A6EC9B267054B09FE91E61</span>
+            </div>
+          </div>
+          <p id="meta-session-desc" class="body-text" style="font-size: 0.82rem; margin: 0; color: var(--text-secondary);">
+            Continuous multi-gas logging (MQ135, MQ3, MQ4, MQ2 + Dual Temp/Humidity).
+          </p>
+        </div>
+
+        <!-- Live Raw CSV Data Table Preview -->
+        <div style="overflow-x: auto; background: rgba(0,0,0,0.5); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); max-height: 240px;">
+          <table id="provenance-raw-table" style="width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.74rem; text-align: left;">
+            <thead style="position: sticky; top: 0; background: #121216; z-index: 2;">
+              <!-- Header columns -->
+            </thead>
+            <tbody>
+              <!-- Sample rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       ZONE 4 — VIDEO CHAPTER DEMOS & SFIC DOCUMENT VAULT
+       ════════════════════════════════════════════════════════════════ -->
+  <section id="zone-dossier" style="padding: 7rem 0 10rem 0; position: relative; z-index: 10; border-top: 1px solid var(--border-subtle);">
+    <div class="container">
+      <div class="eyebrow">Document Dossier &amp; Video Proof</div>
+      <h2 class="section-title">SFIC Submission &amp; Video Walkthroughs.</h2>
+      <p class="body-text" style="max-width: 720px; margin-bottom: 3.5rem;">
+        Access full laboratory test documentation, regional Khardaha logistics pitch, and five narrated video demonstration chapters.
+      </p>
+
+      <!-- Video Chapters Grid -->
+      <h3 style="font-size: 1.2rem; margin-bottom: 1.2rem;">Demonstration Walkthroughs (5 Chapters)</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.2rem; margin-bottom: 3.5rem;">
+        <button type="button" class="glass-card clickable" data-video-id="bvh3YAOhDsY" data-video-title="Chapter 01: System Overview" style="text-align: left; cursor: pointer; padding: 1.4rem;">
+          <div class="eyebrow" style="margin-bottom: 0.4rem;">Chapter 01</div>
+          <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 0.4rem; color: #ffffff;">System Overview</div>
+          <p class="body-text" style="font-size: 0.75rem;">Physical rig, edge-cloud decoupling, and Khardaha field rationale.</p>
+        </button>
+
+        <button type="button" class="glass-card clickable" data-video-id="dL_wJjh1M5o" data-video-title="Chapter 02: Hardware Architecture" style="text-align: left; cursor: pointer; padding: 1.4rem;">
+          <div class="eyebrow" style="margin-bottom: 0.4rem;">Chapter 02</div>
+          <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 0.4rem; color: #ffffff;">Hardware Bridge</div>
+          <p class="body-text" style="font-size: 0.75rem;">10-bit SAR ADC UART framing with 5V-to-3.3V resistor level shifting.</p>
+        </button>
+
+        <button type="button" class="glass-card clickable" data-video-id="_tGki7RjPMc" data-video-title="Chapter 03: Sensor Array & Acoustics" style="text-align: left; cursor: pointer; padding: 1.4rem;">
+          <div class="eyebrow" style="margin-bottom: 0.4rem;">Chapter 03</div>
+          <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 0.4rem; color: #ffffff;">Sensors &amp; Acoustics</div>
+          <p class="body-text" style="font-size: 0.75rem;">MQ chemisorption kinetics + piezoelectric zero-crossing rate filtering.</p>
+        </button>
+
+        <button type="button" class="glass-card clickable" data-video-id="KCXEhn_c-vE" data-video-title="Chapter 04: Predictive Decay Models" style="text-align: left; cursor: pointer; padding: 1.4rem;">
+          <div class="eyebrow" style="margin-bottom: 0.4rem;">Chapter 04</div>
+          <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 0.4rem; color: #ffffff;">Arrhenius Models</div>
+          <p class="body-text" style="font-size: 0.75rem;">Non-linear decay prediction equations and remaining shelf life math.</p>
+        </button>
+
+        <button type="button" class="glass-card clickable" data-video-id="3HB6LGiXlrQ" data-video-title="Chapter 05: Core Initialization" style="text-align: left; cursor: pointer; padding: 1.4rem;">
+          <div class="eyebrow" style="margin-bottom: 0.4rem;">Chapter 05</div>
+          <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 0.4rem; color: #ffffff;">Terminal CLI</div>
+          <p class="body-text" style="font-size: 0.75rem;">Terminal dashboard v8.0, 15-minute R0 baseline, and live alert tests.</p>
+        </button>
+      </div>
+
+      <!-- SFIC Documents Cards -->
+      <h3 style="font-size: 1.2rem; margin-bottom: 1.2rem;">SFIC Submission Dossier (Inline Previews)</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+        <a href="./SFIC/prototype.pdf" class="glass-card clickable" data-pdf-path="./SFIC/prototype.pdf" data-pdf-title="Technical Lab Report (prototype.pdf)" style="text-decoration: none;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.8rem;">
+            <span class="mono-tag">1.8 MB · PDF</span>
+            <span style="color: var(--text-tertiary);">Preview ↗</span>
+          </div>
+          <div style="font-weight: 600; font-size: 1.15rem; color: #ffffff; margin-bottom: 0.4rem;">Technical Lab Report</div>
+          <p class="body-text" style="font-size: 0.85rem;">Complete laboratory report, sensor circuit schematics, mathematical proofs, and validation curves.</p>
+        </a>
+
+        <a href="./SFIC/project_proposal.pdf" class="glass-card clickable" data-pdf-path="./SFIC/project_proposal.pdf" data-pdf-title="Project Proposal & Pitch Deck" style="text-decoration: none;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.8rem;">
+            <span class="mono-tag">1.7 MB · PDF</span>
+            <span style="color: var(--text-tertiary);">Preview ↗</span>
+          </div>
+          <div style="font-weight: 600; font-size: 1.15rem; color: #ffffff; margin-bottom: 0.4rem;">Project Proposal &amp; Pitch</div>
+          <p class="body-text" style="font-size: 0.85rem;">Executive brief, regional Khardaha supply-chain economics, pilot timeline, and budget allocations.</p>
+        </a>
+
+        <a href="./SFIC/innovators_cv.pdf" class="glass-card clickable" data-pdf-path="./SFIC/innovators_cv.pdf" data-pdf-title="Innovator CV & Academic Credentials" style="text-decoration: none;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.8rem;">
+            <span class="mono-tag">101 KB · PDF</span>
+            <span style="color: var(--text-tertiary);">Preview ↗</span>
+          </div>
+          <div style="font-weight: 600; font-size: 1.15rem; color: #ffffff; margin-bottom: 0.4rem;">Innovator Credentials</div>
+          <p class="body-text" style="font-size: 0.85rem;">Academic credentials, embedded hardware research, and prior publications of the engineering team.</p>
+        </a>
+
+        <a href="./SFIC/EDGE_OLFACTION_paper.docx" class="glass-card clickable" data-pdf-path="./SFIC/EDGE_OLFACTION_paper.docx" data-pdf-title="IEEE Conference Manuscript Draft" style="text-decoration: none;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.8rem;">
+            <span class="mono-tag">6.0 MB · DOCX</span>
+            <span style="color: var(--text-tertiary);">Download ↓</span>
+          </div>
+          <div style="font-weight: 600; font-size: 1.15rem; color: #ffffff; margin-bottom: 0.4rem;">IEEE Manuscript Draft</div>
+          <p class="body-text" style="font-size: 0.85rem;">27-reference IEEE conference draft: "Real-Time Agricultural Quality Assessment via Hybrid Kinetic Analytics".</p>
+        </a>
+      </div>
+
+      <!-- Institutional Attribution -->
+      <div class="glass-card" style="margin-top: 3.5rem; border-color: rgba(255,255,255,0.12); padding: 2rem;">
+        <div class="eyebrow">Academic Oversight &amp; Endorsement</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+          <div>
+            <div style="font-size: 1.25rem; font-weight: 600; color: #ffffff;">Prof. Rimi Sengupta</div>
+            <div class="body-text" style="font-size: 0.85rem;">
+              Assistant Professor &amp; Project Supervisor · Department of Electronics &amp; Communication Engineering (ECE)<br>
+              University of Engineering &amp; Management (UEM), Kolkata
+            </div>
+          </div>
+          <div style="display: flex; gap: 0.8rem; align-items: center;">
+            <a href="mailto:rimi.sengupta17@gmail.com" class="glass-pill" style="font-family: var(--font-mono); font-size: 0.75rem;">rimi.sengupta17@gmail.com</a>
+            <a href="https://orcid.org/0000-0001-7639-581X" target="_blank" rel="noopener" class="glass-pill" style="font-family: var(--font-mono); font-size: 0.75rem;">ORCID: 0000-0001-7639-581X</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 5. YOUTUBE VIDEO MODAL ── -->
+  <div id="video-modal" class="modal-overlay">
+    <div class="modal-backdrop" style="position: absolute; inset: 0;"></div>
+    <div class="modal-frame">
+      <div class="modal-header">
+        <div id="video-modal-title" style="font-weight: 600; font-size: 1rem; color: #ffffff;">Demonstration Walkthrough</div>
+        <button type="button" class="modal-close-btn" aria-label="Close Modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <iframe id="video-modal-iframe" src="" style="width: 100%; height: 100%; border: none;" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 6. SFIC PDF PREVIEW MODAL ── -->
+  <div id="pdf-modal" class="modal-overlay">
+    <div class="modal-backdrop" style="position: absolute; inset: 0;"></div>
+    <div class="modal-frame">
+      <div class="modal-header">
+        <div id="pdf-modal-title" style="font-weight: 600; font-size: 1rem; color: #ffffff;">Document Dossier</div>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+          <a id="pdf-modal-download" href="#" download class="glass-pill" style="font-size: 0.75rem; padding: 0.3rem 0.7rem;">Download File ↗</a>
+          <button type="button" class="modal-close-btn" aria-label="Close Modal">&times;</button>
+        </div>
+      </div>
+      <div class="modal-body" style="height: 75vh;">
+        <iframe id="pdf-modal-iframe" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Orchestrator -->
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
