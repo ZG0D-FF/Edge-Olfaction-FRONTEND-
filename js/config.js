@@ -64,7 +64,7 @@ export const CONFIG = {
     { title: "Technical Lab Report", file: "./SFIC/prototype.pdf", size: "1.8 MB", type: "PDF", desc: "Complete laboratory investigation, sensor schematics, signal equations, and telemetry curves." },
     { title: "Project Proposal & Pitch", file: "./SFIC/project_proposal.pdf", size: "1.7 MB", type: "PDF", desc: "Detailed regional deployment logistics, Khardaha market trials, and socio-economic impact metrics." },
     { title: "Lead Systems Architect CV", file: "./SFIC/dibyajyotee_ghosh_cv.pdf", size: "90 KB", type: "PDF", desc: "Dibyajyotee Ghosh (ZGOD-FF) — B.Tech ECE IEM Kolkata (CGPA: 8.83). Edge AI, firmware, and full-stack architecture lead.", github: "https://github.com/ZG0D-FF", linkedin: "https://linkedin.com/in/mr-zgod" },
-    { title: "Co-Innovator CV & Hardware", file: "./SFIC/innovators_cv.pdf", size: "101 KB", type: "PDF", desc: "Sharmik Sen — Hardware calibration, circuit breadboarding, and analog signal acquisition lead." }
+    { title: "Hardware Lead Credentials", file: "./SFIC/innovators_cv.pdf", size: "101 KB", type: "PDF", desc: "Sharmik Sen — Sensor calibration, analog signal conditioning, and hardware breadboard integration.", github: "https://github.com/sharmik21-ops", linkedin: "https://www.linkedin.com/in/sharmik-sen-ba35b5319/" }
   ],
 
   models3D: {
