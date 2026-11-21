@@ -63,8 +63,8 @@ export const CONFIG = {
   sficDossier: [
     { title: "Technical Lab Report", file: "./SFIC/prototype.pdf", size: "1.8 MB", type: "PDF", desc: "Complete laboratory investigation, sensor schematics, signal equations, and telemetry curves." },
     { title: "Project Proposal & Pitch", file: "./SFIC/project_proposal.pdf", size: "1.7 MB", type: "PDF", desc: "Detailed regional deployment logistics, Khardaha market trials, and socio-economic impact metrics." },
-    { title: "Innovator CV & Credentials", file: "./SFIC/innovators_cv.pdf", size: "101 KB", type: "PDF", desc: "Academic and technical background of the student engineering team at UEM Kolkata." },
-    { title: "IEEE Manuscript Draft", file: "./SFIC/EDGE_OLFACTION_paper.docx", size: "6.0 MB", type: "DOCX", desc: "27-reference IEEE A4 format manuscript titled 'Edge-Olfaction: Real-Time Agricultural Quality Assessment'." }
+    { title: "Lead Systems Architect CV", file: "./SFIC/dibyajyotee_ghosh_cv.pdf", size: "90 KB", type: "PDF", desc: "Dibyajyotee Ghosh (ZGOD-FF) — B.Tech ECE IEM Kolkata (CGPA: 8.83). Edge AI, firmware, and full-stack architecture lead.", github: "https://github.com/ZG0D-FF", linkedin: "https://linkedin.com/in/mr-zgod" },
+    { title: "Co-Innovator CV & Hardware", file: "./SFIC/innovators_cv.pdf", size: "101 KB", type: "PDF", desc: "Sharmik Sen — Hardware calibration, circuit breadboarding, and analog signal acquisition lead." }
   ],
 
   models3D: {
