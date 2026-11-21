@@ -32,6 +32,9 @@ class ShowcaseApp {
     this._initInteractiveWidgets();
     this._initDocumentAndVideoHooks();
     this._initScrollTracker();
+    if (window.lucide && typeof window.lucide.createIcons === "function") {
+      window.lucide.createIcons();
+    }
   }
 
   _initLenis() {

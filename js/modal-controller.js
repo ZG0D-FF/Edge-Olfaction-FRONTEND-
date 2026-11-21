@@ -7,6 +7,8 @@ export class ModalController {
   constructor() {
     this._initCursor();
     this._initModals();
+    this._initFresnelAndScroll();
+    this._initIcons();
   }
 
   _initCursor() {
@@ -185,6 +187,50 @@ export class ModalController {
     }
     this.pdfModal.classList.add("active");
     document.body.style.overflow = "hidden";
+  }
+
+  _initIcons() {
+    if (window.lucide && typeof window.lucide.createIcons === "function") {
+      window.lucide.createIcons();
+    } else {
+      window.addEventListener("DOMContentLoaded", () => {
+        if (window.lucide && typeof window.lucide.createIcons === "function") {
+          window.lucide.createIcons();
+        }
+      });
+    }
+  }
+
+  _initFresnelAndScroll() {
+    // Roving Dual-Layer Fresnel edge reflection
+    document.addEventListener("mousemove", (e) => {
+      const card = e.target.closest(".glass-card");
+      if (card) {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        card.style.setProperty("--mouse-x", `${x}px`);
+        card.style.setProperty("--mouse-y", `${y}px`);
+      }
+    }, { passive: true });
+
+    // Staggered scroll reveal
+    const cards = document.querySelectorAll(".glass-card, .metric-tile");
+    cards.forEach((el, index) => {
+      el.classList.add("scroll-reveal");
+      el.style.transitionDelay = `${(index % 4) * 0.08}s`;
+    });
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-revealed");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    cards.forEach((el) => observer.observe(el));
   }
 
   closeAll() {
