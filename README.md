@@ -1,6 +1,12 @@
 # Adaptive Hybrid Edge-Olfaction System 🧠💨
 **IEEE-Aligned Predictive Spoilage Detection via Multi-Channel VOC Calibration**
 
+[![License: Dual MIT / Apache 2.0](https://img.shields.io/badge/License-MIT%20%2F%20Apache--2.0-blue.svg?style=flat-square)](LICENSE.md)
+[![Live Procurement BOM Tracker](https://github.com/ZG0D-FF/Edge-Olfaction-FRONTEND-/actions/workflows/bom_tracker.yml/badge.svg)](https://github.com/ZG0D-FF/Edge-Olfaction-FRONTEND-/actions/workflows/bom_tracker.yml)
+[![Standard: IEEE Aligned](https://img.shields.io/badge/Standard-IEEE--Aligned%20v8.0-emerald.svg?style=flat-square)]()
+[![Hardware: RPi 4B + Arduino Uno](https://img.shields.io/badge/Hardware-RPi%204B%20%2B%20Uno%20R3-orange.svg?style=flat-square)]()
+[![Citation](https://img.shields.io/badge/Cite-CITATION.cff-purple.svg?style=flat-square)](CITATION.cff)
+
 ## Overview
 This repository contains the edge-computing framework for an "Electronic Nose" designed for real-time perishable goods monitoring. The system acquires data from a 4-channel MQ sensor array, converts raw ADC values to calibrated **Rs (Resistance)** values, and processes them through an IEEE-aligned signal pipeline:
 
@@ -40,5 +46,5 @@ If you use this system, architecture, or sensor dataset in academic research, pl
 See [CITATION.cff](CITATION.cff) for standard machine-readable metadata.
 
 ## License
-Dual-licensed under the **MIT License** and **Apache License 2.0**. See [LICENSE](LICENSE) for details.
+Dual-licensed under the **MIT License** and **Apache License 2.0**. See [LICENSE.md](LICENSE.md) for full terms, conditions, and attribution guidelines.
 
