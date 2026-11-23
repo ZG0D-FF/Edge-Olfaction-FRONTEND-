@@ -208,9 +208,9 @@ def main():
         "last_sync_ist": timestamp_ist,
         "status": "VERIFIED_LIVE" if all_healthy else "DEGRADED",
         "currency": "INR",
-        "headline_grant_request": 5000,
+        "headline_grant_request": 15000,
         "total_bom": total_bom,
-        "grant_coverage_percent": round((5000 / total_bom) * 100, 1) if total_bom > 0 else 0,
+        "grant_coverage_percent": round((15000 / total_bom) * 100, 1) if total_bom > 0 else 0,
         "items": output_items,
         "verification": {
             "engine": "Playwright / curl_cffi Industrial Scraper",
@@ -237,7 +237,7 @@ def main():
     if gh_summary:
         with open(gh_summary, "a", encoding="utf-8") as gf:
             gf.write("### 📦 Edge Olfaction — Procurement BOM Audit Report\n\n")
-            gf.write(f"**Last Sync**: `{timestamp_ist}` | **Total BOM**: `₹{total_bom:,}` | **Grant Ceiling**: `₹5,000`\n\n")
+            gf.write(f"**Last Sync**: `{timestamp_ist}` | **Total BOM**: `₹{total_bom:,}` | **Grant Ceiling**: `₹15,000`\n\n")
             gf.write("| Item | Vendor | Live Price | In Stock | Status |\n")
             gf.write("| :--- | :--- | :---: | :---: | :--- |\n")
             for item in output_items:
