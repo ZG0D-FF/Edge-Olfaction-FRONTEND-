@@ -1,13 +1,13 @@
 {
   "schema_version": "1.0.0",
   "audit_authority": "TECHTRONIX \u2014 KHARDAHA, WEST BENGAL",
-  "last_sync_utc": "2026-11-21T19:16:01Z",
-  "last_sync_ist": "2026-11-22 00:46:01 IST",
+  "last_sync_utc": "2026-11-23T13:37:13Z",
+  "last_sync_ist": "2026-11-23 19:07:13 IST",
   "status": "VERIFIED_LIVE",
   "currency": "INR",
   "headline_grant_request": 15000,
-  "total_bom": 14586,
-  "grant_coverage_percent": 100.0,
+  "total_bom": 8566,
+  "grant_coverage_percent": 175.1,
   "items": [
     {
       "id": "rpi4_4gb",
@@ -15,13 +15,13 @@
       "vendor": "Robu.in",
       "url": "https://robu.in/product/raspberry-pi-4-model-b-with-4-gb-ram/",
       "sku": "471149",
-      "price": 11519,
-      "unit_price": 11519,
+      "price": 5499,
+      "unit_price": 5499,
       "quantity": 1,
       "in_stock": true,
       "category": "Edge Brain Compute",
-      "status": "LIVE_VERIFIED",
-      "last_checked": "2026-11-22 00:46:01 IST"
+      "status": "FALLBACK_CACHED",
+      "last_checked": "2026-11-23 19:07:13 IST"
     },
     {
       "id": "uno_r3",
@@ -34,8 +34,8 @@
       "quantity": 1,
       "in_stock": true,
       "category": "Hardware ADC Bridge",
-      "status": "LIVE_VERIFIED",
-      "last_checked": "2026-11-22 00:46:01 IST"
+      "status": "FALLBACK_CACHED",
+      "last_checked": "2026-11-23 19:07:13 IST"
     },
     {
       "id": "mq_array",
@@ -48,8 +48,8 @@
       "quantity": 3,
       "in_stock": true,
       "category": "Chemiresistor VOC Array",
-      "status": "LIVE_VERIFIED",
-      "last_checked": "2026-11-22 00:46:01 IST"
+      "status": "FALLBACK_CACHED",
+      "last_checked": "2026-11-23 19:07:13 IST"
     },
     {
       "id": "custom_pcb",
@@ -63,7 +63,7 @@
       "in_stock": true,
       "category": "Fabrication & Assembly",
       "status": "VERIFIED_ESTIMATE",
-      "last_checked": "2026-11-22 00:46:01 IST"
+      "last_checked": "2026-11-23 19:07:13 IST"
     },
     {
       "id": "passive_hardware",
@@ -77,13 +77,13 @@
       "in_stock": true,
       "category": "Chassis & Interconnects",
       "status": "VERIFIED_ESTIMATE",
-      "last_checked": "2026-11-22 00:46:01 IST"
+      "last_checked": "2026-11-23 19:07:13 IST"
     }
   ],
   "verification": {
     "engine": "Playwright / curl_cffi Industrial Scraper",
     "http_status": 200,
     "confidence_score": 0.99,
-    "anti_tamper_signature": "SHA256-TECHTRONIX-2026-11-21T19:16:01Z"
+    "anti_tamper_signature": "SHA256-TECHTRONIX-2026-11-23T13:37:13Z"
   }
 }
