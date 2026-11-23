@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this system, hardware schematics, or software in your research, please cite it as below."
+title: "Adaptive Hybrid Edge-Olfaction System"
+abstract: "IEEE-aligned predictive spoilage detection via multi-channel MOS sensor fusion, Haar discrete wavelet transform, and Arrhenius reaction kinetics on decoupled edge compute."
+authors:
+  - family-names: "Ghosh"
+    given-names: "Dibyajyotee"
+    role: "Lead Systems Architect"
+    affiliation: "Institute of Engineering & Management (IEM), Kolkata"
+  - family-names: "Sen"
+    given-names: "Sharmik"
+    role: "Hardware & Sensor Lead"
+    affiliation: "University of Engineering & Management (UEM), Kolkata"
+  - family-names: "Sengupta"
+    given-names: "Rimi"
+    role: "Faculty Supervisor"
+    affiliation: "University of Engineering & Management (UEM), Kolkata"
+repository-code: "https://github.com/ZG0D-FF/Edge-Olfaction-FRONTEND-"
+license:
+  - "MIT"
+  - "Apache-2.0"
+keywords:
+  - "electronic-nose"
+  - "edge-ai"
+  - "tinyml"
+  - "mos-sensor-array"
+  - "cold-chain-monitoring"
+date-released: "2026-11-23"

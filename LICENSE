@@ -1,0 +1,13 @@
+# Open Source Licensing
+
+This repository and hardware design artifacts are dual-licensed under:
+
+- **MIT License** ([LICENSE-MIT](LICENSE-MIT))
+- **Apache License, Version 2.0** ([LICENSE-APACHE](LICENSE-APACHE))
+
+You may choose either license at your option.
+
+### Attribution Requirement
+Any redistribution, research citation, or commercial adaptation must retain the copyright notice and cite the authors as outlined in [CITATION.cff](CITATION.cff).
+
+Copyright (c) 2026 Dibyajyotee Ghosh, Sharmik Sen, Prof. Rimi Sengupta.

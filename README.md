@@ -22,3 +22,23 @@ This repository contains the edge-computing framework for an "Electronic Nose" d
 ## Execution
 ```bash
 python src/calibration_logger.py
+```
+
+## Citation
+If you use this system, architecture, or sensor dataset in academic research, please cite:
+
+```bibtex
+@software{edge_olfaction_2026,
+  author    = {Ghosh, Dibyajyotee and Sen, Sharmik and Sengupta, Rimi},
+  title     = {Adaptive Hybrid Edge-Olfaction System: IEEE-Aligned Predictive Spoilage Detection},
+  year      = {2026},
+  publisher = {GitHub},
+  url       = {https://github.com/ZG0D-FF/Edge-Olfaction-FRONTEND-}
+}
+```
+
+See [CITATION.cff](CITATION.cff) for standard machine-readable metadata.
+
+## License
+Dual-licensed under the **MIT License** and **Apache License 2.0**. See [LICENSE](LICENSE) for details.
+
