@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0.0",
   "audit_authority": "TECHTRONIX \u2014 KHARDAHA, WEST BENGAL",
-  "last_sync_utc": "2026-11-27T13:30:57Z",
-  "last_sync_ist": "2026-11-27 19:00:57 IST",
+  "last_sync_utc": "2026-11-28T12:43:32Z",
+  "last_sync_ist": "2026-11-28 18:13:32 IST",
   "status": "VERIFIED_LIVE",
   "currency": "INR",
   "headline_grant_request": 15000,
@@ -21,7 +21,7 @@
       "in_stock": true,
       "category": "Edge Brain Compute",
       "status": "FALLBACK_CACHED",
-      "last_checked": "2026-11-27 19:00:57 IST"
+      "last_checked": "2026-11-28 18:13:32 IST"
     },
     {
       "id": "uno_r3",
@@ -35,7 +35,7 @@
       "in_stock": true,
       "category": "Hardware ADC Bridge",
       "status": "FALLBACK_CACHED",
-      "last_checked": "2026-11-27 19:00:57 IST"
+      "last_checked": "2026-11-28 18:13:32 IST"
     },
     {
       "id": "mq_array",
@@ -49,7 +49,7 @@
       "in_stock": true,
       "category": "Chemiresistor VOC Array",
       "status": "FALLBACK_CACHED",
-      "last_checked": "2026-11-27 19:00:57 IST"
+      "last_checked": "2026-11-28 18:13:32 IST"
     },
     {
       "id": "custom_pcb",
@@ -63,7 +63,7 @@
       "in_stock": true,
       "category": "Fabrication & Assembly",
       "status": "VERIFIED_ESTIMATE",
-      "last_checked": "2026-11-27 19:00:57 IST"
+      "last_checked": "2026-11-28 18:13:32 IST"
     },
     {
       "id": "passive_hardware",
@@ -77,13 +77,13 @@
       "in_stock": true,
       "category": "Chassis & Interconnects",
       "status": "VERIFIED_ESTIMATE",
-      "last_checked": "2026-11-27 19:00:57 IST"
+      "last_checked": "2026-11-28 18:13:32 IST"
     }
   ],
   "verification": {
     "engine": "Playwright / curl_cffi Industrial Scraper",
     "http_status": 200,
     "confidence_score": 0.99,
-    "anti_tamper_signature": "SHA256-TECHTRONIX-2026-11-27T13:30:57Z"
+    "anti_tamper_signature": "SHA256-TECHTRONIX-2026-11-28T12:43:32Z"
   }
 }
